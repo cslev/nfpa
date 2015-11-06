@@ -1,5 +1,5 @@
-# NFPA
-NFPA: Network Function Performance Analyzer
+#NFPA
+Network Function Performance Analyzer
 =======
 
 It is commonly accepted that decoupling network functions (NFs) from the underlying physical 
@@ -9,7 +9,10 @@ Virtualization (NFV) infrastructure has gained a huge potential for supporting t
 of NFs in a variety of (virtualized) environments, including Internet and cloud service providers, 
 campus and enterprise networks, and over-the-top applications.
 
+-------
+
 One of the fundamental questions is: 
+
 Are the software-based solutions (ever going to be) able to cope with the forever changing and increasing traffic demands? Network Function Performance Analyzer is a publicly available, open-source measurement application, which is not only in accordance with standardized methodologies (RFC 2544), but also makes possible to comprehensively compare performance metrics of NFs in an exhaustive range of dimensions. More precisely, NFPA answers
 
 -------
