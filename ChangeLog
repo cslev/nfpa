@@ -1,0 +1,235 @@
+ChangeLog
+v0.0.1 - PAT - Pktgen Automation Tool
+	 Getting port stats is now possible
+
+v0.0.2 - different packet sizes can be set for measurements
+
+v0.0.3 - measurement results are written into output files
+
+v0.0.4 - configuration needs to be done in a separate config.cfg file
+
+v0.0.5 - if output file exists, no header will be written again -> this helps 
+easier parsing later (for instance gnuplot, or shell scripts)
+
+v0.1.0 - Separated BASH application with more than one module for analyzing
+
+v0.1.1 - Add feature of analyzing the res files - calculating avg, min and max 
+values
+
+v0.1.2 - main.sh creates now symlinks for pat.cfg and PAT.lua in pktgen's root
+dir. User do not have to make it on his or hers own.
+
+v0.1.3 - Refined gnuplot output file name. Add feature of setting the bps unit as
+well. Now, accordingly PAT calculates correctly the throughput in the given unit
+and presenting via gnuplot also uses this information.
+
+v0.1.4 - Remove Miss, Diff from presentation and creating a separate charts for 
+them. Setting PKTGEN_BINARY is now possible in the main.cfg
+
+v0.1.5 - Feature of setting min and max outlier can be defined in main.cfg
+
+v0.1.6 - Simplify code and add feature of calculating and plotting the theoretical results as well.
+
+v0.1.7 - Change name from PAT to A2NFPA (Advanced and Automated Network Function
+Performance Analyzer)
+
+v0.1.8 - You can set your measurement scenario name via the first argument.
+This scenario name will help you identify results files later.
+
+v0.2.0 - Make A2NFPA Python-based instead of BASH
+	 Only one config file exists! No possibility for causing inconsistency
+	 Pktgen config file are created during running the app according to the desired preferences
+	 Traffic types are now recognized and if a pcap file exists for a given traffic type then
+	 it is going to be used and measured
+
+v0.2.1 - Old A2NFPA is fully migrated to python-based code - OLD FUNCTIONS work
+as they worked formerly. Do not use new ones yet. APP_NAME from config is purged.
+App name is going to be the same in the future!
+
+v0.2.2 - using PCAP files are working! It is easy to create, define and use your
+own pcap file, just follow the naming conventions. Let's say you have a special
+pcap file where only 67 bytes packets are present, and you call it mypcap.
+After this, you only need to rename your pcap to a2nfpa.mypcap.67bytes.pcap and
+place it in PCAP folder. Then in a2nfpa.cfg set packetSize=67, and 
+trafficType=mypcap.
+Only specific packet sizes are working!!!! More realistic pcaps are not supported!
+
+v0.2.3 - BiDirectional support for simple traffic! 
+Now setting up biDir=1 in a2nfpa.cfg enables to generate traffic in both directions
+and also capturing port rate is working! Direction is indicated now in the gnuplot/
+res filenames as well (uniDir|biDir)
+to send traffic
+
+v0.2.4 - BiDirectional support for special traffic! 
+
+v0.2.5 - Realistic PCAP file support is now available. It is possible to
+set a special traffic file, for instance, WIFI for measurement. 
+A2NFPA will search for a pcap file in MAIN_ROOT/PCAP folder named a2nfpa.WIFI.pcap! 
+So, name your pcap properly and set in a2nfpa.cfg (realisticTraffic=WIFI)
+New gnuplot file templates are used for realistic traffics
+
+v0.2.6 - Bidirectional Realistic PCAP file support is available. Usage didn't
+change.
+
+v0.2.7 - The preset PKTGEN core_mask and cpu_core_assign variables are now 
+checked before start, thus A2NFPA will realize if those settings are invalid.
+
+v0.2.8 - Capable of using different SYNTHETIC pcap files for different ports at
+the same time. Read a2nfpa.cfg to know how to use it! Remark:
+"#If two traffic types are separated via 1 'PIPE (|)', then two different pcaps
+#will be loaded to the two ports, so bidirectional measurement will be done
+#for this traffic type irrespectively whether the latter biDir property is 1 or 0.
+#On the other hand, biDir property works the same as it worked for other traffic 
+#types"
+
+v0.2.9 - Capable of using different REALISTIC pcap files for different ports at
+the same time. Works the same as SYNTHETIC works
+
+v0.2.10 - Results files (.data) are comma separated as well in order to easily
+import it to, for instance, Libreoffic Calc or MS Excel for easier reading.
+
+v0.2.11 - Bug fix for plotters (handling commas in gnuplot charts properly, and
+calculate/show throughput units (pps,bps) properly 
+
+v0.2.12 - Patch for plotter bugs
+
+
+v0.3.1 - A2NFPA saves results to (remote PostgreSQL) database. This feature is
+temporary since it's unsecure.
+The old visualizer and .data files are also supported and generated. 
+The database has now more columns, so a2nfpa.cfg has also changed. New HW/SW 
+related variables needs to be filled. And user information is also necessary
+
+v0.3.2 - Logs are now saved into MAIN_ROOT/log. Estimate time calculator is 
+added to show at the beginning how much to do we have for a coffee break.
+Database is also updated for showing whether a measurement was solely uniDir or 
+biDir. bidir_twin_id is insufficient to indicate this.
+
+v0.3.3 - Improved Estimated time calculation
+
+v0.4.1 - Changed name to NFPA. Minimal web-gui features added.
+Added more arguments and change argparser. Now, it should be used:
+sudo python nfpa.py [-h] -n NAME [-w WEB]
+
+
+v0.4.2 - Reading configuration file is now separated in order to be used from
+other modules. 
+
+v0.4.3 - Create proper Web-GUI fillout form for configuration.
+
+v0.4.4 - Add 'floating' <div> elements to configuration form to help the user.
+
+v0.4.5 - Add configuration comments to source in order to use it consistently. 
+
+v0.4.6 - Refine CLI arguments to define web-gui which ip/host and port should
+be used.
+
+v0.4.7 - Remove port_mask and promiscuous_mode from config, since they are always
+need to be the same (port_mask = 3, and -P for promiscuous in order to capture
+any packet)
+
+v0.4.8 - Make SQLite Database path static, instead of configurable.
+
+v0.4.9 - Configuring via CLI or WEB-GUI produces the same configurations, and
+config file is always consistent and represents the last setup.
+
+v0.4.10 - Refactor everything from a2nfpa* to nfpa*
+
+v0.4.11 - Add confirm dialog to web-gui to ask again about enabled DPDK interfaces
+
+v0.4.12 - Minor bugfix for handling packetSize,trafficType, and realisticTraffic
+properties to be empty.
+
+v0.4.13 - Bugfix for the cli version initiated by the new argument parser and 
+structure
+
+v0.4.14 - Correct estimate time left calculation for realistic traffics
+
+v0.4.15 - Measurement progress bar is added to WEB_GUI
+
+v0.4.16 - Refine GUI and use special logger class to WEBNFPA class as well.
+
+v0.4.17 - Temporary get back to use pcap files starting with a2nfpa instead of 
+nfpa.
+
+v0.4.18 - Minor changes in help. After starting web gui on a certain ip:port,
+then NFPA can be accessed via http://ip:port/nfpa
+
+v0.4.19 - Minor changes in help and GUI to indicate the usage in a more easier
+way.
+
+v0.4.20 - Bugfix for remote PostgreSQL connection. Now, there is a timeout for 
+connection, and if connection is not working, then NFPA will exit. If connection
+is OK, then NFPA disconnects from the database, and connect later when needed.
+This is useful, since a measurement can last to many hours, and database 
+connection will timeout if it has been created at the beginning.
+
+v0.5.1 - Migrate database handling to local postgres
+
+v0.5.2 - Merge last bugfix of v0.4
+
+v0.5.3 - Add port_mask setting possibility, since it is possible to use only 1 
+port for both directions. Accordingly, add checking for this parameter.
+
+v0.5.4 - Add some error propagation to WEB-gui in order to not just indicate 
+errors in the terminal, but in some cases the WEB_gui also shows some basic
+information
+
+v0.5.5 - If configuration errors happen, WEB-gui does not exits. It is possible
+to go back and reset some misconfigured parameters. Note that in case of system 
+related errors (e.g., directory not exists), it is not supported (yet)!
+
+v0.5.6 - Add some views (defined in postgresql) to sqlite database and do some
+minor changes in sqlite database to make it consistent with postgresql
+
+v0.5.7 - Add testing feature that could be set via -t option by starting NFPA.
+This indicates that no PKTGEN will be started and a pre-measured test data (.res
+files) will be read and processed. Useful feature for testing purposes. The
+nfpa.cfg file MUST contain in this case no realistic trace, and only simple 
+traffic trace with packet sizes 64,128,256,512,1024,1280 and 1500, respectively.
+
+v0.5.8 - Change Postgres SQL adapter to sqlite. Now, results are saved in local
+sqlite database.
+
+v0.5.9 - Add an original empty sqlite database file to the repository
+ 
+v0.5.10 - Refine Gnuplot scripts to create IEEEtran, two-sided paper compatible 
+output where the font sizes match the text size
+
+v0.5.11 - Add proper bidir column handling in sqlite database handler.
+
+v0.5.12 - Repair sqlite database schema: wrong foreign keys were used in 
+measurements table 
+
+v0.5.13 - Refine res directory handling. Now, a not so deep  granularity is
+also provided during creating res dirs (vnf_name/driver/cpu/virt/port_type/dir/)
+
+v0.5.14 - Use own invoker in many opportunities. This helps to log errors to
+log files
+
+v0.5.15 - Minor bugfixes and set pktgen running back to os.system() in order to
+be able to watch the processing in the terminal
+
+v0.5.16 - Measurement webpage now shows the path to logfile that is being 
+generated
+
+v0.5.17 - Minor changes to GUI 
+
+v0.5.18 - Add some info about new rules of using vnf_function parameter as it
+should be set corresponding to the VNF, i.e., if formerly the port forward 
+string was set as comment, then one must use bridge as vnf_function. Accordingly,
+if l2-switch is used, then always install proper flow rules in your vnf, i.e.,
+it will mean the DMAC learning formerly set as comment parameter.
+Furthermore, DON'T USE trxE and trXI traces at the same time to avoid ambiguous
+results. 
+
+v0.5.19 - Change pcap file names from a2nfpa.* to nfpa.*
+
+v0.5.20 - Refine some infos in config file and web gui
+
+v0.5.21 - Add temporary pktgen .res files deletion at the beginning of the 
+processing as well. This will clean up pktgen's root, and those files that are
+existing there due to a crashed/cancelled process of NFPA cannot influence
+the measurements results
+
+v0.5.22 - Remove 'test' option completely.

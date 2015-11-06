@@ -1,0 +1,122 @@
+This document is devoted as a manual for using NFPA, the 
+Network Function Performance Analyzer as a standalone 
+application for quick measurement testing. 
+
+## Dependencies
+- DPDK (master (2.1)) 
+  - look after Intel DPDK getting started guide
+
+- pktgen-dpdk (master (2.8.4))
+  - http://pktgen.readthedocs.org/en/latest/getting_started.html
+
+- gnuplot for plotting the results
+  - on Debian based Linux distributions execute: $ sudo apt-get install gnuplot
+
+additional libraries for NFPAv0.3.1 and above:
+- libsqlite (for sqlite)
+- python-psycopg2 (for postgres)
+- python-bottle (for web-based GUI (http://bottlepy.org/docs/dev/index.html))
+
+
+## Before using NFPA
+- enable DPDK on the NICs' port(s) that you want to use for measurement
+  - look after Intel DPDK getting started guide
+
+
++----------------------------------+
+|              USAGE               |
++----------------------------------+
+There are two methods to use NFPA, but both of them starts with configuration.
+There is a config file (nfpa.cfg) that needs be edited, before doing anything.
+This configuration is related to your measurement scenario and other NF,FileSystem,
+HW/SW related settings!
+For doing this go to NFPA's main root
+$ cd /path/to/your/NFPA
+For editing, use your favorite editor 
+$ nano nfpa.cfg
+
+nfpa.cfg's comments are intended to be straightforward.
+
+### HOW TO USE
+In NFPA's main root, execute the following
+$ sudo python nfpa.py -n [scenario_name]
+In this case measurements are started right after the command was executed.
+
+There is another way of using and configuring NFPA. If you do not like 
+configuration via CLI and config files, NFPA provides a GUI as well for doing
+this. 
+$ sudo python nfpa.py -n [scenario_name] -w [host:port]
+Afterwards, NFPA launches a lightweight WEB server (python-bottle based), and
+a configuration form could be accessed via your browser under host:port/nfpa URL.
+In this case, measurements only starts after you've clicked on Start Measurement
+button. 
+Accordingly, the web-based GUI provides a progressbar showing the estimated time
+left. However, due to browser caching and cookies it is possible that it
+shows the previous measurement's time. Therefore, always check the progress in 
+the terminal window, where you have started the app. 
+
+That's all! After configuration is done via any way, just lay back and drink
+your coffee till it finishes.
+
+Note that CLI and WEB-GUI reads and writes the same config file, 
+so it is always consistent and represents the last measurement setup!
+
+## BASIC DOCUMENTATION ON HOW NFPA WORKS AND WHAT IT DOES IN THE BACKGROUND ##
+# How it works (pktgen/measuring related)
+After defining your demands, set measurement duration in order to define how 
+many seconds one measurement should last. This means the time (in seconds) a 
+measurement/traffic generation will last for one packet size. 
+So, if you want to send 64 bytes and 1500 bytes of
+packets with measurement duration set to 20 means that 64-byte packets will be 
+sent for 20 (+heat up/cool down offset (6 sec) seconds, then 1500-byte packets will 
+be sent in the same manner. Note again 
+that there is a warm up, and a cool-down phase also in these setups.
+
+#Traffic types
+If a simple synthetic traffic type (e.g., tr2e), and multiple packetSizes are set
+then for each packet size a different pcap file needs to be existed (e.g., 
+nfpa.tr2e.64bytes.pcap).
+In this case, each pcap file will be loaded to sendPort (or to both of the ports
+if biDir==1)
+
+If two traffic types are separated via 1 'PIPE (|)', then two different pcaps
+will be loaded to the two ports, so bidirectional measurement will be done
+for this traffic type irrespectively whether the latter biDir property is 1 or 0.
+On the other hand, biDir property works the same as it worked for other traffic 
+types
+These traffic types work the same manner as they worked for other ones. So, if
+multiple packet sizes are set with this option, then multiple (different) 
+pcap files will be loaded to the different ports. For instance, in case of 
+packetSize=64, and packetSize128 with trafficType=tr2i|tr2e, then
+for i in each packet size:
+  nfpa.tr2e.${i}bytes.pcap will be loaded to sendPort, while
+  nfpa.tr2i.${i}bytes.pcap will be loaded to recvPort
+
+Note that the same applies for realisticTraffic as well.
+ 
+
+
+### How it works (linux/filesystem related)
+NFPA first creates symlinks pointing at nfpa.cfg and the corresponding lua
+scripts root directory in order to make pktgen be able to read the lua scripts 
+and the configuration file (nfpa.cfg).
+Then, NFPA starts pktgen as many times as you configured.
+The results of the measurement scenarios will be written to output files
+(located in your PKTGEN_ROOT directory) as npfa.[traffic_type].[packetsize].res.
+However, those temporary files are deleted at the end of the measurement.
+Afterwards, analyzing the results is starting, which 
+calculates the average, min, max and theoretical values then plots them (via gnuplot).
+The gnuplot data files and charts will be placed in RES directory under MAIN_ROOT,
+and numeric results are pushed into the database.
+
+
+If you only want to scripting PktGen via lua scripts, we recommend to go to
+http://pktgen.readthedocs.org/en/latest/scripts.html
+
+
+The NFPA team
+
+
+
+
+
