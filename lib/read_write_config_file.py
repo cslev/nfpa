@@ -102,15 +102,12 @@ def readConfigFile(config_file):
     print("Logging directory will be: %s" % config["LOG_PATH"])
     
     
-    #get current timestamp
+    #get current timestamp8
     ts = time.time()        
     config['app_start_date'] = str(ts)
     
     calculateTimeLeft()
     
-    print(config)
-    
-    exit(-1)
     
     return (True,config)
 
