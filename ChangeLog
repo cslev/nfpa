@@ -233,3 +233,7 @@ existing there due to a crashed/cancelled process of NFPA cannot influence
 the measurements results
 
 v0.5.22 - Remove 'test' option completely.
+
+v0.5.23 - Config parameter values can now contain '=' signs as well. It could
+be useful, for instance, if OpenFlow flow rules wanted to be set as vnf_comment
+parameter

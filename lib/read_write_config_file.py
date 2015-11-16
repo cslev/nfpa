@@ -64,10 +64,20 @@ def readConfigFile(config_file):
                         
                     else:
                         try:
+                            key = key_value[0]
+                            value = key_value[1]
+                            for e,i in enumerate(key_value):
+                                if e < 2:
+                                    continue
+                                
+                                #more than one '=' is present in one line
+                                #let's concatenate the rest
+                                value += "=" + key_value[e]
                             #handling line splitting! If something went
                             #wrong during setting up the cfg file, the 
                             #application will quit
-                            config[key_value[0]]=key_value[1]
+                            config[key]=value                            
+                                
                         
                         except IndexError as ie:
                             msg=str("Error during parsing %s!\n" % config_file)
@@ -75,6 +85,8 @@ def readConfigFile(config_file):
                                       "line '#%d'" % line_num)
                             return (False, msg)
             line_num += 1
+     
+     
                         
     #append packetSizes and trafficTypes lists to config dict
 
@@ -95,6 +107,10 @@ def readConfigFile(config_file):
     config['app_start_date'] = str(ts)
     
     calculateTimeLeft()
+    
+    print(config)
+    
+    exit(-1)
     
     return (True,config)
 
