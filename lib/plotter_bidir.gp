@@ -16,7 +16,7 @@ set termoption dashed
 #set key autotitle columnhead out   
 
 #setting output style
-set term post enh color eps 20
+set term post noenh color eps 20
 #set size 0.7,0.7
 
 #set separator
