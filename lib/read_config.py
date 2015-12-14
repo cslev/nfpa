@@ -253,9 +253,10 @@ class ReadConfig(object):
         else:
             if(pm == '1'):
                 self.log.debug("PORT MASK IS 1")
-                
-                if(self._config["sendPort"] != 0 and 
-                   self._config["recvPort"] != 0):
+#                 self.log.debug("sendPort: %s" % self._config["sendPort"])
+#                 self.log.debug("recvPort: %s" % self._config["recvPort"])
+                if(self._config["sendPort"] != '0' and 
+                   self._config["recvPort"] != '0'):
                     self.log.error("In case of Port mask 1, sendPort and " +\
                                     "recvPort need to be 0!")
                     return -1

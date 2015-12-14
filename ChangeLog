@@ -237,3 +237,9 @@ v0.5.22 - Remove 'test' option completely.
 v0.5.23 - Config parameter values can now contain '=' signs as well. It could
 be useful, for instance, if OpenFlow flow rules wanted to be set as vnf_comment
 parameter
+
+v0.5.24 - Set gnuplot property terminal from enhanced to noenhanced in order to
+make text as underscored instead of subscript.
+
+v0.5.25 - Correct one port support! NFPA did not recognized correctly the 
+configuration if only 1 port wanted to be used instead of the 2-port setup.
