@@ -75,7 +75,7 @@ class NFPA(object):
         
         self.pid_file=self.config['MAIN_ROOT'] + "/" + "nfpa.pid"
         self.log.info("Deleting previous pid_file: %s" % self.pid_file)
-        os.command("rm -rf " + self.pid_file)
+        os.system("rm -rf " + self.pid_file)
         
         #before fresh start remove temporary files if they were not removed
         #already. This could be happen, if in some case, NFPA crashes, and
