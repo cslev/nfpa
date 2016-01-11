@@ -247,3 +247,6 @@ configuration if only 1 port wanted to be used instead of the 2-port setup.
 v0.5.26 - Add storePID function to store NFPA's PID in nfpa.pid file located 
 under NFPA's MAIN_ROOT. This helps to easily kill the whole process tree during
 execution if needed.
+
+v0.5.27 - Add NFPA killer script (kill_nfpa.sh), which kills the whole process 
+tree of NFPA.
