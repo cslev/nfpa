@@ -38,8 +38,20 @@ class NFPA(object):
         self.config = {}
         #default name TEST
         self.scenario_name = kwargs.get("scenario_name","TEST")
-                
+        
+        
   
+    def storePID(self, new_pid):
+        '''
+        This process save the new_pid variables into nfpa.pids file to be able
+        to kill the whole process tree during execution
+        new_pid Int - the pid to store
+        '''
+        
+        file = open(self.pid_file,'w')
+        file.write(str(new_pid))
+        file.write("\n")
+        file.close()
         
     def initialize(self):
 #         print("Main class instantiated")
@@ -52,6 +64,10 @@ class NFPA(object):
             return -1
             
         self.config = self.rc.getConfig()
+        
+        self.pid_file=self.config['MAIN_ROOT'] + "/" + nfpa.pid
+        self.log.info("Deleting previous pid_file: %s" % pid_file)
+        os.command("rm -rf " + pid_file)
        
         self.log = l.getLogger( self.__class__.__name__, 
                                 self.config['LOG_LEVEL'], 
@@ -82,7 +98,9 @@ class NFPA(object):
                        df.getDateFormat(self.config['app_start_date'])))
         self.log.info("THANKS FOR USING NFPA FOR MEASURING")
 
-
+        self.storePID(str(os.getpid()))
+        self.log.debug("NFPA PID stored")
+        
    
    
     def exiting(self):
