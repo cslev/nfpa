@@ -65,7 +65,7 @@ class NFPA(object):
             
         self.config = self.rc.getConfig()
         
-        self.pid_file=self.config['MAIN_ROOT'] + "/" + nfpa.pid
+        self.pid_file=self.config['MAIN_ROOT'] + "/" + "nfpa.pid"
         self.log.info("Deleting previous pid_file: %s" % pid_file)
         os.command("rm -rf " + pid_file)
        
