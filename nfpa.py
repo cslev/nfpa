@@ -65,15 +65,18 @@ class NFPA(object):
             
         self.config = self.rc.getConfig()
         
-        self.pid_file=self.config['MAIN_ROOT'] + "/" + "nfpa.pid"
-        self.log.info("Deleting previous pid_file: %s" % pid_file)
-        os.command("rm -rf " + pid_file)
+        
        
         self.log = l.getLogger( self.__class__.__name__, 
                                 self.config['LOG_LEVEL'], 
                                 self.config['app_start_date'],
                                 self.config['LOG_PATH'])
-            
+        
+        
+        self.pid_file=self.config['MAIN_ROOT'] + "/" + "nfpa.pid"
+        self.log.info("Deleting previous pid_file: %s" % pid_file)
+        os.command("rm -rf " + pid_file)
+        
         #before fresh start remove temporary files if they were not removed
         #already. This could be happen, if in some case, NFPA crashes, and
         #temporary res files in PKTGEN_ROOT/ still remains existing and can
