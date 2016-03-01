@@ -67,9 +67,7 @@ class SQLiteDatabaseAdapter(object):
         self.tables += self.abstract_tables
         
         self.connect()
-        
-        exit(-1)
-        
+      
         #update autoincrement sequences
 #         self.updateAutoIncrementSequences()
     
