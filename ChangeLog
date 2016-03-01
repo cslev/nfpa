@@ -252,3 +252,20 @@ v0.5.27 - Add NFPA killer script (kill_nfpa.sh), which kills the whole process
 tree of NFPA.
 
 v0.5.28 - Minor bugfix
+
+v0.6.1 - NFPA is compatible with the newest version of PktGen 2.9.12, and
+since there is no more long lasting ads and information when starting pktgen
+the running time has been reduced, and the remaining time calculation has
+been adjusted accordingly. Thus, NFPA recommends to use PktGen 2.9.12, which
+perfectly works with DPDK 2.2.0.
+
+v0.6.2 - NFPA is now capable of creating the SQLite database file from scratch!
+Accordingly, you do not need to download the nfpa.db file separately, if you want
+to have a clear database. In this case, just remove/delete nfpa.db from the db/
+directory, and the first run of NFPA after removal will create a new and
+empty database!
+
+
+
+
+

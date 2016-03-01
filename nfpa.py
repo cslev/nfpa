@@ -360,7 +360,7 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     
-    #initialize main NFPA class, which can be passed as as pointer to WEBNFPA
+    #initialize main NFPA class, which can be passed as a pointer to WEBNFPA
     #as well
         
     main = NFPA(scenario_name=args.name[0])

@@ -30,10 +30,12 @@ The database has:
 import sqlite3
 import copy
 import sys
+import os
 #required for loading classes under lib/
 sys.path.append("../lib/")
 import logger as l
 import logging
+import invoke as invoke
 class SQLiteDatabaseAdapter(object):
         
     '''
@@ -66,6 +68,7 @@ class SQLiteDatabaseAdapter(object):
         
         self.connect()
         
+        exit(-1)
         
         #update autoincrement sequences
 #         self.updateAutoIncrementSequences()
@@ -79,11 +82,19 @@ class SQLiteDatabaseAdapter(object):
         '''
         self.log.debug(str("connecting to database %s" % self.db_name))
         
-        
-        #the connection var itself - required for committing and closing
-        self.conn = sqlite3.connect(self.db_name)
-        #cursor - required for each database function calls
-        self.c = self.conn.cursor()
+        #check whether database file exists
+        if not (os.path.isfile(self.db_name)):
+	    self.log.warn("DATABASE FILE NOT EXISTS...creating a new from scratch!")
+            create_cmd = "cat db/create_nfpadatabase.sql | sqlite3 " + self.db_name
+            invoke.invoke(create_cmd) 
+            self.log.info("DATABASE FILE CREATED")
+				
+        else:
+	    self.log.debug("DATABASE FILE EXISTS")
+	    #the connection var itself - required for committing and closing
+	    self.conn = sqlite3.connect(self.db_name)
+	    #cursor - required for each database function calls
+	    self.c = self.conn.cursor()
                 
         return True
     

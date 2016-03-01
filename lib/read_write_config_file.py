@@ -26,7 +26,7 @@ def readConfigFile(config_file):
     #list for realistic traffics
     realisticTraffics = []
     
-    config['version'] = "v0.5"
+    config['version'] = "v0.6"
     
     
     
@@ -117,7 +117,7 @@ def calculateTimeLeft():
         whole measurement and prints out at the beginning
         '''
         #Each variable represents time in seconds        
-        time_to_start_pktgen = 11
+        time_to_start_pktgen = 6
         #number of packet sizes
         num_ps = len(config["packetSizes"]) 
 #         self.log.debug("packetsizes: %d" % num_ps )
