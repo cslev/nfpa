@@ -240,8 +240,8 @@ def getConfigComments():
                     'cpu_port_assign':
                     'Set here which core to be used for which port ' +  
                     '(in decimal). If not sure, use "2.0,3.1".' + 
-                    'Multicore assignment only works if ' +
-                    'core mask is set like "[2-4].0" ',
+                    'To see how multicore assingment should be set, ' +
+                    'go to http://pktgen.readthedocs.io/en/latest/usage_pktgen.html',
                     
                     'cpu_make':
                     "Set here the make of the CPU where the NF being " +
@@ -504,7 +504,7 @@ def writeConfigFile(c):
     file.write("LOG_LEVEL=" + c['LOG_LEVEL'] + "\n")
     file.write("### ================================================== ###\n\n")
     
-    file.write("### ------------- DPDK Related Settings  ------------- ###\n")
+    file.write("### ------------- Pktgen and DPDK arguments  ------------- ###\n")
     splitToMultipleLines(cc['cpu_core_mask'], file)
     file.write("cpu_core_mask=" + c['cpu_core_mask'] + "\n\n")
     splitToMultipleLines(cc['port_mask'], file)
