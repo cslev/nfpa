@@ -86,7 +86,7 @@
 % main_dict[2] = filesystem_settings
 % main_dict_heads[2] = "Filesystem & OS Related Settings"
 % main_dict[3] = dpdk_settings
-% main_dict_heads[3] = "DPDK Related Settings"
+% main_dict_heads[3] = "Pktgen and DPDK arguments"
 % main_dict[4] = nf_settings
 % main_dict_heads[4] = "Network Function Hardware & Software Related Settings"
 % main_dict[5] = gnuplot_settings
