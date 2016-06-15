@@ -348,17 +348,9 @@ class ReadConfig(object):
     
          
         
-        #checking whether path to database file exists
-        self.log.debug("db_path: %s/db/nfpa.db" % 
-                       (self._config['MAIN_ROOT']))
-        db_file = self._config["MAIN_ROOT"] + "/db/nfpa.db"
-        if not (os.path.isfile(db_file)):
-            self.log.error("DB_PATH (%s) does not exist!" % 
-                         db_file)
-            self.log.error("EXITING...")
-            exit(-1)    
-    
+                    
         self._config['dbhelper'].connect()
+        exit(-1)
         #check user
         self._config['dbhelper'].getUser(self._config['username'])
         self._config['dbhelper'].disconnect()
