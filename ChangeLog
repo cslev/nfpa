@@ -265,6 +265,7 @@ to have a clear database. In this case, just remove/delete nfpa.db from the db/
 directory, and the first run of NFPA after removal will create a new and
 empty database!
 
+v0.6.3 - Minor bugfixes around scenario name parsing and creating database from scratch
 
 
 

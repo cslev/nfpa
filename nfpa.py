@@ -7,6 +7,7 @@ import os
 import sys
 import datetime
 import argparse
+import re #required for regural expression check
 #required for loading classes under lib/
 sys.path.append("lib/")
 from read_config import ReadConfig
@@ -359,6 +360,16 @@ if __name__ == '__main__':
                         required=False)
     
     args = parser.parse_args()
+    
+    #check the scenario's name argument! It needs to be compatible with
+    #linux naming conventions for directories, thus it must not contain
+    #special characters like '/'.
+    pattern = re.compile(r'^[a-zA-Z0-9_]*$') #alphanumeric + underscore
+    if pattern.match(args.name[0]) is None:
+      print("\033[1;31m[NFPA] Error during parsing scenario's name!")
+      print("\033[1;31m[NFPA] Only alphanumeric characters and underscore are allowed!\033[0m")
+      exit(-1)
+    
     
     #initialize main NFPA class, which can be passed as a pointer to WEBNFPA
     #as well
