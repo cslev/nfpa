@@ -170,28 +170,47 @@ class ReadConfig(object):
             except ValueError as e:
                 self.log.info("Multicore coremask has been recognized: %s" % 
                               str(tmp_i))
-                self.log.info("parsing...only accepted style: [2-4]")
-#                 self.log.debug(str(e))
                 #this case is when multiple cores wanted to be used
+                
+                #split by ':' -> this results in at least a 1 element long
+                #list. If there was no ':', then one element long list,
+                #otherwise two elemets will be in the list
+                #first, remove brackets
+                tmp_i=tmp_i.replace('[','')
+                tmp_i=tmp_i.replace(']','')
+                multi_core_list = tmp_i.split(":")
+                
+                print multi_core_list
+                for i in range(0,len(multi_core_list)):
+                #~ tmp_bool = false #indicator of found ':'
+                #~ if len(multi_core_list) == 1:
+                    #~ #same as before, only olny element
+                    #~ multi_core = multi_core_list[0]
+                    #~ tmp_bool = true
+                #~ else:
+                    #~ tmp_bool = false
                 #parsing only if core mask is set like [2-4]
                 #cut the first and last char, since they are rectangular 
                 #parentheses (brackets)
-                multi_core = copy.deepcopy(tmp_i[1:(len(tmp_i)-1)])
-                #ok, we need to split the string according to the dash between
-                #the core numbers 2-4
-                min_c = int(multi_core.split('-')[0])
-                max_c = int(multi_core.split('-')[1])
+                    multi_core = multi_core_list[i]
+                    print multi_core
+                    #~ multi_core = copy.deepcopy(multi_core[1:(len(multi_core)-1)])
+                    #~ print multi_core
+                    #ok, we need to split the string according to the dash between
+                    #the core numbers 2-4
+                    min_c = int(multi_core.split('-')[0])
+                    max_c = int(multi_core.split('-')[1])
                 
               
-                for mc in range(min_c, max_c+1):
-                    #append core nums to digits
-                    digits.append(copy.deepcopy(int(mc)))
-                    #update max core num if necessary
-                    if int(mc) > tmp_max_core_mask:
-                        tmp_max_core_mask = int(mc)
+                    for mc in range(min_c, max_c+1):
+                        #append core nums to digits
+                        digits.append(copy.deepcopy(int(mc)))
+                        #update max core num if necessary
+                        if int(mc) > tmp_max_core_mask:
+                            tmp_max_core_mask = int(mc)
 #               
-                    
-#         exit(-1)
+        
+        #~ exit(-1)
         #all right, we got max core mask needs to be used
         #now, check whether the the main cpu_core_mask variable covers it
         #calculate how many bits are required for cpu_core_mask
@@ -214,6 +233,10 @@ class ReadConfig(object):
                                    b,
                                    bit_length))
             self.log.error("!!! %d > %d !!!" % (tmp_max_core_mask+1,bit_length))
+            #~ self.log.error("Core ids to be used:")
+            #~ self.log.error(digits)
+            #~ self.log.error("Reserved cores:")
+            #~ self.log.error(bin_core_mask)
             return -1
         #we need to check the correctness as well, as are the corresponding
         #bits are 1
