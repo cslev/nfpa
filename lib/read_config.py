@@ -373,7 +373,6 @@ class ReadConfig(object):
         
                     
         self._config['dbhelper'].connect()
-        exit(-1)
         #check user
         self._config['dbhelper'].getUser(self._config['username'])
         self._config['dbhelper'].disconnect()
