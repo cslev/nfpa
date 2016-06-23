@@ -180,7 +180,7 @@ class ReadConfig(object):
                 tmp_i=tmp_i.replace(']','')
                 multi_core_list = tmp_i.split(":")
                 
-                print multi_core_list
+                #~ print multi_core_list
                 for i in range(0,len(multi_core_list)):
                 #~ tmp_bool = false #indicator of found ':'
                 #~ if len(multi_core_list) == 1:
@@ -193,25 +193,33 @@ class ReadConfig(object):
                 #cut the first and last char, since they are rectangular 
                 #parentheses (brackets)
                     multi_core = multi_core_list[i]
-                    print multi_core
+                    #~ print multi_core
                     #~ multi_core = copy.deepcopy(multi_core[1:(len(multi_core)-1)])
                     #~ print multi_core
                     #ok, we need to split the string according to the dash between
                     #the core numbers 2-4
+                    
                     min_c = int(multi_core.split('-')[0])
-                    max_c = int(multi_core.split('-')[1])
-                
+                    
+                    #if there is no range specified, i.e., there is no dash 
+                    #then we won't get two separate pieces
+                    if len(multi_core.split('-')) > 1:
+                      max_c = int(multi_core.split('-')[1])
+                    else:
+                      #if no dash was specified, let the max_c be simply
+                      #min_c as well -> it won't cause problems later
+                      max_c = min_c
               
                     for mc in range(min_c, max_c+1):
                         #append core nums to digits
                         digits.append(copy.deepcopy(int(mc)))
-                        #update max core num if necessary
+                        #update max core num if necessary (required later
+                        #for checking the length of the specified bit 
+                        #mask for CPU core
                         if int(mc) > tmp_max_core_mask:
                             tmp_max_core_mask = int(mc)
-#               
-        
-        #~ exit(-1)
-        #all right, we got max core mask needs to be used
+
+        #alright, we got max core mask needs to be used
         #now, check whether the the main cpu_core_mask variable covers it
         #calculate how many bits are required for cpu_core_mask
         #store cpu_core_mask in temporary variable 'b'
@@ -268,7 +276,7 @@ class ReadConfig(object):
         
         #check port_mask
         pm = self._config["port_mask"]
-        print(pm)
+        #~ print(pm)
         if (pm != '1' and pm != '3'):
             #port mask is mis-configured
             self.log.error("Port mask could be only 1 or 3!")
