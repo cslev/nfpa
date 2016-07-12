@@ -262,6 +262,10 @@ function start_measurement ()
         
     sleep(1);
     i = i + 1;
+    
+    -- practically write out each line into the file in each seconds
+    -- instead of only writing the results when measurement is done
+    io.flush();
   end
 
   -- stop traffic

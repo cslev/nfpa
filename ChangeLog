@@ -274,3 +274,7 @@ v0.8 - Add INFINITE LOOP capability. By setting measurementDuration in nfpa.cfg 
 the first proper traffic type and trace will be run forever, until NFPA
 becomes killed (to this, use kill_nfpa.sh helper script).
 
+v0.8.2 - Lua scripts now writes out the temporary results into the temporary
+result files in each seconds instead of writing them at the end of the
+measurement. This is useful if NFPA is running in an infinite loop, and
+a third-party application may want to observe the actual throughput data.
