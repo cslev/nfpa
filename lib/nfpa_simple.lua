@@ -110,13 +110,22 @@ function start_measurement ()
   number_of_packetsizes = #pktSizes;
   -- calculating estimated measurement duration
   -- heating up=3s, cooldown=3s, config["measurementDuration"], number_of_packetsizes
-  estimated_time = number_of_packetsizes * config["measurementDuration"] +
-  number_of_packetsizes*6;
+  if tonumber(config["measurementDuration"]) ~= 0
+  then
+    estimated_time = number_of_packetsizes * tonumber(config["measurementDuration"]) +
+    number_of_packetsizes*6;
+    -- reducing factor for estimated time - the following should be multiplied
+    -- in each iteration of the loop below
+    reduce_factor = tonumber(config["measurementDuration"]) + 6;
+    infinite_measurement = false;
+  else
+    estimated_time = "INFINITE"
+    infinite_measurement = true;
+  end
+  
   print("Estimated time needed for this measurement is: " .. estimated_time .. " seconds");
 
-  -- reducing factor for estimated time - the following should be multiplied
-  -- in each iteration of the loop below
-  reduce_factor = config["measurementDuration"] + 6;
+  
 
   -- iterate through packet sizes to start measurements
   for i in pairs(pktSizes)
@@ -193,11 +202,23 @@ function start_measurement ()
     end  
     -- print("Go grab a coffee...");
 
-    -- loop according to measurement_duration, in each cycle 1 sec sleep is 
+    -- loop according to measurementDuration, in each cycle 1 sec sleep is 
     -- invoked, and in each iteration we measure the sending pkts/s rate and 
     -- the received pkts/s rate and print them out
-    for i=1,config["measurementDuration"],1
+    -- for i=1,config["measurementDuration"],1
+    -- infinite loop by default, and will break if measurementDuration 
+    -- was set properly
+    i = 0;
+    m = tonumber(config["measurementDuration"]);
+    while true
     do
+      
+      if((infinite_measurement == false) and
+        (i == m))
+      then
+        -- break the infinite loop
+        break;
+      end
       -- get port data
       portRates = pktgen.portStats("all", "rate");
       -- get sent packet/s data
@@ -243,23 +264,7 @@ function start_measurement ()
       
           
       sleep(1);
-      
-      -- testing purpose for reacting to key presses
-      if ( key == "s" )
-      then
-        print("s key pressed - Stopping and exiting...");
-        pktgen.stop(tonumber(config["sendPort"]));
-        -- stop traffic on the other port if biDir was set
-        if(tonumber(config["biDir"]) == 1)
-        then
-          pktgen.stop(tonumber(config["recvPort"]));    
-        end
-        pktgen.clear("all");
-        pktgen.cls();
-        sleep(1);
-        os.exit();
-      end
-      
+      i = i + 1;
     end
 
     -- stop traffic
@@ -277,8 +282,7 @@ function start_measurement ()
     
     io.close(file);
     
-    estimated_time = estimated_time - reduce_factor;
-    print("Estimated time left for this measurement is: " .. estimated_time);
+    
     
   end
 end

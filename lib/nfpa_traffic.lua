@@ -121,7 +121,19 @@ function start_measurement ()
   
   traffic = config["trafficType"] .. "." .. config["packetSize"];
   
-  estimated_time = config["measurementDuration"] + 6;
+  if tonumber(config["measurementDuration"]) ~= 0
+  then
+    estimated_time = number_of_packetsizes * tonumber(config["measurementDuration"]) +
+    number_of_packetsizes*6;
+    -- reducing factor for estimated time - the following should be multiplied
+    -- in each iteration of the loop below
+    reduce_factor = tonumber(config["measurementDuration"]) + 6;
+    infinite_measurement = false;
+  else
+    estimated_time = "INFINITE"
+    infinite_measurement = true;
+  end
+  
   print("Estimated time needed for this measurement is: " .. estimated_time .. 
   " seconds");
 
@@ -188,8 +200,18 @@ function start_measurement ()
   -- loop according to measurement_duration, in each cycle 1 sec sleep is 
   -- invoked, and in each iteration we measure the sending pkts/s rate and the
   -- received pkts/s rate and print them out
-  for i=1,config["measurementDuration"],1
+  -- infinite loop by default, and will break if measurementDuration 
+  -- was set properly
+  i = 0;
+  m = tonumber(config["measurementDuration"]);
+  while true
   do
+    if((infinite_measurement == false) and
+      (i == m))
+    then
+      -- break the infinite loop
+      break;
+    end
     -- get port data
     portRates = pktgen.portStats("all", "rate");
     -- get sent packet/s data
@@ -239,25 +261,7 @@ function start_measurement ()
       io.write("\n");
         
     sleep(1);
-    
-    -- testing purpose for reacting to key presses
-    -- it seems that it is not working
-    if ( key == "s" )
-    then
-      print("s key pressed - Stopping and exiting...");
-      pktgen.stop(tonumber(config["sendPort"]));
-      -- stop traffic on the other port if biDir was set
-      if(tonumber(config["biDir"]) == 1)
-      then
-        pktgen.stop(tonumber(config["recvPort"]));    
-      end
-      
-      pktgen.clear("all");
-      pktgen.cls();
-      sleep(1);
-      os.exit();
-    end
-    
+    i = i + 1;
   end
 
   -- stop traffic

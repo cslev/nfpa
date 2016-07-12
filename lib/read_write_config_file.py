@@ -26,7 +26,7 @@ def readConfigFile(config_file):
     #list for realistic traffics
     realisticTraffics = []
     
-    config['version'] = "v0.7"
+    config['version'] = "v0.8"
     
     
     
@@ -123,6 +123,17 @@ def calculateTimeLeft():
 #         self.log.debug("packetsizes: %d" % num_ps )
         #one measurement lasts for measurementDuration + 2 times 3 seconds
         #as heating up and cooling down
+        
+        #if measurementDuration is set to infinite via 0, we don't 
+        #calculate remaing time, just set it to 0 and return!
+        if int(config['measurementDuration']) == 0:
+            config['ETL_seconds'] = 0
+            #convert it to datetime
+            sum = str(datetime.timedelta(seconds=0))            
+            #store Estimated Time Left in the config dictionary to access it later
+            config['ETL'] = sum
+            return
+            
         measurement = (int(config['measurementDuration']) + 6)
         iteration = int(config['measurement_num'])
         
@@ -382,7 +393,10 @@ def getConfigComments():
                     "For instance, 20 means that traffic will be generated " +
                     "for 20 seconds for each pre-set packet sizes, or even 20 " +
                     "seconds long will be the pcap-files replayed (in case of " +
-                    "synthetic or realistic traffic traces). If not sure, use 20!",
+                    "synthetic or realistic traffic traces). If not sure, use 20! " + 
+                    "Use 0 to indicate an infinite, never ending measurement " + 
+                    "for running in the background. In this case, measurement_num " + 
+                    "argument has no meaning",
                     
                     'sendPort':
                     "The port desired to be used for sending. In case of " +

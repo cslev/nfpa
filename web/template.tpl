@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
-        <title>Network Function Performance Analyzer v0.5.x</title>
+        <title>Network Function Performance Analyzer</title>
 
         <link href="static/css/nfpa_style.css" rel="stylesheet" type="text/css">
         <script src="static/js/nfpa.js" type="text/javascript"></script>
@@ -327,7 +327,10 @@ CHECK YOUR TERMINAL WINDOW for further status messages!
 <script>
 
 var tl = ({{d['ETL_seconds']}}-1)*9;
-
+if (tl < 0)
+{
+  alert("INFINITE MEASUREMENT");
+}
 progressBarSim(0);
 </script>
 

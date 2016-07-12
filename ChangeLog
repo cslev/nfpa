@@ -270,4 +270,7 @@ v0.6.3 - Minor bugfixes around scenario name parsing and creating database from 
 v0.7 - Full fledged multi-core support (now core-mask check function allows to define mulitple 
 cores separately for RX and TX queues)!
 
+v0.8 - Add INFINITE LOOP capability. By setting measurementDuration in nfpa.cfg to 0,
+the first proper traffic type and trace will be run forever, until NFPA
+becomes killed (to this, use kill_nfpa.sh helper script).
 

@@ -141,8 +141,8 @@ class ReadConfig(object):
                          self._config["MAIN_ROOT"])
             return -1 
         
-        #check PKTGEN port masks and core masks
-        #store in temporary variable 'a'
+        #### --- === check PKTGEN port masks and core masks === --- ####
+        #store cpu_port_assign in temporary variable 'a'
         a = self._config["cpu_port_assign"]
         #var a contains a string like this "2.0,3.1"
         #remove head and tail double quotes
@@ -154,9 +154,8 @@ class ReadConfig(object):
             #this produces ["2.0","3.1"]
             tmp_i = i.split('.')[0]
             self.log.debug("next desired core num: " + str(tmp_i))
-#             for j in (i.split('.',1)[0]):
-#                 self.log.warninging(str(j))
-                #check whether mutliple core was set (try to convert it to int)
+
+            #check whether mutliple core was set (try to convert it to int)
             try:
                 int_tmp_i = int(tmp_i)
                 #this produces ['"','2','3']
@@ -344,13 +343,13 @@ class ReadConfig(object):
         warning = False
         #check whether packetsize is set, but no synthetic traffictype is set
         if self._config['packetSizes'] and not self._config["trafficTypes"]:
-            self.log.warning("Packetsize(s) set without traffic type(s)")
+            self.log.warning("Packetsize(s) set without synthetic traffic type(s)")
             self.log.warning("SKIPPING...")
             warning = True
             time.sleep(1)
             
         elif not self._config['packetSizes'] and self._config["trafficTypes"]:
-            self.log.warning("Traffic type(s) set without packet size(s)")
+            self.log.warning("Synthetic traffic type(s) set without packet size(s)")
             self.log.warning("SKIPPING...")
             warning = True
             time.sleep(1)
@@ -695,9 +694,13 @@ class ReadConfig(object):
         lua_cfg_file.write("#THESE ARE CONFIGURATIONS FOR PKTGEN LUA SCRIPT!\n")
         lua_cfg_file.write("\n\n")
 
+        #Check whether infinite measurementDuration was set
+        if int(self._config["measurementDuration"]) == 0:
+          self.log.info("### === INFINITE MEASUREMENT WAS SET === ###")
         #write out measurement duration
         lua_cfg_file.write("measurementDuration=" + 
                            self._config["measurementDuration"])
+        
         lua_cfg_file.write("\n\n")
         
         #write out sending port
