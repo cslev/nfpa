@@ -11,7 +11,8 @@ require "Pktgen";
 
 -- local variables for config parameters (read from config.cfg)
 config = {};
-
+-- local variable for different packet sizes (read from config.cfg)
+pktSizes = {};
 
 
 -- +++++++++++++++++++++++++ FUNCTION ++++++++++++++++++++++++++++
