@@ -120,7 +120,10 @@ end
 function start_measurement ()
   
   traffic = config["trafficType"] .. "." .. config["packetSize"];
-  
+  -- get the number of desired packet sizes used for measurement
+  number_of_packetsizes = #pktSizes;
+  -- calculating estimated measurement duration
+  -- heating up=3s, cooldown=3s, config["measurementDuration"], number_of_packetsizes
   if tonumber(config["measurementDuration"]) ~= 0
   then
     estimated_time = number_of_packetsizes * tonumber(config["measurementDuration"]) +

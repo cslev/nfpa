@@ -51,7 +51,7 @@ function read_config_file ()
         else
           print(key,"\t",value);
         end
-      
+
     else
      -- nothing to do, these lines are comments <-- Lua has no continue
      -- statement. That's why this check is done likewise
@@ -60,14 +60,14 @@ function read_config_file ()
 
   -- closes the opened file
   io.close(config_file);
-  
+
 end
 -- ====================== END FUNCTION ========================
 
 function parse_config ()
   -- determine port rate
-  print("Parsing configuration file...");     
-  
+  print("Parsing configuration file...");
+
   -- check for special ul-dl birdirectional traffic
   for key,value in pairs(config)
   do
@@ -85,9 +85,9 @@ function parse_config ()
         print("Update: biDir=1");
       end
     end
-    
-  end     
-    
+
+  end
+
 end
 
 -- ################### END CONFIGURATION ######################
@@ -99,12 +99,12 @@ end
 -- file_name string - output filename check to
 function file_check (file_name)
   file_found = io.open(file_name, "r");
-  
+
   if file_found==nil
   then
     print(file_name .. " does not exists. Write initial head data " ..
           "into the file\n");
-   
+
     return true;
   else
     print(file_name .. " exists so unecessary data will not be written again\n");
@@ -118,10 +118,13 @@ end
 -- +++++++++++++++++++++++++ FUNCTION ++++++++++++++++++++++++++++
 
 function start_measurement ()
-  
+
   traffic = config["realisticTraffic"];
-  
-   if tonumber(config["measurementDuration"]) ~= 0
+  -- get the number of desired packet sizes used for measurement
+  number_of_packetsizes = #pktSizes;
+  -- calculating estimated measurement duration
+  -- heating up=3s, cooldown=3s, config["measurementDuration"], number_of_packetsizes
+  if tonumber(config["measurementDuration"]) ~= 0
   then
     estimated_time = number_of_packetsizes * tonumber(config["measurementDuration"]) +
     number_of_packetsizes*6;
@@ -133,24 +136,24 @@ function start_measurement ()
     estimated_time = "INFINITE"
     infinite_measurement = true;
   end
-  
-  print("Estimated time needed for this measurement is: " .. estimated_time .. 
+
+  print("Estimated time needed for this measurement is: " .. estimated_time ..
   " seconds");
 
-  
+
   -- print("FILE CHECK");
-  -- check output file existence    
+  -- check output file existence
   file_exists=file_check("nfpa.".. traffic .. ".res");
-  
-  
+
+
   -- create file descriptor for output
   local file = io.open("nfpa.".. traffic .. ".res","a");
 
   -- set default output file to the created file descriptor
   io.output(file);
-  
-  
-  -- start sending packets    
+
+
+  -- start sending packets
   print("Start traffic on port " .. config["sendPort"]);
   pktgen.start(tonumber(config["sendPort"]));
   -- set the other port as well if biDir is set
@@ -170,7 +173,7 @@ function start_measurement ()
     -- some basic information when later the file is analyzed
     -- and add theoretical max value for the given packet size
     -- io.write(size .. "\n");
-    
+
     io.write("#Snt(pps)|Rcv(pps)|Miss(pps)|Snt(bps)|Rcv(bps)|" ..
              "Diff(bps)");
     -- make header other port's traffic as well if biDir is set
@@ -179,12 +182,12 @@ function start_measurement ()
       io.write("|Snt2(pps)|Rcv2(pps)|Miss2(pps)|Snt2(bps)|Rcv2(bps)|" ..
                 "Diff2(bps)");
     end
-    
+
     io.write("\n");
-  end             
+  end
   -- print out results to the console as well
   -- print("Results for: " .. size .. "byte packets\n");
-  
+
 
   -- wait some seconds to avoid slow start
   print("Waiting for heating up\n");
@@ -192,17 +195,17 @@ function start_measurement ()
 
   if(tonumber(config["biDir"]) == 1)
     then
-      print("Bi-directional measurement started with realistic traffic: " .. 
+      print("Bi-directional measurement started with realistic traffic: " ..
             traffic .. "\n");
     else
-      print("Measurement started with realistic traffic: " .. traffic .. "\n");      
-    end  
+      print("Measurement started with realistic traffic: " .. traffic .. "\n");
+    end
   -- print("Go grab a coffee...");
 
-  -- loop according to measurement_duration, in each cycle 1 sec sleep is 
+  -- loop according to measurement_duration, in each cycle 1 sec sleep is
   -- invoked, and in each iteration we measure the sending pkts/s rate and the
   -- received pkts/s rate and print them out
-  -- infinite loop by default, and will break if measurementDuration 
+  -- infinite loop by default, and will break if measurementDuration
   -- was set properly
   i = 0;
   m = tonumber(config["measurementDuration"]);
@@ -222,7 +225,7 @@ function start_measurement ()
     sent_bps = portRates[tonumber(config["sendPort"])].mbits_tx;
     -- since it is in mbit/s we change it to bps
     sent_bps = sent_bps * 1000000;
-    -- get received packet/s data    
+    -- get received packet/s data
     recv_pkts = portRates[tonumber(config["recvPort"])].pkts_rx;
     -- we need to rely on pktgen's calculation for getting throughput in bps
     recv_bps = portRates[tonumber(config["recvPort"])].mbits_rx;
@@ -233,14 +236,14 @@ function start_measurement ()
     miss_pkts = sent_pkts - recv_pkts;
     -- calculate the difference between sent and received mbit/s
     diff_bps = sent_bps - recv_bps;
-  
-    
+
+
 
     -- log data into file
     -- prettify output
-    io.write(sent_pkts .. "|" .. recv_pkts ..  "|".. miss_pkts .. "|" .. 
+    io.write(sent_pkts .. "|" .. recv_pkts ..  "|".. miss_pkts .. "|" ..
              sent_bps ..  "|" .. recv_bps .. "|" .. diff_bps);
-    
+
     -- capture bidirectional traffic as well if biDir was set
     if(tonumber(config["biDir"]) == 1)
     then
@@ -262,16 +265,16 @@ function start_measurement ()
       diff_bps2 = sent_bps2 - recv_bps2;
       -- log data into file
       -- prettify output
-      io.write("|" .. sent_pkts2 .. "|" .. recv_pkts2 ..  "|".. miss_pkts2 
-              .. "|" .. sent_bps2 ..  "|" .. recv_bps2 .. "|" .. diff_bps2);      
+      io.write("|" .. sent_pkts2 .. "|" .. recv_pkts2 ..  "|".. miss_pkts2
+              .. "|" .. sent_bps2 ..  "|" .. recv_bps2 .. "|" .. diff_bps2);
     end
-                     
-               
+
+
       io.write("\n");
-        
+
     sleep(1);
     i = i + 1;
-    
+
     -- practically write out each line into the file in each seconds
     -- instead of only writing the results when measurement is done
     io.flush();
@@ -279,19 +282,19 @@ function start_measurement ()
 
   -- stop traffic
   pktgen.stop(tonumber(config["sendPort"]));
-  
+
   -- stop traffic on the other port if biDir was set
   if(tonumber(config["biDir"]) == 1)
   then
-    pktgen.stop(tonumber(config["recvPort"]));    
+    pktgen.stop(tonumber(config["recvPort"]));
   end
   -- wait some seconds to reach 0 traffic
   print("Cooling down\n")
   sleep(3);
-  
-  
+
+
   io.close(file);
-  
+
   -- print("Estimated time left for this measurement is: " .. estimated_time);
 
 end
@@ -332,6 +335,3 @@ pktgen.screen("off");
 sleep(1);
 -- pktgen.quit();
 os.exit();
-
-
-
