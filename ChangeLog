@@ -280,3 +280,7 @@ measurement. This is useful if NFPA is running in an infinite loop, and
 a third-party application may want to observe the actual throughput data.
 
 v0.8.3 - Minor bugfix to lua scripts
+
+v0.9 - NFPA now supports DPDK parameter --socket-mem. This way, it is possible to avoid consuming
+all the hugepages we have. Moreover, NFPA checks in advance whether there are sufficient hugepages
+before the much slower pktgen initialization would print out the corresponding information
