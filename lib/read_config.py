@@ -92,7 +92,7 @@ class ReadConfig(object):
         self._config["dbhelper"] = SQLiteDatabaseAdapter(self._config)     
         
         #parse config params
-        configSuccess = self.checkConfig()
+        configSuccess = self.checkConfig
         if(configSuccess == -1):
             return -1
             
@@ -100,9 +100,7 @@ class ReadConfig(object):
         #create res dir
         self.createResultsDir()
         
-        #calculate estimated time for measurement
-#         self.calculateTimeLeft()
-            
+
         #assemble pktgen command
         self.assemblePktgenCommand()
           
@@ -112,8 +110,24 @@ class ReadConfig(object):
 
     
     
+
+    def check_retval(self,cmd,retval):
+        '''
+        This function is devoted to check return values got from calling invoke.invoke()
+        If return value is not 0, then an error occured. Error message and error code will be printed out
+        Otherwise, the exact value (e.g.,output of the command) is being returned
+        :param cmd: Strgin - the command that was executed
+        :param retval: List - return value: [0] error msg, [1] error code
+        '''
+        if (retval[1] != 0):
+            self.log.error("Error during executing command: %s" % cmd)
+            self.log.error("Error: %s" % str(retval[0]))
+            self.log.error("Exit_code: %s" % str(retval[1]))
+            exit(-1)
+
+        return retval[0]
     
-    
+    @property
     def checkConfig(self):
         '''
         This function will check the set config parameters and correctness, i.e.,
@@ -320,7 +334,75 @@ class ReadConfig(object):
 #                     self.log.error("EXITING...")
 #                     exit(-1)
         #PORT MASK = OK
-        
+
+        #check socket_mem param, but first get the relevant information from the OS
+        #commands for getting hugepage information
+        free_hugepages_cmd = "cat /proc/meminfo |grep HugePages_Free"
+
+        total_hugepages_cmd = "cat /proc/meminfo | grep HugePages_Total"
+        hugepage_size_cmd = "cat /proc/meminfo|grep Hugepagesize"
+
+        #get the data
+        free_hugepages = self.check_retval(free_hugepages_cmd, invoke.invoke(free_hugepages_cmd))
+        total_hugepages = self.check_retval(total_hugepages_cmd, invoke.invoke(total_hugepages_cmd))
+        hugepage_size = self.check_retval(hugepage_size_cmd, invoke.invoke(hugepage_size_cmd))
+
+        #get the second part of the outputs
+        free_hugepages = free_hugepages.split(":")[1]
+        total_hugepages = total_hugepages.split(":")[1]
+        tmp_hugepage_size = copy.deepcopy(hugepage_size)
+        #this looks like : "Hugepagesize:       2048 kB"
+        #first we get the right part after the colon, then we remove the whitespaces from '       2048 kB.
+        #Finally we split that again with whitespace, and gets the first apart of the list, which is 2048
+        hugepage_size = hugepage_size.split(":")[1].strip().split(" ")[0]
+        hugepage_size_unit = tmp_hugepage_size.split(":")[1].strip().split(" ")[1]
+        #remove whitespaces
+        free_hugepages = free_hugepages.strip()
+        total_hugepages = total_hugepages.strip()
+        hugepage_size = hugepage_size.strip()
+        hugepage_size_unit = hugepage_size_unit.strip()
+
+        #convert them to int
+        free_hugepages = int(free_hugepages)
+        total_hugepages = int(total_hugepages)
+        hugepage_size = int(hugepage_size)
+        #check wheter hugepage size unit is kB (until now (2016), there are defined in kB)
+        if(hugepage_size_unit == "kB"):
+            hugepage_size = hugepage_size/1024
+        else:
+            self.error("Cannot determine Hugepage size (check lines 372-378 in read_config.py to improve code) :(")
+            exit(-1)
+
+        self.log.info("Hugepage size in MB: %s" % hugepage_size)
+        self.log.info("Total hugepages: %s" % total_hugepages)
+        self.log.info("Free hugepages: %s " % free_hugepages)
+
+        if(total_hugepages == 0):
+            self.log.error("There is no hugepages to use! Check the output of: cat /proc/meminfo |grep -i hugepages")
+            exit(-1)
+
+        if(free_hugepages == 0):
+            self.log.error("There is no hugepages left! Check the output of: cat /proc/meminfo |grep -i hugepages")
+            exit(-1)
+
+        # socket_mem parameter could have more than one important value due to the NUMA awareness
+        # In this case, it is separated via a ',' (comma), so parse this value
+        socket_mem_list = self._config["socket_mem"].split(',')
+        # check if the required number of hugepages are enough
+        usable_hugepages = free_hugepages * hugepage_size
+        for i in socket_mem_list:
+            # no NUMA config was set
+            socket_mem = int(i)
+            usable_hugepages-=socket_mem
+        if(usable_hugepages >= 0):
+            self.log.info("There were enough hugepages to initialize pktgen (req: %s (MB), avail:%s! (MB)" % (self._config["socket_mem"],
+                                                                                                  (free_hugepages*hugepage_size)))
+        else:
+            self.log.error("Insufficient hugepages! Your required setting '%s' (MB) does not correspond to the available " \
+                           "resources %s (MB)" %(self._config["socket_mem"], (free_hugepages*hugepage_size)))
+            self.log.error("Check the output of: cat /proc/meminfo |grep -i hugepages")
+            exit(-1)
+
         #check biDir param
         try:
             self._config["biDir"] = int((self._config["biDir"]))
@@ -385,7 +467,7 @@ class ReadConfig(object):
         self._config['dbhelper'].disconnect()
         
         return 0
-        
+
     def createResultsDir(self):
         '''
         This function creates the results dir according to the config
@@ -651,6 +733,7 @@ class ReadConfig(object):
         pktgen = self._config["PKTGEN_BIN"] 
         pktgen += " -c " +  self._config["cpu_core_mask"]
         pktgen += " -n " +  self._config["mem_channels"]
+        pktgen += " --socket-mem " + self._config["socket_mem"]
         pktgen += " -- -T"
         pktgen += " -p " + self._config["port_mask"]
         pktgen += " -P "
