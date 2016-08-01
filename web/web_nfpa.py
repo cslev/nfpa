@@ -253,8 +253,9 @@ class WEBNFPA(object):
             error_msg = "Error: Unable to start measurement! " +\
                         "Check terminal output for more details!"
             self.log.error(error_msg)
-            return template('web/error_msg.tpl', 
-                                    error=error_msg)
+            return template('web/error_msg.tpl',
+                            version=self.config['version'],
+                            error=error_msg)
     
        
         

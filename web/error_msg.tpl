@@ -1,6 +1,7 @@
 <html>
     <head>
-        <title>NFPA v0.4.x</title>
+% version = version
+        <title>NFPA {{version}}</title>
         <link href='http://fonts.googleapis.com/css?family=Bitter' rel='stylesheet' type='text/css'>
         <script type="text/javascript">
 
