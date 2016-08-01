@@ -247,6 +247,10 @@ def getConfigComments():
                     'mem_channels':
                     "Number of memory channels to use (e.g., 4). " + 
                     "If not sure, use 4!",
+
+                    'socket_mem':
+                    "Size of hugepages to be used, for instance 1024. Note that for " +\
+                    "using NUMA nodes this setting is like 1024,1024 - Setup for both sockets!",
                     
                     'cpu_port_assign':
                     'Set here which core to be used for which port ' +  
@@ -456,8 +460,8 @@ def splitter(comment):
 def splitToMultipleLines(comment, filepointer):
     '''
     This function is devoted to split the comments (find above) into
-    multiple lines with correctly inserted comment lines to write out
-    them to file properly
+    multiple lines with correctly inserted comment lines to properly write out
+    them into the confing file
     comment String - the comment to be writed out
     filepointer FilePointer - the actual file pointer, since this function
     will do the actual write outs to simplify the operation
@@ -525,6 +529,8 @@ def writeConfigFile(c):
     file.write("port_mask=" + c['port_mask'] + "\n\n")
     splitToMultipleLines(cc['mem_channels'], file)
     file.write("mem_channels=" + c['mem_channels'] + "\n\n")
+    splitToMultipleLines(cc['socket_mem'], file)
+    file.write("socket_mem=" + c['socket_mem'] + "\n\n")
     splitToMultipleLines(cc['cpu_port_assign'], file)
     file.write("cpu_port_assign=" + c['cpu_port_assign'] + "\n")
     file.write("### ================================================== ###\n\n")
