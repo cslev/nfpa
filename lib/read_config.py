@@ -687,7 +687,7 @@ class ReadConfig(object):
         pktgen += " -n " +  self._config["mem_channels"]
         pktgen += " --socket-mem " + self._config["socket_mem"]
         if(("other_dpdk_params" in self._config) and (len(self._config["other_dpdk_params"]) > 0)):
-            pktgen += " " + self.config["other_dpdk_params"]
+            pktgen += " " + self._config["other_dpdk_params"]
         pktgen += " -- -T"
         pktgen += " -p " + self._config["port_mask"]
         pktgen += " -P "
