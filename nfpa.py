@@ -201,7 +201,6 @@ class NFPA(object):
                                         ps + "bytes.pcap"        
                             
                             self.log.info(cmd)
-                            
                             #sleep 1s for reading command
                             time.sleep(1)
                             
@@ -302,14 +301,7 @@ class NFPA(object):
         
         #after everything is done, delete unnecessary res files
         self.deleteResFiles()
-       
-            
-            
-            
-            
-            
-        
-        
+
         stop = time.time()        
         start = self.config['app_start_date'] 
          
