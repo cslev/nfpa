@@ -186,7 +186,8 @@ class WEBNFPA(object):
                          "header_uni",
                          "header_bi",
                          "dbhelper",
-                         "version"]
+                         "version",
+                         "other_dpdk_params"]
      
         for i in c:
             #different traffic types and packet sizes are needed to be
@@ -195,8 +196,8 @@ class WEBNFPA(object):
                 #get data, which is comma separated string
                 l = request.forms.get(str('%s' % i))
                 if l == '':
-                    # there properties can be empty, so we set the
-                    #values of them to None, and later while writing
+                    # their properties can be empty, so we set their
+                    #values to None, and later while writing
                     #them out into the config file, we can check whether
                     #they are None
                     l = None
