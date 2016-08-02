@@ -246,8 +246,8 @@ def getConfigComments():
                     'other_dpdk_params':
                     "For any further DPDK parameters, such as setting up a vhost " +\
                     "inteface, use this variable. Pay attention to type these additional " +\
-                    "parameters properly, since NFPA is not going to check its correctness "+\
-                    "If no other parameters are needed, leave this empty or comment the line!",
+                    "parameters properly, since NFPA is not going to check its correctness. "+\
+                    "If no other parameters are needed, leave this empty!",
 
                     'port_mask':
                     "Port mask in HEX. For instance, '3' means (11 in BIN) " +\
