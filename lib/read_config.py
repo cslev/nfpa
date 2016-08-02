@@ -325,10 +325,11 @@ class ReadConfig(object):
         total_hugepages_cmd = "cat /proc/meminfo | grep HugePages_Total"
         hugepage_size_cmd = "cat /proc/meminfo|grep Hugepagesize"
 
-        #get the data
-        free_hugepages =invoke.check_retval(free_hugepages_cmd, invoke.invoke(free_hugepages_cmd))
-        total_hugepages = invoke.check_retval(total_hugepages_cmd, invoke.invoke(total_hugepages_cmd))
-        hugepage_size = invoke.check_retval(hugepage_size_cmd, invoke.invoke(hugepage_size_cmd))
+        #get the data - invoce.check_retval will analyze the return values as well, and as a third
+        #parameter, we need to pass him our self.log instance to make him able to write out error messages
+        free_hugepages =invoke.check_retval(free_hugepages_cmd, invoke.invoke(free_hugepages_cmd),self.log)
+        total_hugepages = invoke.check_retval(total_hugepages_cmd, invoke.invoke(total_hugepages_cmd), self.log)
+        hugepage_size = invoke.check_retval(hugepage_size_cmd, invoke.invoke(hugepage_size_cmd), self.log)
 
         #get the second part of the outputs
         free_hugepages = free_hugepages.split(":")[1]
@@ -461,7 +462,7 @@ class ReadConfig(object):
         self._config['RES_PATH'] = path
         
         create_cmd = "mkdir -p " + path
-        invoke.check_retval(create_cmd,invoke.invoke(create_cmd))
+        invoke.check_retval(create_cmd,invoke.invoke(create_cmd), self.log)
         
 
     def createSymlinksForLuaScripts(self):
@@ -473,16 +474,16 @@ class ReadConfig(object):
         #remove all existing nfpa lua scripts
         self.log.info("Remove old symlinks...")
         remove_cmd = "rm -rf " + self._config["PKTGEN_ROOT"] + "/nfpa_simple.lua"  
-        invoke.check_retval(remove_cmd,invoke.invoke(remove_cmd))
+        invoke.check_retval(remove_cmd,invoke.invoke(remove_cmd), self.log)
 
 
         remove_cmd = "rm -rf " + self._config["PKTGEN_ROOT"] + "/nfpa_traffic.lua"                       
-        invoke.check_retval(remove_cmd,invoke.invoke(remove_cmd))
+        invoke.check_retval(remove_cmd,invoke.invoke(remove_cmd), self.log)
 
         
         remove_cmd = "rm -rf " +  self._config["PKTGEN_ROOT"] + \
                      "/nfpa_realistic.lua"                       
-        invoke.check_retval(remove_cmd,invoke.invoke(remove_cmd))
+        invoke.check_retval(remove_cmd,invoke.invoke(remove_cmd), self.log)
 
         
         self.log.info("DONE")
@@ -492,7 +493,7 @@ class ReadConfig(object):
                 "/lib/nfpa_simple.lua " + self._config["PKTGEN_ROOT"] + \
                 "/nfpa_simple.lua"
         self.log.info(symlink_cmd)  
-        invoke.check_retval(symlink_cmd,invoke.invoke(symlink_cmd))
+        invoke.check_retval(symlink_cmd,invoke.invoke(symlink_cmd), self.log)
 
         #create symlink for nfpa_traffic.lua
         self.log.info("create symlinks")
@@ -500,7 +501,7 @@ class ReadConfig(object):
                 "/lib/nfpa_traffic.lua " + self._config["PKTGEN_ROOT"] + \
                 "/nfpa_traffic.lua"
         self.log.info(symlink_cmd)  
-        invoke.check_retval(symlink_cmd,invoke.invoke(symlink_cmd))
+        invoke.check_retval(symlink_cmd,invoke.invoke(symlink_cmd), self.log)
 
          
         #create symlink for nfpa_realistic.lua
@@ -509,7 +510,7 @@ class ReadConfig(object):
                 "/lib/nfpa_realistic.lua " + self._config["PKTGEN_ROOT"] + \
                 "/nfpa_realistic.lua"
         self.log.info(symlink_cmd)  
-        invoke.check_retval(symlink_cmd,invoke.invoke(symlink_cmd))
+        invoke.check_retval(symlink_cmd,invoke.invoke(symlink_cmd), self.log)
 
     
             

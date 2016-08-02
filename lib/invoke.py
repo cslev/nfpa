@@ -29,18 +29,19 @@ def invoke(command):
     return retList
 
 
-def check_retval(self, cmd, retval):
+def check_retval(cmd, retval, logger_instance):
     '''
     This function is devoted to check return values got from calling invoke()
     If return value is not 0, then an error occured. Error message and error code will be printed out
     Otherwise, the exact value (e.g.,output of the command) is being returned
     :param cmd: Strgin - the command that was executed
     :param retval: List - return value: [0] error msg, [1] error code
+    :param logger_instance: Logger instance of the class where from this function is called
     '''
     if (retval[1] != 0):
-        self.log.error("Error during executing command: %s" % cmd)
-        self.log.error("Error: %s" % str(retval[0]))
-        self.log.error("Exit_code: %s" % str(retval[1]))
+        logger_instance.error("Error during executing command: %s" % cmd)
+        logger_instance.error("Error: %s" % str(retval[0]))
+        logger_instance.error("Exit_code: %s" % str(retval[1]))
         exit(-1)
 
     return retval[0]
