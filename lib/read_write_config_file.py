@@ -234,7 +234,21 @@ def getConfigComments():
                     "1,2,3. Or if you set 2e, it means that you want to use " +\
                     "core 5,3,2,1. Note that 1 core per NIC port should be " +\
                     "allocated.",
-                    
+
+                    'mem_channels':
+                    "Number of memory channels to use (e.g., 4). " +
+                    "If not sure, use 4!",
+
+                    'socket_mem':
+                    "Size of hugepages to be used, for instance 1024. Note that for " + \
+                    "using NUMA nodes this setting is like 1024,1024 - Setup for both sockets!",
+
+                    'other_dpdk_params':
+                    "For any further DPDK parameters, such as setting up a vhost " +\
+                    "inteface, use this variable. Pay attention to type these additional " +\
+                    "parameters properly, since NFPA is not going to check its correctness "+\
+                    "If no other parameters are needed, leave this empty or comment the line!",
+
                     'port_mask':
                     "Port mask in HEX. For instance, '3' means (11 in BIN) " +\
                     "that two port will be used. This is the common case. " +\
@@ -242,15 +256,7 @@ def getConfigComments():
                     "receiving the traffic (for instance, if you have one 40G" +\
                     "NIC with only one port). In such cases port mask should " +\
                     "be '1' (01 in BIN) and accordingly both the sendPort " +\
-                    "and recvPort (to be set later) should be '0'!", 
-                    
-                    'mem_channels':
-                    "Number of memory channels to use (e.g., 4). " + 
-                    "If not sure, use 4!",
-
-                    'socket_mem':
-                    "Size of hugepages to be used, for instance 1024. Note that for " +\
-                    "using NUMA nodes this setting is like 1024,1024 - Setup for both sockets!",
+                    "and recvPort (to be set later) should be '0'!",
                     
                     'cpu_port_assign':
                     'Set here which core to be used for which port ' +  
@@ -522,15 +528,17 @@ def writeConfigFile(c):
     file.write("LOG_LEVEL=" + c['LOG_LEVEL'] + "\n")
     file.write("### ================================================== ###\n\n")
     
-    file.write("### ------------- Pktgen and DPDK arguments  ------------- ###\n")
+    file.write("### ------------- DPDK and Pktgen arguments  ------------- ###\n")
     splitToMultipleLines(cc['cpu_core_mask'], file)
     file.write("cpu_core_mask=" + c['cpu_core_mask'] + "\n\n")
-    splitToMultipleLines(cc['port_mask'], file)
-    file.write("port_mask=" + c['port_mask'] + "\n\n")
     splitToMultipleLines(cc['mem_channels'], file)
     file.write("mem_channels=" + c['mem_channels'] + "\n\n")
     splitToMultipleLines(cc['socket_mem'], file)
     file.write("socket_mem=" + c['socket_mem'] + "\n\n")
+    splitToMultipleLines(cc['other_dpdk_params'], file)
+    file.write("other_dpdk_params=" + c['other_dpdk_params'] + "\n\n")
+    splitToMultipleLines(cc['port_mask'], file)
+    file.write("port_mask=" + c['port_mask'] + "\n\n")
     splitToMultipleLines(cc['cpu_port_assign'], file)
     file.write("cpu_port_assign=" + c['cpu_port_assign'] + "\n")
     file.write("### ================================================== ###\n\n")
