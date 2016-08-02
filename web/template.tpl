@@ -28,7 +28,7 @@
 % user_settings = ['username']
 % filesystem_settings = ['PKTGEN_ROOT', 'PKTGEN_BIN', 'MAIN_ROOT','RES_DIR',
 %                        'LOG_LEVEL']
-% dpdk_settings = ['cpu_core_mask', 'port_mask', 'mem_channels', 'socket_mem', 'cpu_port_assign']
+% dpdk_settings = ['cpu_core_mask', 'mem_channels', 'socket_mem', 'other_dpdk_params', 'port_mask', 'cpu_port_assign']
 % nf_settings = ['cpu_make', 'cpu_model', 'nic_make', 'nic_model', 'port_type',
 %                'virtualization','vnf_name', 'vnf_version', 'vnf_driver', 
 %                'vnf_driver_version', 'vnf_function', 'vnf_comment']
@@ -48,9 +48,10 @@
 %              'RES_DIR' : "Results directory (under main root)<span class='req'>*</span>",
 %              'LOG_LEVEL' : "Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL (incase sensitive)<span class='req'>*</span>",
 %              'cpu_core_mask' : "CPU Core Mask in HEX (e.g., e, 1f)<span class='req'>*</span>",
-%              'socket_mem' : "Socket Mem option for the size of hugepages to be used (e.g., 4096)<span class='req'>*</span>",
-%              'port_mask' : "Port Mask in HEX (could only be 1 or 3)<span class='req'>*</span>",
 %              'mem_channels' : "Number of Hugepages to use (e.g., 4)<span class='req'>*</span>",
+%              'socket_mem' : "Socket Mem option for the size of hugepages to be used (e.g., 4096)<span class='req'>*</span>",
+%              'other_dpdk_params': "Define here other DPDK params, e.g., for using vhost interfaces. Leave it empty if NOT NEEDED!",
+%              'port_mask' : "Port Mask in HEX (could only be 1 or 3)<span class='req'>*</span>",
 %              'cpu_port_assign' : "CPU Core Assignment<span class='req'>*</span>",
 %              'cpu_make' : "CPU Make (e.g. intel xeon, intel atom)<span class='req'>*</span>",
 %              'cpu_model' : "CPU Model (e.g. e5-2620)<span class='req'>*</span>",
