@@ -106,28 +106,9 @@ class ReadConfig(object):
           
         #create symlinks for lua files
         self.createSymlinksForLuaScripts()
-        
 
     
-    
 
-    def check_retval(self,cmd,retval):
-        '''
-        This function is devoted to check return values got from calling invoke.invoke()
-        If return value is not 0, then an error occured. Error message and error code will be printed out
-        Otherwise, the exact value (e.g.,output of the command) is being returned
-        :param cmd: Strgin - the command that was executed
-        :param retval: List - return value: [0] error msg, [1] error code
-        '''
-        if (retval[1] != 0):
-            self.log.error("Error during executing command: %s" % cmd)
-            self.log.error("Error: %s" % str(retval[0]))
-            self.log.error("Exit_code: %s" % str(retval[1]))
-            exit(-1)
-
-        return retval[0]
-    
-    @property
     def checkConfig(self):
         '''
         This function will check the set config parameters and correctness, i.e.,
@@ -335,7 +316,9 @@ class ReadConfig(object):
 #                     exit(-1)
         #PORT MASK = OK
 
-        #check socket_mem param, but first get the relevant information from the OS
+
+        #check socket_mem param
+        # first get the relevant information from the OS
         #commands for getting hugepage information
         free_hugepages_cmd = "cat /proc/meminfo |grep HugePages_Free"
 
@@ -343,9 +326,9 @@ class ReadConfig(object):
         hugepage_size_cmd = "cat /proc/meminfo|grep Hugepagesize"
 
         #get the data
-        free_hugepages = self.check_retval(free_hugepages_cmd, invoke.invoke(free_hugepages_cmd))
-        total_hugepages = self.check_retval(total_hugepages_cmd, invoke.invoke(total_hugepages_cmd))
-        hugepage_size = self.check_retval(hugepage_size_cmd, invoke.invoke(hugepage_size_cmd))
+        free_hugepages =invoke.check_retval(free_hugepages_cmd, invoke.invoke(free_hugepages_cmd))
+        total_hugepages = invoke.check_retval(total_hugepages_cmd, invoke.invoke(total_hugepages_cmd))
+        hugepage_size = invoke.check_retval(hugepage_size_cmd, invoke.invoke(hugepage_size_cmd))
 
         #get the second part of the outputs
         free_hugepages = free_hugepages.split(":")[1]
@@ -414,7 +397,7 @@ class ReadConfig(object):
         except ValueError as ve:
             self.log.error("biDir (%s) IS NOT A NUMBER!!!" % self._config["biDir"])
             return -1
-        
+
         #check pcap files
         #check config file consistency (traffic types and packet sizes)
         if not self.checkPcapFileExists():
@@ -478,12 +461,7 @@ class ReadConfig(object):
         self._config['RES_PATH'] = path
         
         create_cmd = "mkdir -p " + path
-        retval = invoke.invoke(create_cmd)
-        if(retval[1] != 0):
-            self.log.error("Error during creating results subdir(s)")
-            self.log.error("Error: %s" % str(retval[0]))
-            self.log.error("Exit_code: %s" % str(retval[1]))
-            exit(-1)
+        invoke.check_retval(create_cmd,invoke.invoke(create_cmd))
         
 
     def createSymlinksForLuaScripts(self):
@@ -495,31 +473,17 @@ class ReadConfig(object):
         #remove all existing nfpa lua scripts
         self.log.info("Remove old symlinks...")
         remove_cmd = "rm -rf " + self._config["PKTGEN_ROOT"] + "/nfpa_simple.lua"  
-        retval = invoke.invoke(remove_cmd)
-        if(retval[1] != 0):
-            self.log.error("Error during removing symlink")
-            self.log.error("Error: %s" % str(retval[0]))
-            self.log.error("Exit_code: %s" % str(retval[1]))
-            exit(-1)
-                     
+        invoke.check_retval(remove_cmd,invoke.invoke(remove_cmd))
+
 
         remove_cmd = "rm -rf " + self._config["PKTGEN_ROOT"] + "/nfpa_traffic.lua"                       
-        retval = invoke.invoke(remove_cmd)
-        if(retval[1] != 0):
-            self.log.error("Error during removing symlink")
-            self.log.error("Error: %s" % str(retval[0]))
-            self.log.error("Exit_code: %s" % str(retval[1]))
-            exit(-1)
-        
+        invoke.check_retval(remove_cmd,invoke.invoke(remove_cmd))
+
         
         remove_cmd = "rm -rf " +  self._config["PKTGEN_ROOT"] + \
                      "/nfpa_realistic.lua"                       
-        retval = invoke.invoke(remove_cmd)
-        if(retval[1] != 0):
-            self.log.error("Error during removing symlink")
-            self.log.error("Error: %s" % str(retval[0]))
-            self.log.error("Exit_code: %s" % str(retval[1]))
-            exit(-1)
+        invoke.check_retval(remove_cmd,invoke.invoke(remove_cmd))
+
         
         self.log.info("DONE")
         #create symlink for nfpa_simple.lua
@@ -528,25 +492,16 @@ class ReadConfig(object):
                 "/lib/nfpa_simple.lua " + self._config["PKTGEN_ROOT"] + \
                 "/nfpa_simple.lua"
         self.log.info(symlink_cmd)  
-        retval = invoke.invoke(symlink_cmd)
-        if(retval[1] != 0):
-            self.log.error("Error during creating symlink")
-            self.log.error("Error: %s" % str(retval[0]))
-            self.log.error("Exit_code: %s" % str(retval[1]))
-            exit(-1)
-        
+        invoke.check_retval(symlink_cmd,invoke.invoke(symlink_cmd))
+
         #create symlink for nfpa_traffic.lua
         self.log.info("create symlinks")
         symlink_cmd = "ln -s " + self._config["MAIN_ROOT"] + \
                 "/lib/nfpa_traffic.lua " + self._config["PKTGEN_ROOT"] + \
                 "/nfpa_traffic.lua"
         self.log.info(symlink_cmd)  
-        retval = invoke.invoke(symlink_cmd)
-        if(retval[1] != 0):
-            self.log.error("Error during creating symlink")
-            self.log.error("Error: %s" % str(retval[0]))
-            self.log.error("Exit_code: %s" % str(retval[1]))
-            exit(-1)
+        invoke.check_retval(symlink_cmd,invoke.invoke(symlink_cmd))
+
          
         #create symlink for nfpa_realistic.lua
         self.log.info("create symlinks")
@@ -554,12 +509,8 @@ class ReadConfig(object):
                 "/lib/nfpa_realistic.lua " + self._config["PKTGEN_ROOT"] + \
                 "/nfpa_realistic.lua"
         self.log.info(symlink_cmd)  
-        retval = invoke.invoke(symlink_cmd)
-        if(retval[1] != 0):
-            self.log.error("Error during creating symlink")
-            self.log.error("Error: %s" % str(retval[0]))
-            self.log.error("Exit_code: %s" % str(retval[1]))
-            exit(-1)
+        invoke.check_retval(symlink_cmd,invoke.invoke(symlink_cmd))
+
     
             
     def checkPcapFileExists(self):
