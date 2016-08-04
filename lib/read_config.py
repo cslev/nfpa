@@ -317,7 +317,7 @@ class ReadConfig(object):
         #PORT MASK = OK
 
 
-        #check socket_mem param
+        #Check available hugepages
         # first get the relevant information from the OS
         #commands for getting hugepage information
         free_hugepages_cmd = "cat /proc/meminfo |grep HugePages_Free"
@@ -354,7 +354,7 @@ class ReadConfig(object):
         if(hugepage_size_unit == "kB"):
             hugepage_size = hugepage_size/1024
         else:
-            self.error("Cannot determine Hugepage size (check lines 372-378 in read_config.py to improve code) :(")
+            self.error("Cannot determine Hugepage size (check lines 320-355 in read_config.py to improve code) :(")
             exit(-1)
 
         self.log.info("Hugepage size in MB: %s" % hugepage_size)
@@ -362,32 +362,35 @@ class ReadConfig(object):
         self.log.info("Free hugepages: %s " % free_hugepages)
 
         if(total_hugepages == 0):
-            self.log.error("There is no hugepages to use! Check the output of: cat /proc/meminfo |grep -i hugepages")
+            self.log.error("Hugepages are not enabled? Check the output of: cat /proc/meminfo |grep -i hugepages")
             exit(-1)
 
         if(free_hugepages == 0):
             self.log.error("There is no hugepages left! Check the output of: cat /proc/meminfo |grep -i hugepages")
             exit(-1)
 
-        # socket_mem parameter could have more than one important value due to the NUMA awareness
-        # In this case, it is separated via a ',' (comma), so parse this value
-        socket_mem_list = self._config["socket_mem"].split(',')
-        # check if the required number of hugepages are enough
-        usable_hugepages = free_hugepages * hugepage_size
-        for i in socket_mem_list:
-            # no NUMA config was set
-            socket_mem = int(i)
-            usable_hugepages-=socket_mem
-        if(usable_hugepages >= 0):
-            self.log.info("There were enough hugepages to initialize pktgen (req: %s (MB), avail:%s! (MB)" % (self._config["socket_mem"],
-                                                                                                  (free_hugepages*hugepage_size)))
-        else:
-            self.log.error("Insufficient hugepages! Your required setting '%s' (MB) does not correspond to the available " \
-                           "resources %s (MB)" %(self._config["socket_mem"], (free_hugepages*hugepage_size)))
-            self.log.error("Check the output of: cat /proc/meminfo |grep -i hugepages")
-            exit(-1)
+        # check socket_mem param if exists or not empty
+        if (("socket_mem" in self._config) and (len(self._config["socket_mem"]) > 0)):
+            # socket_mem parameter could have more than one important value due to the NUMA awareness
+            # In this case, it is separated via a ',' (comma), so parse this value
+            socket_mem_list = self._config["socket_mem"].split(',')
+            # check if the required number of hugepages are enough
+            usable_hugepages = free_hugepages * hugepage_size
+            for i in socket_mem_list:
+                # no NUMA config was set
+                socket_mem = int(i)
+                usable_hugepages-=socket_mem
+            if(usable_hugepages >= 0):
+                self.log.info("There were enough hugepages to initialize pktgen (req: %s (MB), avail:%s! (MB)" % (self._config["socket_mem"],
+                                                                                                      (free_hugepages*hugepage_size)))
+            else:
+                self.log.error("Insufficient hugepages! Your required setting '%s' (MB) does not correspond to the available " \
+                               "resources %s (MB)" %(self._config["socket_mem"], (free_hugepages*hugepage_size)))
+                self.log.error("Check the output of: cat /proc/meminfo |grep -i hugepages")
+                exit(-1)
 
-        #check biDir param
+
+    #check biDir param
         try:
             self._config["biDir"] = int((self._config["biDir"]))
             #check the value
@@ -685,7 +688,8 @@ class ReadConfig(object):
         pktgen = self._config["PKTGEN_BIN"] 
         pktgen += " -c " +  self._config["cpu_core_mask"]
         pktgen += " -n " +  self._config["mem_channels"]
-        pktgen += " --socket-mem " + self._config["socket_mem"]
+        if (("socket_mem" in self._config) and (len(self._config["socket_mem"]) > 0)):
+            pktgen += " --socket-mem " + self._config["socket_mem"]
         if(("other_dpdk_params" in self._config) and (len(self._config["other_dpdk_params"]) > 0)):
             pktgen += " " + self._config["other_dpdk_params"]
         pktgen += " -- -T"

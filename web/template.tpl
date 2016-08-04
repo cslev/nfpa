@@ -49,7 +49,7 @@
 %              'LOG_LEVEL' : "Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL (incase sensitive)<span class='req'>*</span>",
 %              'cpu_core_mask' : "CPU Core Mask in HEX (e.g., e, 1f)<span class='req'>*</span>",
 %              'mem_channels' : "Number of Hugepages to use (e.g., 4)<span class='req'>*</span>",
-%              'socket_mem' : "Socket Mem option for the size of hugepages to be used (e.g., 4096)<span class='req'>*</span>",
+%              'socket_mem' : "Socket Mem option for the size of hugepages to be used (e.g., 4096). Leave empty, if all available hugepages are required!",
 %              'other_dpdk_params': "Define here other DPDK params, e.g., for using vhost interfaces. Leave it empty if NOT NEEDED!",
 %              'port_mask' : "Port Mask in HEX (could only be 1 or 3)<span class='req'>*</span>",
 %              'cpu_port_assign' : "CPU Core Assignment<span class='req'>*</span>",

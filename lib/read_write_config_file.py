@@ -241,7 +241,8 @@ def getConfigComments():
 
                     'socket_mem':
                     "Size of hugepages to be used, for instance 1024. Note that for " + \
-                    "using NUMA nodes this setting is like 1024,1024 - Setup for both sockets!",
+                    "using NUMA nodes this setting is like 1024,1024 - Setup for both sockets!" +\
+                    "If all available hugepages are required, leave this field empty!",
 
                     'other_dpdk_params':
                     "For any further DPDK parameters, such as setting up a vhost " +\
