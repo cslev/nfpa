@@ -284,3 +284,13 @@ v0.8.3 - Minor bugfix to lua scripts
 v0.9 - NFPA now supports DPDK parameter --socket-mem. This way, it is possible to avoid consuming
 all the hugepages we have. Moreover, NFPA checks in advance whether there are sufficient hugepages
 before the much slower pktgen initialization would print out the corresponding information
+
+v1.0 RC1 - New version of NFPA is available. It is still in RC1 phase, but the reason, why it became
+v1.0 is that now we are working on to make NFPA to be run in virtualized environments, and provide a
+NFPA-as-a-service function. The new thing is basically the 'other_dpdk_params' in the nfpa.cfg,
+where you can set any further parameters that may be required to run NFPA efficiently in your environment.
+In particular, it could be settings for configuring vhost interfaces for pktgen.
+
+ v1.0 RC1 - socket_mem argument became unnecessary to be set to ease the setup if one not knows
+ the amount of hugepages his or her setup needs, just want to use all without calculating this
+ number.
