@@ -39,7 +39,7 @@ class NFPA(object):
         self.config = {}
         #default name TEST
         self.scenario_name = kwargs.get("scenario_name","TEST")
-        
+        self.reset_terminal = kwargs.get("reset_terminal", True)
         
   
     def storePID(self, new_pid):
@@ -313,7 +313,15 @@ class NFPA(object):
               str(df.getDateFormat(self.config['app_start_date']) + \
               ".log")
         self.log.info("Log file can be found under: %s" % str(log))
-        self.log.info("THANK YOU FOR USING NFPA %s" % self.config['version']) 
+        self.log.info("THANK YOU FOR USING NFPA %s" % self.config['version'])
+
+        if(self.reset_terminal):
+            self.log.info("Resetting terminal...")
+            time.sleep(1)
+            os.system("reset")
+            #print out log automatically in this case to simulate 'no-reset' effect
+            print_log_cmd="cat " + log
+            os.system(print_log_cmd)
               
     
     def deleteResFiles(self):
@@ -350,6 +358,15 @@ if __name__ == '__main__':
                         "Argument should look like hostname:port, " + 
                         "e.g., localhost:8000",
                         required=False)
+    parser.add_argument('-r','--reset',
+                        action="store_false",
+                        default=True,
+                        help="DO NOT RESET the terminal after measurement is done. " +
+                        "Reset is enabled by default, since NFPA could only quit " +
+                        "from Pktgen via Lua.exit(), it confuses the terminal and " +
+                        "one may need to logout and login again to clear that mess. " +
+                        "If you want to disable, however, the use this argument.",
+                        required=False)
     
     args = parser.parse_args()
     
@@ -361,13 +378,13 @@ if __name__ == '__main__':
       print("\033[1;31m[NFPA] Error during parsing scenario's name!")
       print("\033[1;31m[NFPA] Only alphanumeric characters and underscore are allowed!\033[0m")
       exit(-1)
-    
-    
+
+
+
     #initialize main NFPA class, which can be passed as a pointer to WEBNFPA
     #as well
-        
-    main = NFPA(scenario_name=args.name[0])
-        
+    main = NFPA(scenario_name=args.name[0],reset_terminal=args.reset)
+
     
     #web based gui
     if(args.web):
