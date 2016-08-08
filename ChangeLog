@@ -291,6 +291,10 @@ NFPA-as-a-service function. The new thing is basically the 'other_dpdk_params' i
 where you can set any further parameters that may be required to run NFPA efficiently in your environment.
 In particular, it could be settings for configuring vhost interfaces for pktgen.
 
- v1.0 RC1 - socket_mem argument became unnecessary to be set to ease the setup if one not knows
- the amount of hugepages his or her setup needs, just want to use all without calculating this
- number.
+v1.0 RC1 - socket_mem argument became unnecessary to be set to ease the setup if one not knows
+the amount of hugepages his or her setup needs, just want to use all without calculating this
+number.
+
+v1.0 RC1 - Add -r,--reset runtime argument. This argument disables terminal reset, which is now enabled by default!
+This means that NFPA repairs the messed up terminal after measurement is done, and there is no need for logout and
+login again.
