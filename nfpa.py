@@ -358,7 +358,7 @@ if __name__ == '__main__':
                         "Argument should look like hostname:port, " + 
                         "e.g., localhost:8000",
                         required=False)
-    parser.add_argument('-r','--reset',
+    parser.add_argument('-r','--no-reset',
                         action="store_false",
                         default=True,
                         help="DO NOT RESET the terminal after measurement is done. " +
