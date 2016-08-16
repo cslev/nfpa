@@ -358,7 +358,7 @@ if __name__ == '__main__':
                         "Argument should look like hostname:port, " + 
                         "e.g., localhost:8000",
                         required=False)
-    parser.add_argument('-r','--no-reset',
+    parser.add_argument('-r','--noreset',
                         action="store_false",
                         default=True,
                         help="DO NOT RESET the terminal after measurement is done. " +
@@ -383,7 +383,7 @@ if __name__ == '__main__':
 
     #initialize main NFPA class, which can be passed as a pointer to WEBNFPA
     #as well
-    main = NFPA(scenario_name=args.name[0],reset_terminal=args.reset)
+    main = NFPA(scenario_name=args.name[0],reset_terminal=args.noreset)
 
     
     #web based gui
