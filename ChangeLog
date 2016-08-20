@@ -298,3 +298,10 @@ number.
 v1.0 RC1 - Add -r,--reset runtime argument. This argument disables terminal reset, which is now enabled by default!
 This means that NFPA repairs the messed up terminal after measurement is done, and there is no need for logout and
 login again.
+
+v1.0 - Test confirmed that NFPA works well with the latest features, and can run in docker containers, or othe VMs using
+vhost interfaces. In docker, we measured that the packet sending rate using OVS 2.5.0 with DPDK could as high as 6 Mpps
+(64-byte packets), but in most cases when NFPA was running in the container, the receiving rate was about 4 Mpps.
+On the other hand, with the new 'other_dpdk_params' configuration parameter makes it possible to run several NFPA
+applications at the same time on the same machine! To do this use DPDK's --file-prefix parameter. For more info, check
+http://dpdk.org/doc/guides/prog_guide/multi_proc_support.html#running-multiple-independent-dpdk-applications.
