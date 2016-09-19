@@ -46,16 +46,9 @@ class ReadConfig(object):
     def __init__(self):
         '''
         Constructor
-        read_only Bool - if read_only is False, this class automatically 
-        continues processing (calls other functions) after reading config file.
-        This is useful if CLI is used, and config file has been properly edited.
-        If Web-based GUI is also enabled, only reading is allowed, then we
-        should stop processing, since this is reading is only needed to fill up
-        web-form for configuration with preset values. In this case, web-based
-        form will automatically creates/updates config file and instantiated a
-        new class from this with read_only=False set
-          
         '''
+
+
         
         #dictionary for storing configuration parameters read from config file
         self._config = {}
@@ -89,10 +82,13 @@ class ReadConfig(object):
                                 self._config['LOG_PATH'])
         
         #create an instance of database helper and store it in config dictionary
-        self._config["dbhelper"] = SQLiteDatabaseAdapter(self._config)     
-        
+        self._config["dbhelper"] = SQLiteDatabaseAdapter(self._config)
+
+        #set supported control APIs
+        self._config["controllers"] = ("openflow")
+
         #parse config params
-        configSuccess = self.checkConfig
+        configSuccess = self.checkConfig()
         if(configSuccess == -1):
             return -1
             
@@ -107,7 +103,29 @@ class ReadConfig(object):
         #create symlinks for lua files
         self.createSymlinksForLuaScripts()
 
-    
+
+    def checkDirectoryExistence(self, dir):
+        '''
+        This functions checks whether the directory dir exists
+        :param dir: the path to the directory
+        :return: False - if not, True - if yes
+        '''
+        if not (os.path.isdir(dir)):
+            self.log.error("Directory \'(%s)\' does not exists!" % dir)
+            return False
+        return True
+
+    def checkFileExistence(self, filename):
+        '''
+        This function checks whether the given filename exists
+        :param filename: the path to the file
+        :return:  False - if not, True - if yes
+        '''
+        if not (os.path.isfile(filename)):
+            self.log.error("File (%s) does not exists!" % filename)
+            return False
+        return True
+
 
     def checkConfig(self):
         '''
@@ -117,24 +135,47 @@ class ReadConfig(object):
         return - Int: -1 error, 0 otherwise 
         '''
         #check pktgen's directory existence
-        if not (os.path.isdir(self._config["PKTGEN_ROOT"])):
-            self.log.error("PKTGEN_ROOT (%s) does not exist!" % 
-                         self._config["PKTGEN_ROOT"])
+        if not self.checkDirectoryExistence(self._config["PKTGEN_ROOT"]):
             return -1
             
         #ok, pktgen dir exists, check whether the binary exists as well
         pktgen_bin = self._config["PKTGEN_ROOT"] + "/" + \
                      self._config["PKTGEN_BIN"]
-        if not (os.path.isfile(pktgen_bin)):
-            self.log.error("PKTGEN_BIN (%s) does not exist!" % 
-                         pktgen_bin)
+        if not self.checkFileExistence(pktgen_bin):
             return -1
         
         #check whether nfpa's MAIN_ROOT is set correctly
-        if not (os.path.isdir(self._config["MAIN_ROOT"])):
-            self.log.error("nfpa's MAIN_ROOT (%s) is not correctly set!" % 
-                         self._config["MAIN_ROOT"])
-            return -1 
+        if not self.checkDirectoryExistence(self._config["MAIN_ROOT"]):
+            return -1
+
+
+        #check whether NFPA is going to setup the flows in the vnf
+        #make parameter to lowercase
+        self._config["control_nfpa"] = self._config["control_nfpa"].lower()
+        if self._config["control_nfpa"] == "true":
+            #make it a boolean variable for easier checks later
+            self._config["control_nfpa"]=bool("true") #this makes it True
+        else:
+            # make it a boolean variable for easier checks later
+            self._config["control_nfpa"]=bool(0) #this makes it False
+
+        #if control_nfpa is True we check the other related parameters, otherwise
+        #these are unnecessary
+        if self._config["control_nfpa"]:
+            #convert it first to lowercase
+            self._config["control_vnf"] = self._config["control_vnf"].lower()
+            #check whether it is supported
+            if self._config["control_vnf"] not in self._config["controllers"]:
+                self.log.error("The control_vnf (%s) is not supported!")
+                self.log.error("Disable control_nfpa in nfpa.cfg and configure your vnf manually")
+                exit(-1)
+
+            #check paths to the binaries
+            #directory
+            if not self.checkFileExistence(self._config["control_path"]):
+                return -1
+
+
         
         #### --- === check PKTGEN port masks and core masks === --- ####
         #store cpu_port_assign in temporary variable 'a'
@@ -439,7 +480,12 @@ class ReadConfig(object):
         self.log.debug("vnf_function: %s" % self._config['vnf_function'])
         self.log.debug("vnf_comment: %s" % self._config['vnf_comment'])  
         self.log.debug("username: %s" % self._config['username'])
-          
+        self.log.debug("control_nfpa: %s" % self._config['control_nfpa'])
+        self.log.debug("control_vnf: %s" % self._config['control_vnf'])
+        self.log.debug("control_path: %s" % self._config["control_path"])
+        self.log.debug("control_mgmt: %s" % self._config["control_mgmt"])
+
+
 #         self._config['password'] = "entertm1"
 #         self._config['email'] = "sdn-tmit@sdn.tmit.hu"
 #         self.log.debug("password: %s" % self._config['password'])

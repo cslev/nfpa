@@ -26,7 +26,7 @@ def readConfigFile(config_file):
     #list for realistic traffics
     realisticTraffics = []
     
-    config['version'] = "v1.0"
+    config['version'] = "v1.1"
     
     
     
@@ -352,7 +352,33 @@ def getConfigComments():
                     "should be omitted during calculating average, min and " +
                     "max values (format: 5% -> 0.05). Use 0 to take into " + 
                     "account all results!",
-                    
+
+                    'control_nfpa':
+                    "This feature is experimental currently. It only works with " +
+                    "some predefined vnf_function use-cases, and traffic traces. " +
+                    "It could be helpful if one needs a lot of common, " +
+                    "reproducable measurements and does not want to configure " +
+                    "the NFs in each case." +
+                    "With this parameter you could indicate whether you want " +
+                    "NFPA to configure your NF (true or false). If False " +
+                    "the related configurations are omitted!",
+
+                    'control_vnf':
+                    "Configure here the kind of NF you have, e.g., openflow, vpp. " +
+                    "Currently, only openflow is supported",
+
+                    'control_path':
+                    "Path to your control application's binary, for instance, " +
+                    "in case of openflow, it needs to be the path to your " +
+                    "ovs-ofctl binary.",
+
+                    'control_mgmt':
+                    "Connection management data to reach your VNF to be configured. " +
+                    "In case of OVS, you need to start it, for instance, with " +
+                    "passive tcp connection set up as controller for the bridge " +
+                    "example to do this: ovs-vsctl set-controller ptcp:6634",
+
+
                     'packetSize':
                     "Define the desired packet sizes to be used. Note that " +
                     "in case of User defined synthetic traffic traces (traces "+
@@ -580,6 +606,17 @@ def writeConfigFile(c):
     file.write("outlier_min_percentage=" + c['outlier_min_percentage'] + "\n\n")
     splitToMultipleLines(cc['outlier_max_percentage'], file)
     file.write("outlier_max_percentage=" + c['outlier_max_percentage'] + "\n")    
+    file.write("### ================================================== ###\n\n")
+
+    file.write("### ------------- Let NFPA configure your VNF -------- ###\n\n")
+    splitToMultipleLines(cc['control_nfpa'], file)
+    file.write("control_nfpa=" + c['control_nfpa'] + "\n\n")
+    splitToMultipleLines(cc['control_vnf'], file)
+    file.write("control_vnf=" + c['control_vnf'] + "\n\n")
+    splitToMultipleLines(cc['control_path'], file)
+    file.write("control_path=" + c['control_path'] + "\n\n")
+    splitToMultipleLines(cc['control_mgmt'], file)
+    file.write("control_mgmt=" + c['control_mgmt'] + "\n\n")
     file.write("### ================================================== ###\n\n")
     
     file.write("### --- Traffic Generating/PktGen Related Settings --- ###\n")
