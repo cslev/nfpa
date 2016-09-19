@@ -26,7 +26,7 @@ def readConfigFile(config_file):
     #list for realistic traffics
     realisticTraffics = []
     
-    config['version'] = "v1.1"
+    config['version'] = "v2.0 alpha"
     
     
     
