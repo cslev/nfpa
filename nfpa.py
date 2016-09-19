@@ -116,7 +116,90 @@ class NFPA(object):
         self.log.error("EXITING...")
         exit(-1)
         
-    
+    def configureVNFRemote(self, vnf_function, traffictype):
+        '''
+        This function will configure the remote vnf via pre-installed tools
+        located on the same machine where NFPA is.
+        Only works for some predefined vnf_function and traffictraces
+
+        :return: True - if success, False - if not
+        '''
+
+        of_path = self.config["MAIN_ROOT"] + "/of_rules/"
+
+        #handle here OpenFlow and setup via ovs-ofctl
+        if self.config["control_vnf"].lower() == "openflow":
+
+            # first, delete the flows
+            ofctl_cmd = self.config["control_path"] + " <C> " + \
+                        self.config["control_mgmt"] + " "
+            cmd = ofctl_cmd.replace("<C>", "del-flows")
+            retval = invoke.invoke(cmd)
+
+            if (retval[1] != 0):
+                self.log.error("ERROR OCCURRED DURING DELETING FLOWS!")
+                self.log.error("Check your command: %s" % cmd)
+                self.log.error(retval[2])
+                return False
+            else:
+                self.log.debug("%s" % retval[0])  # print out stdout if any
+                self.log.debug("Flow rules deleted")
+
+            #OK, flows are deleted, so replace 'del-flows' to 'add-flows' for
+            # easier usage later
+            ofctl_cmd = ofctl_cmd.replace("<C>", "add-flows")
+            #first check vnf_function, if it is bridge, then no special stuff needs
+            #to be setup regardless of the traces
+            ############     BRIDGE ###########
+            if self.config["vnf_function"].lower() == "bridge":
+                #add birdge rules - located under of_rules
+                cmd = ofctl_cmd + " " + of_path + self.config["vnf_function"]
+                self.log.debug("add-flows via '%s'" % cmd)
+                retval = invoke.invoke(cmd)
+
+                if (retval[1] != 0):
+                    self.log.error("ERROR OCCURRED DURING ADDING FLOWS!")
+                    self.log.error("Check your command: %s" % cmd)
+                    self.log.error(retval[2])
+
+                    return False
+                else:
+                    self.log.debug("%s" % retval[0])  # print out stdout if any
+                    self.log.debug("Flows added")
+                    return True
+            ############    =============   ###########
+
+
+            ############     OTHER CASES    ###########
+            cmd = ofctl_cmd + of_path + vnf_function + "." + traffictype + "_unidir"
+            #if biDir is set, then other file is needed where the same rules are present
+            #in the reverse direction
+            if (int(self.config["biDir"]) == 1):
+                cmd=cmd.replace("unidir","bidir")
+            self.log.debug("add-flows via '%s'" % cmd)
+
+            retval = invoke.invoke(cmd)
+
+            if (retval[1] != 0):
+                self.log.error("ERROR OCCURRED DURING ADDING FLOWS!")
+                self.log.error("Check your command: %s" % cmd)
+                self.log.error(retval[2])
+
+                return False
+            else:
+                self.log.debug("%s" % retval[0])  # print out stdout if any
+                self.log.debug("Flows added")
+                exit(-1)
+                return True
+            ############    =============   ###########
+
+
+        else:
+            self.log.error("Currently, only openflow is supported!")
+            exit(-1)
+
+
+        exit(-1)
     def startPktgenMeasurements(self):
         
         self.log.info("+----------------------------------------------+")
@@ -124,7 +207,7 @@ class NFPA(object):
                           self.config['ETL']))
         self.log.info("+----------------------------------------------+")
         time.sleep(2)
-        
+
 
         if self.config["trafficTypes"]:
             
@@ -136,6 +219,13 @@ class NFPA(object):
                 for trafficType in self.config["trafficTypes"]:
                     #first, measure simple scenarios (if desired)
                     if(trafficType == "simple"):
+
+                        # configure VNF if set
+                        if self.config["control_nfpa"]:
+                            if not self.configureVNFRemote(self.config["vnf_function"],trafficType):
+                                # configuring vnf did not succeed
+                                exit(-1)
+
                         #create config file for LUA script
                         self.rc.generateLuaConfigFile(trafficType, 
                                                       self.config["packetSizes"],
@@ -162,9 +252,15 @@ class NFPA(object):
                             self.log.error("Error: %s" % str(retval[0]))
                             self.log.error("Exit_code: %s" % str(retval[1]))
                             exit(-1)
-#                       
+
+
                     else:
-                        
+                        # configure VNF if set
+                        if self.config["control_nfpa"]:
+                            if not self.configureVNFRemote(self.config["vnf_function"], trafficType):
+                                # configuring vnf did not succeed
+                                exit(-1)
+
                         for ps in self.config['packetSizes']:
                             #create config file for LUA script
                             self.rc.generateLuaConfigFile(trafficType, 
