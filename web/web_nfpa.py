@@ -188,7 +188,10 @@ class WEBNFPA(object):
                          "dbhelper",
                          "version",
                          "other_dpdk_params",
-                         "socket_mem"]
+                         "socket_mem",
+                         "control_vnf",
+                         "control_path",
+                         "control_mgmt"]
      
         for i in c:
             #different traffic types and packet sizes are needed to be

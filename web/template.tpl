@@ -33,7 +33,8 @@
 %                'virtualization','vnf_name', 'vnf_version', 'vnf_driver', 
 %                'vnf_driver_version', 'vnf_function', 'vnf_comment']
 % gnuplot_settings = ['pps_unit', 'bps_unit', 'outlier_min_percentage',
-%                     'outlier_max_percentage'] 
+%                     'outlier_max_percentage']
+% nfpa_control_settings = ['control_nfpa', 'control_vnf', 'control_path', 'control_mgmt']
 % traffic_settings = ['packetSizes', 'trafficTypes', 'realisticTraffics',
 %                     'measurement_num', 'measurementDuration', 'sendPort', 
 %                     'recvPort', 'biDir']
@@ -71,7 +72,12 @@
 %                                         "Use 0 to take into account all results!<span class='req'>*</span>",
 %              'outlier_max_percentage' : "Outliers percentage for Maximum Values (e.g., 0.05). " +\
 %                                         "Use 0 to take into account all results!<span class='req'>*</span>",
-%              'packetSizes': "Packet Sizes to Use (comma separated without whitespaces, e.g., 64,128,256,1500)<span class='req'>*</span>",
+%              'control_nfpa' : "Set this to True, if you want NFPA to configure your remote " +\
+%                               "VNF<span class='req'>*</span>",
+%              'control_vnf' : "Southbound API<span class='req'>*</span>",
+%              'control_path' : "Path to the control application<span class='req'>*</span>",
+%              'control_mgmt' : "Connection data to remote VNF<span class='req'>*</span>",
+%              'packetSizes' : "Packet Sizes to Use (comma separated without whitespaces, e.g., 64,128,256,1500)<span class='req'>*</span>",
 %              'trafficTypes': "Synthetic Traffic Types to Use (comma separated without whitespaces, e.g., simple,tr2e,tr3i|tr3e). " + \ 
 %                              "'simple' cannot be used as simple|simple! To reach this end, use Bi-directional setting. " +\
 %                              "'simple|any_other' is still NOT SUPPORTED!<span class='req'>*</span>",
@@ -95,6 +101,8 @@
 % main_dict_heads[5] = "Gnuplot/Presenting Related Settings"
 % main_dict[6] = traffic_settings
 % main_dict_heads[6] = "Traffic Generating/PktGen Related Settings"
+% main_dict[7] = nfpa_control_settings
+% main_dict_heads[7] = "Let NFPA configure your VNF (experimental)"
 % list_of_values = ["packetSizes", "realisticTraffics", "trafficTypes"]
 
 
@@ -218,6 +226,18 @@
                     <option value="1" {{pm_1}}>1</option>    
                     <option value="3" {{pm_3}}>3</option>
                   </select>
+                % elif j == "control_nfpa":
+                %   manage_yes = ""
+                %   manage_no = ""
+                %   if d[j].lower() == "true":
+                %     manage_yes = "selected"
+                %   else:
+                %     manage_no = "selected"
+                %   end
+                   <select name={{j}}>
+                     <option value="true" {{manage_yes}}>True</option>
+                     <option value="false" {{manage_no}}>False</option>
+                   </select>
                 % else:
                   <input type="text" name="{{j}}" value="{{d[j]}}" />
                 % end
