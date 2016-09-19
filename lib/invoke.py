@@ -14,7 +14,7 @@ def invoke(command):
     exit_code = process.wait()
     
     #create a list of the elements
-    retList = [stdout, exit_code]
+    retList = [stdout, exit_code, stderr]
     #this will look like
     #[('stdout of command','stderr_if_happened'), exit_code]
     #for instance:
