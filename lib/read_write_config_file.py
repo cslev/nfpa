@@ -373,10 +373,11 @@ def getConfigComments():
                     "ovs-ofctl binary.",
 
                     'control_mgmt':
-                    "Connection management data to reach your VNF to be configured. " +
-                    "In case of OVS, you need to start it, for instance, with " +
-                    "passive tcp connection set up as controller for the bridge " +
-                    "example to do this: ovs-vsctl set-controller ptcp:6634",
+                    "Connection management data to reach your VNF. " +
+                    "In case of OVS, you need to start it with " +
+                    "passive tcp connection set up as controller connections." +
+                    "to do this, use the following command after OVS was started: "+
+                    "ovs-vsctl set-controller ptcp:6634",
 
 
                     'packetSize':

@@ -171,11 +171,29 @@ class NFPA(object):
 
 
             ############     OTHER CASES    ###########
-            cmd = ofctl_cmd + of_path + vnf_function + "." + traffictype + "_unidir"
+            #check whether flow rules exists?
+            scenario_path = of_path + vnf_function + "." + traffictype + "_unidir"
+            if not (os.path.isfile(scenario_path)):
+                self.log.error("Missing flow rule file: %s" % scenario_path)
+                self.log.error("NFPA does not know how to configure VNF to act as " + \
+                               "%s for the given trace %s" % (vnf_function,traffictype))
+                self.log.error("More info: http://ios.tmit.bme.hu/nfpa")
+
+                exit(-1)
+
+
             #if biDir is set, then other file is needed where the same rules are present
             #in the reverse direction
             if (int(self.config["biDir"]) == 1):
-                cmd=cmd.replace("unidir","bidir")
+                scenario_path=scenario_path.replace("unidir","bidir")
+                if not (os.path.isfile(scenario_path)):
+                    self.log.error("Missing flow rule file: %s" % scenario_path)
+                    self.log.error("NFPA does not know how to configure VNF to act as " + \
+                                   "%s for the given trace %s" % (vnf_function,traffictype))
+                    self.log.error("More info: http://ios.tmit.bme.hu/nfpa")
+                    exit(-1)
+            #assemble command ovs-ofctl
+            cmd = ofctl_cmd + scenario_path
             self.log.debug("add-flows via '%s'" % cmd)
 
             retval = invoke.invoke(cmd)
