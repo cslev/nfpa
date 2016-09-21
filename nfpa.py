@@ -143,7 +143,7 @@ class NFPA(object):
                 return False
             else:
                 self.log.debug("%s" % retval[0])  # print out stdout if any
-                self.log.debug("Flow rules deleted")
+                self.log.info("Flow rules deleted")
 
             #OK, flows are deleted, so replace 'del-flows' to 'add-flows' for
             # easier usage later
@@ -154,7 +154,7 @@ class NFPA(object):
             if self.config["vnf_function"].lower() == "bridge":
                 #add birdge rules - located under of_rules
                 cmd = ofctl_cmd + " " + of_path + self.config["vnf_function"]
-                self.log.debug("add-flows via '%s'" % cmd)
+                self.log.info("add-flows via '%s'" % cmd)
                 retval = invoke.invoke(cmd)
 
                 if (retval[1] != 0):
@@ -165,7 +165,7 @@ class NFPA(object):
                     return False
                 else:
                     self.log.debug("%s" % retval[0])  # print out stdout if any
-                    self.log.debug("Flows added")
+                    self.log.info("Flows added")
                     return True
             ############    =============   ###########
 
@@ -189,12 +189,14 @@ class NFPA(object):
                 if not (os.path.isfile(scenario_path)):
                     self.log.error("Missing flow rule file: %s" % scenario_path)
                     self.log.error("NFPA does not know how to configure VNF to act as " + \
-                                   "%s for the given trace %s" % (vnf_function,traffictype))
+                                   "%s for the given trace %s in bi-directional mode" %
+                                   (vnf_function,traffictype))
                     self.log.error("More info: http://ios.tmit.bme.hu/nfpa")
                     exit(-1)
             #assemble command ovs-ofctl
             cmd = ofctl_cmd + scenario_path
-            self.log.debug("add-flows via '%s'" % cmd)
+            self.log.info("add-flows via '%s'" % cmd)
+            self.log.info("This may take some time...")
 
             retval = invoke.invoke(cmd)
 
@@ -206,7 +208,7 @@ class NFPA(object):
                 return False
             else:
                 self.log.debug("%s" % retval[0])  # print out stdout if any
-                self.log.debug("Flows added")
+                self.log.info("Flows added")
                 exit(-1)
                 return True
             ############    =============   ###########
@@ -217,7 +219,6 @@ class NFPA(object):
             exit(-1)
 
 
-        exit(-1)
     def startPktgenMeasurements(self):
         
         self.log.info("+----------------------------------------------+")
