@@ -191,6 +191,7 @@ class WEBNFPA(object):
                          "socket_mem",
                          "control_vnf",
                          "control_path",
+                         "control_args",
                          "control_mgmt"]
      
         for i in c:

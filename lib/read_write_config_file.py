@@ -370,7 +370,11 @@ def getConfigComments():
                     'control_path':
                     "Path to your control application's binary, for instance, " +
                     "in case of openflow, it needs to be the path to your " +
-                    "ovs-ofctl binary.",
+                    "ovs-ofctl binary. ",
+
+                    'control_args':
+                    "Additional arguments to control_path, for instance, OpenFlow " +
+                    "version, i.e., -O OpenFlow13. Leave empty if not needed.",
 
                     'control_mgmt':
                     "Connection management data to reach your VNF. " +
