@@ -131,9 +131,12 @@ class NFPA(object):
         if self.config["control_vnf"].lower() == "openflow":
 
             # first, delete the flows
-            ofctl_cmd = self.config["control_path"] + " <C> " + \
+            ofctl_cmd = self.config["control_path"] + " " + \
+                        self.config["control_args"] +\
+                        " <C> " + \
                         self.config["control_mgmt"] + " "
             cmd = ofctl_cmd.replace("<C>", "del-flows")
+            self.log.debug("control cmd: %s" % cmd)
             retval = invoke.invoke(cmd)
 
             if (retval[1] != 0):

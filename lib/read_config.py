@@ -483,6 +483,7 @@ class ReadConfig(object):
         self.log.debug("control_nfpa: %s" % self._config['control_nfpa'])
         self.log.debug("control_vnf: %s" % self._config['control_vnf'])
         self.log.debug("control_path: %s" % self._config["control_path"])
+        self.log.debug("control_args: %s" % self._config["control_args"])
         self.log.debug("control_mgmt: %s" % self._config["control_mgmt"])
 
 

@@ -305,3 +305,12 @@ vhost interfaces. In docker, we measured that the packet sending rate using OVS 
 On the other hand, with the new 'other_dpdk_params' configuration parameter makes it possible to run several NFPA
 applications at the same time on the same machine! To do this use DPDK's --file-prefix parameter. For more info, check
 http://dpdk.org/doc/guides/prog_guide/multi_proc_support.html#running-multiple-independent-dpdk-applications.
+
+----------=================== NFPA v2 ==================------------
+v2.0 alpha
+Add configuration support for remote VNF configuration - currently only openflow is supported.
+Flow rules are assembled to use them for remote configuration. In case of OpenFlow switch,
+make sure to start it with a passive TCP port for the remote configuration.
+Remote configuration also can be done via WebGUI.
+
+
