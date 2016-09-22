@@ -200,7 +200,6 @@ class NFPA(object):
             cmd = ofctl_cmd + scenario_path
             self.log.info("add-flows via '%s'" % cmd)
             self.log.info("This may take some time...")
-            exit(-1)
             invoke.invoke(cmd, self.log)
             self.log.info("Flows added")
 
