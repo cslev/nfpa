@@ -20,6 +20,8 @@ import special_bidir_traffic_checker as sbtc
 import logger as l
 import date_formatter as df
 import invoke as invoke
+import flow_rules_preparator as flow_prep
+
 #required for loading classes under web/
 sys.path.append("web/")
 from web_nfpa import WEBNFPA
@@ -85,6 +87,10 @@ class NFPA(object):
         self.log.info("Clean up old .res files in PKTGEN's root dir...")
         self.deleteResFiles()
         self.log.info("[DONE]")
+
+        #create a tmp directory for flow rules under nfpa/of_rules
+        invoke.invoke("mkdir -p " + self.config["MAIN_ROOT"] + "/of_rules/tmp", self.log)
+        self.log.debug("tmp directory created under of_rules")
         
         
         self.log.info("### Measurement scenario '" + self.scenario_name + "' has been" 
@@ -159,8 +165,8 @@ class NFPA(object):
 
             ############     OTHER CASES    ###########
             #check whether flow rules exists?
-            scenario_path = of_path + vnf_function + "." + traffictype + "_unidir"
-            if not (os.path.isfile(scenario_path)):
+            scenario_path = vnf_function + "." + traffictype + "_unidir"
+            if not (os.path.isfile(str(of_path + scenario_path))):
                 self.log.error("Missing flow rule file: %s" % scenario_path)
                 self.log.error("NFPA does not know how to configure VNF to act as " + \
                                "%s for the given trace %s" % (vnf_function,traffictype))
@@ -168,23 +174,33 @@ class NFPA(object):
 
                 exit(-1)
 
-
+            bidir = False
             #if biDir is set, then other file is needed where the same rules are present
             #in the reverse direction
             if (int(self.config["biDir"]) == 1):
+                #save biDir setting in a boolean to later use for flow_prep.prepareOpenFlowRules()
+                bidir = True
                 scenario_path=scenario_path.replace("unidir","bidir")
-                if not (os.path.isfile(scenario_path)):
+                if not (os.path.isfile(str(of_path + scenario_path))):
                     self.log.error("Missing flow rule file: %s" % scenario_path)
                     self.log.error("NFPA does not know how to configure VNF to act as " + \
                                    "%s for the given trace %s in bi-directional mode" %
                                    (vnf_function,traffictype))
                     self.log.error("More info: http://ios.tmit.bme.hu/nfpa")
                     exit(-1)
+
+            #replace metadata in flow rule files
+            scenario_path = flow_prep.prepareOpenFlowRules(self.log,
+                                                           of_path,
+                                                           scenario_path,
+                                                           self.config["control_vnf_inport"],
+                                                           self.config["control_vnf_outport"],
+                                                           bidir)
             #assemble command ovs-ofctl
             cmd = ofctl_cmd + scenario_path
             self.log.info("add-flows via '%s'" % cmd)
             self.log.info("This may take some time...")
-
+            exit(-1)
             invoke.invoke(cmd, self.log)
             self.log.info("Flows added")
 
