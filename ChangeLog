@@ -306,7 +306,16 @@ On the other hand, with the new 'other_dpdk_params' configuration parameter make
 applications at the same time on the same machine! To do this use DPDK's --file-prefix parameter. For more info, check
 http://dpdk.org/doc/guides/prog_guide/multi_proc_support.html#running-multiple-independent-dpdk-applications.
 
-----------=================== NFPA v2 ==================------------
+----------=================== NFPA v2 SpongeBob ==================------------
+About versioning and naming convention...well, NFPA is evolving so fast, we need to name each greater
+major revisions. We follow similar naming conventions others have used (like Android) but it will be very close
+to Debian Linux's naming conventions, where the different versions have the name of the (almost randomly chosen)
+characters from the movie Toy Story.
+We stick to Spongebob Squarepants instead! Since current version makes (or will do) much more stuffs for you as the
+previous version, we named it after protagonist Spongebob, who is a workaholic.
+So, behold and please welcome NFPA V2 Spongebob! Logo update is coming soon...
+
+
 v2.0 alpha
 Add configuration support for remote VNF configuration - currently only openflow is supported.
 Flow rules are assembled to use them for remote configuration. In case of OpenFlow switch,
@@ -314,3 +323,6 @@ make sure to start it with a passive TCP port for the remote configuration.
 Remote configuration also can be done via WebGUI.
 
 
+v2.1 alpha
+Now the the in- and output ports could be setup in the nfpa.cfg or via the WebGUI. It is useful for different
+controller application and APIs since these setups will replace meta-ports in the pre-defined flow rule files.
