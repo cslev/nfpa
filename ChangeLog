@@ -326,3 +326,9 @@ Remote configuration also can be done via WebGUI.
 v2.1 alpha
 Now the the in- and output ports could be setup in the nfpa.cfg or via the WebGUI. It is useful for different
 controller application and APIs since these setups will replace meta-ports in the pre-defined flow rule files.
+
+v2.2
+Flow rules preparator is added, which parse the basic flow rules files containing meta port information
+properly to the one the required configuration needs. NFPA saves theses files under of_rules/tmp with
+timestamps in their names, so they could be found easily and the whole thing won't mess up your directory
+tree.
