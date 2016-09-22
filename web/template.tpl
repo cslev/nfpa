@@ -35,7 +35,7 @@
 % gnuplot_settings = ['pps_unit', 'bps_unit', 'outlier_min_percentage',
 %                     'outlier_max_percentage']
 % nfpa_control_settings = ['control_nfpa', 'control_vnf', 'control_path', 'control_args',
-%                          'control_mgmt']
+%                          'control_vnf_inport', 'control_vnf_outport', 'control_mgmt']
 % traffic_settings = ['packetSizes', 'trafficTypes', 'realisticTraffics',
 %                     'measurement_num', 'measurementDuration', 'sendPort', 
 %                     'recvPort', 'biDir']
@@ -75,10 +75,12 @@
 %                                         "Use 0 to take into account all results!<span class='req'>*</span>",
 %              'control_nfpa' : "Set this to True, if you want NFPA to configure your remote " +\
 %                               "VNF<span class='req'>*</span>",
-%              'control_vnf' : "Southbound API<span class='req'>*</span>",
-%              'control_path' : "Path to the control application<span class='req'>*</span>",
+%              'control_vnf' : "Southbound API<span class='req'>*(if NFPA configures VNF)</span>",
+%              'control_path' : "Path to the control application<span class='req'>*(if NFPA configures VNF)</span>",
 %              'control_args' : "Additional arguments to the control application. Leave empty if not needed",
-%              'control_mgmt' : "Connection data to remote VNF<span class='req'>*</span>",
+%              'control_vnf_inport' : "ID of the input port of the vnf<span class='req'>*(if NFPA configures VNF)</span>",
+%              'control_vnf_outport' : "ID of the output port of the vnf<span class='req'>*(if NFPA configures VNF)</span>",
+%              'control_mgmt' : "Connection data to remote VNF<span class='req'>*(if NFPA configures VNF)</span>",
 %              'packetSizes' : "Packet Sizes to Use (comma separated without whitespaces, e.g., 64,128,256,1500)<span class='req'>*</span>",
 %              'trafficTypes': "Synthetic Traffic Types to Use (comma separated without whitespaces, e.g., simple,tr2e,tr3i|tr3e). " + \ 
 %                              "'simple' cannot be used as simple|simple! To reach this end, use Bi-directional setting. " +\
@@ -231,7 +233,7 @@
                 % elif j == "control_nfpa":
                 %   manage_yes = ""
                 %   manage_no = ""
-                %   if d[j].lower() == "true":
+                %   if d[j]:
                 %     manage_yes = "selected"
                 %   else:
                 %     manage_no = "selected"
@@ -239,6 +241,15 @@
                    <select name={{j}}>
                      <option value="true" {{manage_yes}}>True</option>
                      <option value="false" {{manage_no}}>False</option>
+                   </select>
+                % elif j == "control_vnf":
+                %   openflow_selected = ""
+                %# TODO: define here more control application
+                %   if d[j].lower() == "openflow":
+                %     openflow_selected = "selected"
+                %   end
+                   <select name={{j}}>
+                     <option value="openflow" {{openflow_selected}}>OpenFlow</option>
                    </select>
                 % else:
                   <input type="text" name="{{j}}" value="{{d[j]}}" />
@@ -280,7 +291,7 @@
     <input type="hidden" name="ETL" value="{{d['ETL']}}"/>
     <input type="hidden" name="ETL_seconds" value="{{d['ETL_seconds']}}"/>
     <input type="hidden" name="app_start_date" value="{{d['app_start_date']}}"/>
-    
+
     <div class="button-section">
      <input type="submit" name="measure" value="Start Measurement"/>
      

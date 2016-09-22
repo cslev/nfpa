@@ -73,8 +73,10 @@
 <h1>{{error}}</h1>
 <br/>
 <a class="button" href="/nfpa">Back</a>
-</div>
+
 </div>
 
+
+</div>
 </body>
 </html>

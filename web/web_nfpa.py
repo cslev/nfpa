@@ -173,6 +173,10 @@ class WEBNFPA(object):
         self.log.info("Reading configuration parameters...")
         #create temporary shortened variable pointing at self.config
         c = self.config
+
+        #save here version for later usage
+        version = c["version"]
+
         tmp_lists = ["realisticTraffics", 
                      "trafficTypes", 
                      "packetSizes"]
@@ -189,11 +193,17 @@ class WEBNFPA(object):
                          "version",
                          "other_dpdk_params",
                          "socket_mem",
-                         "control_vnf",
-                         "control_path",
-                         "control_args",
-                         "control_mgmt"]
-     
+                         "control_args"
+                         ]
+
+        remote_control_list =   ["control_vnf",
+                                 "control_path",
+                                 "control_vnf_inport",
+                                 "control_vnf_outport",
+                                 "control_mgmt"]
+
+
+
         for i in c:
             #different traffic types and packet sizes are needed to be
             #lists, so we need to split them according to the commas
@@ -215,18 +225,31 @@ class WEBNFPA(object):
                 #otherwise, nothing to do with the data
                 c[i] = request.forms.get(str('%s' % i))
 #         print(c)
-        
+
+        #if control_nfpa is not set, then we do not check the further related fields
+        if c["control_nfpa"] == "false":
+            no_check_list += remote_control_list
+
+        #load back the version info into c
+        c['version'] = version
+
         #check whether everything was set
         list_of_values = list(c.values())
+
+        #tmp variable to indicate that control_vnf is set to True
+        #and avoid later to concatenate no_check_list and remote_control_list
+        #over and over again
+        # tmp_control_vnf=False
+
         for i in c:
-                
             if c[i] is None or c[i] == '':
                 #property cannot be empty
                 if (i not in tmp_lists) and (i not in no_check_list):
                     error_msg = str("Property %s was set to None or '' (null string)"
                                     % i)
                     self.log.error(error_msg)
-                    return template('web/error_msg.tpl', 
+                    return template('web/error_msg.tpl',
+                                    version=version,
                                     error=error_msg)
                 
                 #otherwise, no problem - handling them is done in
@@ -239,8 +262,9 @@ class WEBNFPA(object):
             error_msg = str("Path to config file does not exist!" +\
                             "Wrong path: %s" % (self.config["MAIN_ROOT"])) 
             self.log.error(error_msg)
-            return template('web/error_msg.tpl', 
-                                    error=error_msg)
+            return template('web/error_msg.tpl',
+                            version=version,
+                            error=error_msg)
             
         self.log.info("Updating configuration file was done")  
         
@@ -260,7 +284,7 @@ class WEBNFPA(object):
                         "Check terminal output for more details!"
             self.log.error(error_msg)
             return template('web/error_msg.tpl',
-                            version=self.config['version'],
+                            version=version,
                             error=error_msg)
     
        
