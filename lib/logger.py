@@ -39,12 +39,10 @@ def getLogger(class_name, level, timestamp, path):
             exit(-1)
     #create the log directory
     log_dir_cmd = "mkdir -p " + path
-    retval = invoke.invoke(log_dir_cmd)
-    if(retval[1] != 0):
-        print("Error during creating log file")
-        print("Error: %s" % str(retval[0]))
-        print("Exit_code: %s" % str(retval[1]))
-        exit(-1)
+
+    # logger class is not ready, we set it to None for invoke
+    retval = invoke.invoke(log_dir_cmd, None)
+
     
      # create file handler which logs even debug messages
     fh = logging.FileHandler(path + '/log_' + timestamp + ".log")

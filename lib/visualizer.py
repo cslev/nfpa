@@ -493,15 +493,11 @@ class Visualizer(object):
                                              
         self.log.debug("======= GNUPLOT =======")
         self.log.debug(gnuplot_command)
-        retval = invoke.invoke(gnuplot_command)
-        if(retval[1] != 0):
-            self.log.error("Error during plotting charts")
-            self.log.error("Error: %s" % str(retval[0]))
-            self.log.error("Exit_code: %s" % str(retval[1]))
-            exit(-1)
+        retval = invoke.invoke(gnuplot_command, self.log)
+        if retval is not None or retval != '':
+            self.log.info(retval)
             
-#         self.log.debug(retval)
-        
+
         
         
         

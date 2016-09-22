@@ -137,16 +137,8 @@ class NFPA(object):
                         self.config["control_mgmt"] + " "
             cmd = ofctl_cmd.replace("<C>", "del-flows")
             self.log.debug("control cmd: %s" % cmd)
-            retval = invoke.invoke(cmd)
-
-            if (retval[1] != 0):
-                self.log.error("ERROR OCCURRED DURING DELETING FLOWS!")
-                self.log.error("Check your command: %s" % cmd)
-                self.log.error(retval[2])
-                return False
-            else:
-                self.log.debug("%s" % retval[0])  # print out stdout if any
-                self.log.info("Flow rules deleted")
+            retval = invoke.invoke(cmd, self.log)
+            self.log.info("Flow rules deleted")
 
             #OK, flows are deleted, so replace 'del-flows' to 'add-flows' for
             # easier usage later
@@ -158,18 +150,10 @@ class NFPA(object):
                 #add birdge rules - located under of_rules
                 cmd = ofctl_cmd + " " + of_path + self.config["vnf_function"]
                 self.log.info("add-flows via '%s'" % cmd)
-                retval = invoke.invoke(cmd)
-
-                if (retval[1] != 0):
-                    self.log.error("ERROR OCCURRED DURING ADDING FLOWS!")
-                    self.log.error("Check your command: %s" % cmd)
-                    self.log.error(retval[2])
-
-                    return False
-                else:
-                    self.log.debug("%s" % retval[0])  # print out stdout if any
-                    self.log.info("Flows added")
-                    return True
+                invoke.invoke(cmd, self.log)
+                # print out stdout if any
+                self.log.info("Flows added")
+                return True
             ############    =============   ###########
 
 
@@ -201,20 +185,11 @@ class NFPA(object):
             self.log.info("add-flows via '%s'" % cmd)
             self.log.info("This may take some time...")
 
-            retval = invoke.invoke(cmd)
+            invoke.invoke(cmd, self.log)
+            self.log.info("Flows added")
 
-            if (retval[1] != 0):
-                self.log.error("ERROR OCCURRED DURING ADDING FLOWS!")
-                self.log.error("Check your command: %s" % cmd)
-                self.log.error(retval[2])
-
-                return False
-            else:
-                self.log.debug("%s" % retval[0])  # print out stdout if any
-                self.log.info("Flows added")
-                exit(-1)
-                return True
-            ############    =============   ###########
+            return True
+        ############    =============   ###########
 
 
         else:
@@ -451,15 +426,7 @@ class NFPA(object):
         #besides those, only 2 symlinks exist, which could also be deleted,
         #since each restart it is recreated. However, we do not delete them!
         del_cmd = "rm -rf " + self.config["PKTGEN_ROOT"] + "/nfpa.*.res"
-        retval = invoke.invoke(del_cmd)
-           
-        if(retval[1] != 0):
-            self.log.error("ERROR OCCURRED DURING REMOVING .RES FILES")
-            self.log.error("Error: %s" % str(retval[0]))
-            self.log.error("Exit_code: %s" % str(retval[1]))
-            exit(-1)
-
-
+        retval = invoke.invoke(del_cmd, self.log)
 
 
 if __name__ == '__main__':
