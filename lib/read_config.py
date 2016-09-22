@@ -404,11 +404,11 @@ class ReadConfig(object):
 
         if(total_hugepages == 0):
             self.log.error("Hugepages are not enabled? Check the output of: cat /proc/meminfo |grep -i hugepages")
-            exit(-1)
+            # exit(-1)
 
         if(free_hugepages == 0):
             self.log.error("There is no hugepages left! Check the output of: cat /proc/meminfo |grep -i hugepages")
-            exit(-1)
+            # exit(-1)
 
         # check socket_mem param if exists or not empty
         if (("socket_mem" in self._config) and (len(self._config["socket_mem"]) > 0)):
@@ -428,7 +428,7 @@ class ReadConfig(object):
                 self.log.error("Insufficient hugepages! Your required setting '%s' (MB) does not correspond to the available " \
                                "resources %s (MB)" %(self._config["socket_mem"], (free_hugepages*hugepage_size)))
                 self.log.error("Check the output of: cat /proc/meminfo |grep -i hugepages")
-                exit(-1)
+                # exit(-1)
 
 
     #check biDir param
@@ -475,7 +475,7 @@ class ReadConfig(object):
         self.log.debug("vnf_name: %s" % self._config['vnf_name'])
         self.log.debug("vnf_driver: %s" % self._config['vnf_driver'])
         self.log.debug("vnf_driver_version: %s" % 
-                       self._config['vnf_driver_version'])
+                        self._config['vnf_driver_version'])
         self.log.debug("vnf_version: %s" % self._config['vnf_version'])
         self.log.debug("vnf_function: %s" % self._config['vnf_function'])
         self.log.debug("vnf_comment: %s" % self._config['vnf_comment'])  
@@ -493,8 +493,7 @@ class ReadConfig(object):
 #         self.log.debug("email: %s" % self._config['email'])
     
          
-        
-                    
+
         self._config['dbhelper'].connect()
         #check user
         self._config['dbhelper'].getUser(self._config['username'])

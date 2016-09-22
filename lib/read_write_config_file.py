@@ -376,13 +376,24 @@ def getConfigComments():
                     "Additional arguments to control_path, for instance, OpenFlow " +
                     "version, i.e., -O OpenFlow13. Leave empty if not needed.",
 
+                    'control_vnf_inport':
+                    "Specify here the port ID of the remote VNF that will be used " +
+                    "for input. Using 1 as inport, NFPA will update the flow rule " +
+                    "files accordingly, i.e., in case of openflow it sets in_port=1 " +
+                    "if such match exists in the flow table. " +
+                    "You may think that in some cases, control_vnf_inport has no meaning, " +
+                    "i.e., there won't be any match on the inport, but it is " +
+                    "always NECESSARY to set it.",
+
+                    'control_vnf_outport':
+                    "Specify here the port ID of the remote VNF that will be used for output",
+
                     'control_mgmt':
                     "Connection management data to reach your VNF. " +
                     "In case of OVS, you need to start it with " +
                     "passive tcp connection set up as controller connections." +
                     "to do this, use the following command after OVS was started: "+
                     "ovs-vsctl set-controller ptcp:6634",
-
 
                     'packetSize':
                     "Define the desired packet sizes to be used. Note that " +
@@ -613,15 +624,22 @@ def writeConfigFile(c):
     file.write("outlier_max_percentage=" + c['outlier_max_percentage'] + "\n")    
     file.write("### ================================================== ###\n\n")
 
-    file.write("### ------------- Let NFPA configure your VNF -------- ###\n\n")
+    file.write("### ------------- Let NFPA configure your VNF -------- ###\n")
     splitToMultipleLines(cc['control_nfpa'], file)
     file.write("control_nfpa=" + c['control_nfpa'] + "\n\n")
     splitToMultipleLines(cc['control_vnf'], file)
     file.write("control_vnf=" + c['control_vnf'] + "\n\n")
     splitToMultipleLines(cc['control_path'], file)
     file.write("control_path=" + c['control_path'] + "\n\n")
+    splitToMultipleLines(cc['control_args'], file)
+    file.write("control_args=" + c['control_args'] + "\n\n")
+    splitToMultipleLines(cc['control_vnf_inport'], file)
+    file.write("control_vnf_inport=" + c['control_vnf_inport'] + "\n\n")
+    splitToMultipleLines(cc['control_vnf_outport'], file)
+    file.write("control_vnf_outport=" + c['control_vnf_outport'] + "\n\n")
     splitToMultipleLines(cc['control_mgmt'], file)
     file.write("control_mgmt=" + c['control_mgmt'] + "\n\n")
+
     file.write("### ================================================== ###\n\n")
     
     file.write("### --- Traffic Generating/PktGen Related Settings --- ###\n")
