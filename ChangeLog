@@ -332,3 +332,10 @@ Flow rules preparator is added, which parse the basic flow rules files containin
 properly to the one the required configuration needs. NFPA saves theses files under of_rules/tmp with
 timestamps in their names, so they could be found easily and the whole thing won't mess up your directory
 tree.
+
+v2.2 beta
+Initial tests have confirmed that the NFPA can easily configure remote openflow switches with
+the predefined scenarios.
+Estimated Time Left calculation is also updated by the fact that a dpdk application always zeros
+all the avaialble hugepages even if you only want to use just a couple of them. Now, the number of
+hugepages are also taken into account when estimated time is calculated.

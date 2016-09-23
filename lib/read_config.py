@@ -91,7 +91,9 @@ class ReadConfig(object):
         configSuccess = self.checkConfig()
         if(configSuccess == -1):
             return -1
-            
+
+        #calculate time left
+        self.calculateTimeLeft()
         
         #create res dir
         self.createResultsDir()
@@ -390,6 +392,10 @@ class ReadConfig(object):
         #convert them to int
         free_hugepages = int(free_hugepages)
         total_hugepages = int(total_hugepages)
+        #save total hugepages in self.config in order to calculate with it when the whole process'
+        #estimated time is calculated - zeroiung 1 hugepage takes approx. 0.5s
+        self._config["total_hugepages"]=total_hugepages
+
         hugepage_size = int(hugepage_size)
         #check wheter hugepage size unit is kB (until now (2016), there are defined in kB)
         if(hugepage_size_unit == "kB"):
@@ -500,6 +506,88 @@ class ReadConfig(object):
         self._config['dbhelper'].disconnect()
         
         return 0
+
+
+
+    def calculateTimeLeft(self):
+        '''
+        This function will calculate the estimated time required for the
+        whole measurement and prints out at the beginning
+        '''
+        # Each variable represents time in seconds
+        #initializing and biringing up the interface takes approx. 5 secs, while
+        #zeroing one hugepage takes aprrox. 0.5s
+        time_to_start_pktgen = 5 + (self._config["total_hugepages"] * 0.5)
+
+        # number of packet sizes
+        num_ps = len(self._config["packetSizes"])
+        #         self.log.debug("packetsizes: %d" % num_ps )
+        # one measurement lasts for measurementDuration + 2 times 3 seconds
+        # as heating up and cooling down
+
+        # if measurementDuration is set to infinite via 0, we don't
+        # calculate remaing time, just set it to 0 and return!
+        if int(self._config['measurementDuration']) == 0:
+            self._config['ETL_seconds'] = 0
+            # convert it to datetime
+            sum = str(datetime.timedelta(seconds=0))
+            # store Estimated Time Left in the config dictionary to access it later
+            self._config['ETL'] = sum
+            return
+
+        measurement = (int(self._config['measurementDuration']) + 6)
+        iteration = int(self._config['measurement_num'])
+
+        # 'simple' should be handled different, since there is no pktgen restart
+        # among packet sizes
+        # smt = simple measurement time
+        smt = 0
+        # number of synthetic traffics
+        num_synthetic = len(self._config["trafficTypes"])
+        if "simple" in self._config['trafficTypes']:
+            smt = time_to_start_pktgen * iteration
+            smt += num_ps * measurement * iteration
+            # remove 'simple' from latter calculation
+            num_synthetic -= 1
+
+        synthetic_time = 0
+        # calculate only if there are synthetic traffic set
+        if num_synthetic > 0:
+            # sum up synthetic time
+            # measurement time
+            synthetic_time = num_synthetic * num_ps * measurement
+            # time of pktgen restarts
+            synthetic_time += num_synthetic * num_ps * time_to_start_pktgen
+            # how many times the whole process is running
+            synthetic_time *= iteration
+
+
+            # number of realistic traffic
+        num_realistic = len(self._config['realisticTraffics'])
+
+        realistic_time = 0
+        # calculate only if there are realistic traffic set
+        if num_realistic > 0:
+            # measurement time
+            realistic_time = num_realistic * measurement
+            # time of pktgen restarts
+            realistic_time += num_realistic * time_to_start_pktgen
+            # how many times the whole process is running
+            realistic_time *= iteration
+
+            #         self.log.debug("Estimated time for simple traffic: %d" % smt)
+            #         self.log.debug("Estimated time for synthetic traffic: %d" % synthetic_time)
+            #         self.log.debug("Estimated time for realistic traffic: %d" % realistic_time)
+
+        sum = smt + synthetic_time + realistic_time
+        # add additional 5 seconds for analyzing results
+        sum += 5
+        self._config['ETL_seconds'] = sum
+        # convert it to datetime
+        sum = str(datetime.timedelta(seconds=sum))
+
+        # store Estimated Time Left in the config dictionary to access it later
+        self._config['ETL'] = sum
 
     def createResultsDir(self):
         '''

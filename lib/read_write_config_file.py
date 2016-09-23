@@ -106,90 +106,10 @@ def readConfigFile(config_file):
     ts = time.time()        
     config['app_start_date'] = str(ts)
     
-    calculateTimeLeft()
+    # calculateTimeLeft()
     
     
     return (True,config)
-
-def calculateTimeLeft():
-        '''
-        This function will calculate the estimated time required for the
-        whole measurement and prints out at the beginning
-        '''
-        #Each variable represents time in seconds        
-        time_to_start_pktgen = 6
-        #number of packet sizes
-        num_ps = len(config["packetSizes"]) 
-#         self.log.debug("packetsizes: %d" % num_ps )
-        #one measurement lasts for measurementDuration + 2 times 3 seconds
-        #as heating up and cooling down
-        
-        #if measurementDuration is set to infinite via 0, we don't 
-        #calculate remaing time, just set it to 0 and return!
-        if int(config['measurementDuration']) == 0:
-            config['ETL_seconds'] = 0
-            #convert it to datetime
-            sum = str(datetime.timedelta(seconds=0))            
-            #store Estimated Time Left in the config dictionary to access it later
-            config['ETL'] = sum
-            return
-            
-        measurement = (int(config['measurementDuration']) + 6)
-        iteration = int(config['measurement_num'])
-        
-        #'simple' should be handled different, since there is no pktgen restart
-        #among packet sizes
-        #smt = simple measurement time
-        smt = 0
-        #number of synthetic traffics
-        num_synthetic = len(config["trafficTypes"])
-        if "simple" in config['trafficTypes']:
-            smt = time_to_start_pktgen * iteration
-            smt += num_ps * measurement * iteration
-            #remove 'simple' from latter calculation
-            num_synthetic -= 1
-            
-        synthetic_time = 0
-        #calculate only if there are synthetic traffic set
-        if num_synthetic > 0:
-            #sum up synthetic time
-            #measurement time
-            synthetic_time = num_synthetic * num_ps * measurement
-            #time of pktgen restarts
-            synthetic_time += num_synthetic * num_ps * time_to_start_pktgen
-            #how many times the whole process is running
-            synthetic_time *= iteration 
-        
-        
-        #number of realistic traffic
-        num_realistic = len(config['realisticTraffics'])
-        
-        realistic_time = 0
-        #calculate only if there are realistic traffic set
-        if num_realistic > 0:
-            #measurement time
-            realistic_time = num_realistic * measurement
-            #time of pktgen restarts
-            realistic_time += num_realistic * time_to_start_pktgen
-            #how many times the whole process is running
-            realistic_time *= iteration
-        
-#         self.log.debug("Estimated time for simple traffic: %d" % smt)
-#         self.log.debug("Estimated time for synthetic traffic: %d" % synthetic_time)             
-#         self.log.debug("Estimated time for realistic traffic: %d" % realistic_time)
-        
-        sum = smt + synthetic_time + realistic_time
-        #add additional 5 seconds for analyzing results 
-        sum += 5
-        config['ETL_seconds'] = sum
-        #convert it to datetime
-        sum = str(datetime.timedelta(seconds=sum))
-        
-        #store Estimated Time Left in the config dictionary to access it later
-        config['ETL'] = sum
-
-        
-
 
 
 def getConfigComments():
