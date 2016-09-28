@@ -133,6 +133,8 @@ class NFPA(object):
 
         #the path to the openflow rules
         of_path = self.config["MAIN_ROOT"] + "/of_rules/"
+        # temporary variable for bidir status - it is needed for flow_rules_preparator
+        bidir = False
 
         #handle here OpenFlow and setup via ovs-ofctl
         if self.config["control_vnf"].lower() == "openflow":
@@ -155,7 +157,26 @@ class NFPA(object):
             ############     BRIDGE ###########
             if self.config["vnf_function"].lower() == "bridge":
                 #add birdge rules - located under of_rules
-                cmd = cmd + " " + of_path + self.config["vnf_function"]
+                scenario_path = vnf_function + "_unidir.flows"
+                if not (os.path.isfile(str(of_path + scenario_path))):
+                    self.log.error("Missing flow rule file: %s" % scenario_path)
+                    self.log.error("NFPA does not know how to configure VNF to act as a bridge")
+                    self.log.error("More info: http://ios.tmit.bme.hu/nfpa")
+                    exit(-1)
+
+                if self.config["biDir"] == 1:
+                    #change flow rule file if bidir was set
+                    scenario_path = scenario_path.replace("unidir","bidir")
+                    bidir=True
+
+                #prepare flow rule file
+                scenario_path = flow_prep.prepareOpenFlowRules(self.log,
+                                                               of_path,
+                                                               scenario_path,
+                                                               self.config["control_vnf_inport"],
+                                                               self.config["control_vnf_outport"],
+                                                               bidir)
+                cmd = ofctl_cmd.replace("<C>","add-flows") + scenario_path
                 self.log.info("add-flows via '%s'" % cmd)
                 invoke.invoke(cmd, self.log)
                 # print out stdout if any
@@ -198,8 +219,7 @@ class NFPA(object):
 
             #change back to the .flows file from .groups
             scenario_path = scenario_path.replace(".groups", ".flows")
-            #temporary variable for bidir status
-            bidir = False
+
             #if biDir is set, then other file is needed where the same rules are present
             #in the reverse direction
             if (int(self.config["biDir"]) == 1):
