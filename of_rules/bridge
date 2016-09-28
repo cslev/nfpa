@@ -1,2 +1,0 @@
-in_port=1, actions=output:2
-in_port=2, actions=output:1
