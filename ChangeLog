@@ -339,3 +339,7 @@ the predefined scenarios.
 Estimated Time Left calculation is also updated by the fact that a dpdk application always zeros
 all the avaialble hugepages even if you only want to use just a couple of them. Now, the number of
 hugepages are also taken into account when estimated time is calculated.
+
+v2.2.1 beta
+Updated l2-switch scenarios have been added to of_rules directory. Now, they are more realistic.
+More information can be found on the website.

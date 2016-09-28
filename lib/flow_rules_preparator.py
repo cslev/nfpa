@@ -7,7 +7,7 @@ import time
 import invoke as invoke
 import date_formatter as df
 
-def prepareOpenFlowRules(logger,path, flowrulefile,inport,outport, bidir):
+def prepareOpenFlowRules(logger, path, flowrulefile,inport,outport, bidir):
     '''
     This function will take the openflow flow rule files consisting the meta port data, and replaces
     them according to the control_vnf_inport and control_vnf_outport parameter. The original
