@@ -274,8 +274,9 @@ def getConfigComments():
                     "account all results!",
 
                     'control_nfpa':
-                    "This feature is experimental currently. It only works with " +
+                    "This feature is available since V2 Spongebob. It only works with " +
                     "some predefined vnf_function use-cases, and traffic traces. " +
+                    "Please refer to NFPA website's use-cases subpage! " +
                     "It could be helpful if one needs a lot of common, " +
                     "reproducable measurements and does not want to configure " +
                     "the NFs in each case." +
