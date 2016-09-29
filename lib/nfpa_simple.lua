@@ -47,11 +47,11 @@ function read_config_file ()
       then
         -- store desired packet sizes
         table.insert(pktSizes, value);
-      else
-        -- store other config parameters in config var
-        -- such as measureDuration, sendPort, recvPort, etc.
-        config[key] = value;
       end
+      -- store other config parameters in config var
+      -- such as measureDuration, sendPort, recvPort, etc.
+      config[key] = value;
+
       if key == "biDir"
       then
         print(key,"\t\t",value);

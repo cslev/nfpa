@@ -43,15 +43,21 @@ function read_config_file ()
       key = string.sub(line,0,equal_pos-1);
       -- and value will be the substring after equal sign
       value = string.sub(line,equal_pos+1);
-        -- store other config parameters in config var
-        -- such as measureDuration, sendPort, recvPort, etc.
-        config[key] = value;
-        if key == "biDir"
-        then
-          print(key,"\t\t",value);
-        else
-          print(key,"\t",value);
-        end
+      -- packetSize fields found
+      if(key == "packetSize")
+      then
+        -- store desired packet sizes
+        table.insert(pktSizes, value);
+      end
+      -- store other config parameters in config var
+      -- such as measureDuration, sendPort, recvPort, etc.
+      config[key] = value;
+      if key == "biDir"
+      then
+        print(key,"\t\t",value);
+      else
+        print(key,"\t",value);
+      end
 
     else
      -- nothing to do, these lines are comments <-- Lua has no continue
