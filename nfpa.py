@@ -149,6 +149,12 @@ class NFPA(object):
             retval = invoke.invoke(cmd, self.log)
             self.log.info("Flow rules deleted")
 
+            # second, delete groups
+            cmd = ofctl_cmd.replace("<C>", "del-groups")
+            self.log.debug("control cmd: %s" % cmd)
+            retval = invoke.invoke(cmd, self.log)
+            self.log.info("Groups deleted")
+
             #OK, flows are deleted, so replace 'del-flows' to 'add-flows' for
             # easier usage later
             cmd = ofctl_cmd.replace("<C>", "add-flows")
