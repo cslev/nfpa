@@ -245,7 +245,11 @@ def getConfigComments():
                     "trXi could not be " +
                     "used in one measurement scenario. In such cases, please " +
                     "do two different measurements, even if the application " +
-                    "is capable of doing both at the same time!", 
+                    "is capable of doing both at the same time!",
+
+                    'vnf_num_cores':
+                    "New feature since NFPA v2. Set here the number of cpu " +
+                    "cores the vnf is using",
                     
                     'vnf_comment':
                     "Write here some comment to the function, for instance, " +
@@ -530,6 +534,8 @@ def writeConfigFile(c):
     file.write("vnf_driver_version=" + c['vnf_driver_version'] + "\n\n")
     splitToMultipleLines(cc['vnf_function'], file)
     file.write("vnf_function=" + c['vnf_function'] + "\n\n")
+    splitToMultipleLines(cc['vnf_num_cores'], file)
+    file.write("vnf_num_cores=" + c['vnf_num_cores'] + "\n\n")
     splitToMultipleLines(cc['vnf_comment'], file)
     file.write("vnf_comment=" + c['vnf_comment'] + "\n")
     file.write("### ================================================== ###\n\n")

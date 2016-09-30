@@ -538,6 +538,8 @@ class SQLiteDatabaseAdapter(object):
         nic Int - id of the nic configuration
         virtualization Int - id of the virtualization
         vnf Int - id of the vnf
+        used_cpu_cores =  the number of cores vnf is using
+
         traffic Int - id of the traffic
         repetitions Int - number of measurements
         duration Int - number of seconds one measurements lasts
@@ -561,6 +563,9 @@ class SQLiteDatabaseAdapter(object):
         nic = params.get('nic', None)
         virtualization = params.get('virtualization', None)
         vnf = params.get('vnf', None)
+        used_cpu_cores = params.get('used_cpu_cores', None)
+        if used_cpu_cores is None:
+            self.log.warning("vnf_num_cores was not set...use default 1")
         traffic = params.get('traffic', None)
         repetitions = params.get('repetitions', None)
         duration = params.get('duration', None)
@@ -568,8 +573,8 @@ class SQLiteDatabaseAdapter(object):
         #convert string bidir parameter to boolean
         bidir = bool(int(bidir))
         
-        insert_tuple = (ts, name, cpu, nic, virtualization, vnf, traffic,
-                        repetitions, duration)
+        insert_tuple = (ts, name, cpu, nic, virtualization, vnf,
+                        used_cpu_cores, traffic, repetitions, duration)
         
         
         
@@ -594,7 +599,7 @@ class SQLiteDatabaseAdapter(object):
         #we got all data to insert a row
         query = "INSERT INTO measurements " \
                 "(ts, name, cpu, nic, virtualization, " \
-                "vnf, traffic, repetitions, duration," \
+                "vnf, used_cpu_cores, traffic, repetitions, duration," \
                 "sent_pps_min, sent_pps_avg, sent_pps_max, " \
                 "recv_pps_min, recv_pps_avg, recv_pps_max, " \
                 "miss_pps_min, miss_pps_avg, miss_pps_max, " \
@@ -602,7 +607,7 @@ class SQLiteDatabaseAdapter(object):
                 "recv_bps_min, recv_bps_avg, recv_bps_max, " \
                 "diff_bps_min, diff_bps_avg, diff_bps_max, " \
                 "bidir_twin_id, comment, user_id, bidir) VALUES " \
-                "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
                 
         self.c.execute(query, insert_tuple)
         
