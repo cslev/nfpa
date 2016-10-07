@@ -80,17 +80,20 @@ class ReadConfig(object):
                                 self._config['LOG_LEVEL'], 
                                 self._config['app_start_date'],
                                 self._config['LOG_PATH'])
+
+        # set supported control APIs
+        self._config["controllers"] = ("openflow")
+
+
         
         #create an instance of database helper and store it in config dictionary
         self._config["dbhelper"] = SQLiteDatabaseAdapter(self._config)
 
-        #set supported control APIs
-        self._config["controllers"] = ("openflow")
-
-        #parse config params
+        # parse config params
         configSuccess = self.checkConfig()
-        if(configSuccess == -1):
+        if (configSuccess == -1):
             return -1
+
 
         #calculate time left
         self.calculateTimeLeft()

@@ -569,7 +569,8 @@ class SQLiteDatabaseAdapter(object):
         traffic = params.get('traffic', None)
         repetitions = params.get('repetitions', None)
         duration = params.get('duration', None)
-        bidir = (params.get('bidir', '0'))
+        bidir = (params.get('bidir', False))
+        control_nfpa = params.get('control_nfpa', False)
         #convert string bidir parameter to boolean
         bidir = bool(int(bidir))
         
@@ -589,7 +590,7 @@ class SQLiteDatabaseAdapter(object):
         comment = params.get('comment', None)
         user_id = params.get('user_id', None)
         
-        rest_data_tuple = (bidir_twin_id, comment, user_id, bidir)
+        rest_data_tuple = (bidir_twin_id, comment, user_id, bidir, control_nfpa)
         
         insert_tuple += measure_tuple
         insert_tuple += rest_data_tuple
@@ -606,8 +607,8 @@ class SQLiteDatabaseAdapter(object):
                 "sent_bps_min, sent_bps_avg, sent_bps_max, " \
                 "recv_bps_min, recv_bps_avg, recv_bps_max, " \
                 "diff_bps_min, diff_bps_avg, diff_bps_max, " \
-                "bidir_twin_id, comment, user_id, bidir) VALUES " \
-                "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                "bidir_twin_id, comment, user_id, bidir, control_nfpa) VALUES " \
+                "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
                 
         self.c.execute(query, insert_tuple)
         

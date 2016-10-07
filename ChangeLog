@@ -348,3 +348,8 @@ v2.5 beta
 Greater minor version jump, since fundamental parts have been changed. NFPA now also stores in the 
 database (via the nfpa.cfg) the number of cpu cores the VNF has used, therefore it becomes much
 simpler to filter the measurements data accordingly.
+
+v2.6
+SQLite and the main database is also altered to store control_nfpa variable as well in order to
+indicate whether the supported scenario with a given trace is configured via NFPA.
+

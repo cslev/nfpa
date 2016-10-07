@@ -62,7 +62,8 @@ class DatabaseHandler(object):
         duration = self.config['measurementDuration']
         
         biDir = self.config['biDir']
-        
+
+
         #create a temporary dict (Measurements_Results) where the results 
         #will be stored indexed by the database's column name, 
         #e.g., sent_pps_min
@@ -128,7 +129,8 @@ class DatabaseHandler(object):
                          diff_bps_max = mr['diff_bps_max'],
                          user_id = user_id,
                          comment = self.config['vnf_comment'],
-                         bidir = biDir)
+                         bidir = biDir,
+                         control_nfpa = self.config['control_nfpa'])
                             
                     #if bidirectional measurement was carried out, we need to
                     #add another row
@@ -189,7 +191,8 @@ class DatabaseHandler(object):
                          user_id = user_id,
                          comment = self.config['vnf_comment'],
                          bidir_twin_id = bidir_id,
-                         bidir = biDir)
+                         bidir = biDir,
+                         control_nfpa = self.config['control_nfpa'])
                         
                         
         if self.type == "realistic":
@@ -257,7 +260,8 @@ class DatabaseHandler(object):
                      diff_bps_max = mr['diff_bps_max'],
                      user_id = user_id,
                      comment = self.config['vnf_comment'],
-                     bidir = biDir)
+                     bidir = biDir,
+                     control_nfpa = self.config['control_nfpa'])
                         
                 #if bidirectional measurement was carried out, we need to
                 #add another row
@@ -317,4 +321,5 @@ class DatabaseHandler(object):
                      user_id = user_id,
                      comment = self.config['vnf_comment'],
                      bidir_twin_id = bidir_id,
-                     bidir = biDir)
+                     bidir = biDir,
+                     control_nfpa = self.config['control_nfpa'])
