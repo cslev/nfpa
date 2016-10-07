@@ -238,8 +238,13 @@ class ReadConfig(object):
                     #~ print multi_core
                     #ok, we need to split the string according to the dash between
                     #the core numbers 2-4
-                    
-                    min_c = int(multi_core.split('-')[0])
+
+                    try:
+                      min_c = int(multi_core.split('-')[0])
+                    except ValueError as e:
+                      self.log.error("cpu_core_mask (%s) is wrong! Isn't there any typo?" % a)
+                      self.log.error("Python error: %s" % e)
+                      exit(-1)
                     
                     #if there is no range specified, i.e., there is no dash 
                     #then we won't get two separate pieces
@@ -312,8 +317,8 @@ class ReadConfig(object):
                 return -1
         
         self.log.info("CORE MASKS SEEM TO BE CORRECT!")
-        
-        
+
+
         #check port_mask
         pm = self._config["port_mask"]
         #~ print(pm)
