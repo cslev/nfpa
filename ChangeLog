@@ -359,4 +359,4 @@ data was only processed and analyzed after all measurement were done. However, i
 before the last measurement, for instance, someone has consumed the hugepages from Pktgen, then the
 results measured so far have not been analyzed, plotted and inserted into the database.
 Now, all the measurement results are immediately analyzed trace by trace, i.e., if one measurement was
-completely successfull, then its results will not be vanished.
+completely successful, then its results will not be vanished.
