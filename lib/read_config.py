@@ -22,9 +22,7 @@ from database_adapter import SQLiteDatabaseAdapter
 class ReadConfig(object):
     '''
     This class is devoted to read the config file
-    '''
 
-    '''
     Besides nfpa.cfg file, some additional info and variables
     Additional info for storing some config vars:
         trafficTypes : list [simple,tr2e, etc.]
@@ -38,9 +36,6 @@ class ReadConfig(object):
         app_start_date String - unix timestamp as String storing the start of 
         the application
     '''
-    
-    
-    
 
 
     def __init__(self):
@@ -48,8 +43,6 @@ class ReadConfig(object):
         Constructor
         '''
 
-
-        
         #dictionary for storing configuration parameters read from config file
         self._config = {}
         #read config
@@ -378,9 +371,9 @@ class ReadConfig(object):
 
         #get the data - invoce.check_retval will analyze the return values as well, and as a third
         #parameter, we need to pass him our self.log instance to make him able to write out error messages
-        free_hugepages =invoke.invoke(free_hugepages_cmd,self.log)
-        total_hugepages = invoke.invoke(total_hugepages_cmd, self.log)
-        hugepage_size = invoke.invoke(hugepage_size_cmd, self.log)
+        free_hugepages = (invoke.invoke(free_hugepages_cmd,self.log))[0]
+        total_hugepages = (invoke.invoke(total_hugepages_cmd, self.log))[0]
+        hugepage_size = (invoke.invoke(hugepage_size_cmd, self.log))[0]
 
         #get the second part of the outputs
         free_hugepages = free_hugepages.split(":")[1]
@@ -607,9 +600,9 @@ class ReadConfig(object):
         #append a new value to config dictionary
         self._config['RES_PATH'] = path
         
-        create_cmd = "mkdir -p " + path
-        invoke.invoke(create_cmd, self.log)
-        
+        if not os.path.exists(path):
+            os.makedirs(path)
+
 
     def createSymlinksForLuaScripts(self):
         '''

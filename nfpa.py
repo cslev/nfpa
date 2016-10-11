@@ -89,7 +89,10 @@ class NFPA(object):
         self.log.info("[DONE]")
 
         #create a tmp directory for flow rules under nfpa/of_rules
-        invoke.invoke("mkdir -p " + self.config["MAIN_ROOT"] + "/of_rules/tmp", self.log)
+        path=self.config["MAIN_ROOT"] + "/of_rules/tmp"
+        if not os.path.exists(path):
+            os.makedirs(path)
+
         self.log.debug("tmp directory created under of_rules")
         
         
@@ -146,13 +149,13 @@ class NFPA(object):
                         self.config["control_mgmt"] + " "
             cmd = ofctl_cmd.replace("<C>", "del-flows")
             self.log.debug("control cmd: %s" % cmd)
-            retval = invoke.invoke(cmd, self.log)
+            invoke.invoke(cmd, self.log)
             self.log.info("Flow rules deleted")
 
             # second, delete groups
             cmd = ofctl_cmd.replace("<C>", "del-groups")
             self.log.debug("control cmd: %s" % cmd)
-            retval = invoke.invoke(cmd, self.log)
+            invoke.invoke(cmd, self.log)
             self.log.info("Groups deleted")
 
             #OK, flows are deleted, so replace 'del-flows' to 'add-flows' for
@@ -267,8 +270,62 @@ class NFPA(object):
             exit(-1)
 
 
+    def startAnalyzing(self, traffic_type, traffic_trace):
+      '''
+      This function actually called after pktgen measurements are done, and it instantiate
+      results_analyzer and visualizer class, to analyze the successful result files and
+      create plots of the results
+      :return:
+      '''
+      tt = traffic_type
+      trace = traffic_trace
+
+      #synthetic and realistic results are process differently, so
+      #different class variables are used to store the data
+      if tt == "synthetic":
+        # Pktgen (re)start(s) finished, analyze results
+        self.results_analyzer = ResultsAnalyzer(self.config,
+                                                trafficType=tt,
+                                                traffic_trace=trace)
+
+        # after analyzation is done, visualize results
+        self.results = self.results_analyzer.getResultsDict()
+        self.visualizer = Visualizer(config=self.config,
+                                     results=self.results,
+                                     type=tt,
+                                     traffic_trace=trace)
+        self.database_handler = DatabaseHandler(config=self.config,
+                                                results=self.results,
+                                                type=tt,
+                                                traffic_trace=trace)
+      elif tt == "realistic":
+        # Pktgen (re)start(s) finished, analyze results
+        self.results_analyzer = ResultsAnalyzer(self.config,
+                                                trafficType=tt,
+                                                traffic_trace=trace)
+
+        #after analyzation is done, visualize results
+        self.results = self.results_analyzer.getResultsDict()
+        self.visualizer = Visualizer(config=self.config,
+                                     results=self.results,
+                                     type=tt,
+                                     traffic_trace=trace)
+        self.database_handler = DatabaseHandler(config=self.config,
+                                     results=self.results,
+                                     type=tt,
+                                     traffic_trace=trace)
+      else:
+        self.log.error("Traffic type became malformed before analyzation process would have started")
+        exit(-1)
+
+
+
     def startPktgenMeasurements(self):
-        
+        '''
+        This  function is actually doing the stuff. It assembles the pktgen command
+        and corresponding lua scripts, then starts the measurements
+        :return:
+        '''
         self.log.info("+----------------------------------------------+")
         self.log.info(str("|-    Estimated time required: %s        -|" % 
                           self.config['ETL']))
@@ -294,20 +351,20 @@ class NFPA(object):
                                 exit(-1)
 
                         #create config file for LUA script
-                        self.rc.generateLuaConfigFile(trafficType, 
+                        self.rc.generateLuaConfigFile(trafficType,
                                                       self.config["packetSizes"],
                                                       None)
                         #append simple lua script to pktgen command
                         cmd = self.rc.assemblePktgenCommand()
                         cmd += " -f nfpa_simple.lua"
                         self.log.info("PKTgen command: %s" % cmd)
-                        
+
                         #sleep 1s for reading command
                         time.sleep(1)
-                        
+
                         #change dir to pktgen's main dir
                         cd_cmd = "cd " + self.config["PKTGEN_ROOT"]
-                        
+
                         #concatenate main command
                         main_cmd = cd_cmd + " && " + cmd
                         #here should be start the actual pktgen command!
@@ -320,6 +377,13 @@ class NFPA(object):
                             self.log.error("Exit_code: %s" % str(retval[1]))
                             exit(-1)
 
+                        # ok, we got measurements for a given traffic trace
+                        # with all the defined packetsizes
+                        # Start analyzing existing results, make plots and insert
+                        # data into the database
+                        self.startAnalyzing("synthetic", trafficType)
+
+
 
                     else:
                         # configure VNF if set
@@ -330,7 +394,7 @@ class NFPA(object):
 
                         for ps in self.config['packetSizes']:
                             #create config file for LUA script
-                            self.rc.generateLuaConfigFile(trafficType, 
+                            self.rc.generateLuaConfigFile(trafficType,
                                                           [ps],
                                                           None)
                             #create the command first part
@@ -341,15 +405,15 @@ class NFPA(object):
                                       self.config["sendPort"] + ":" + \
                                       self.config['MAIN_ROOT'] + \
                                       "/PCAP/nfpa." +\
-                                      trafficType + "." + ps + "bytes.pcap" 
-                            
-                                #if bidDir is set, we need to set pcap file for the 
+                                      trafficType + "." + ps + "bytes.pcap"
+
+                                #if bidDir is set, we need to set pcap file for the
                                 #other port as well (add this part to the cmd)
                                 if(int(self.config["biDir"]) == 1):
                                     cmd +=  " -s " + self.config["recvPort"] +\
                                             ":" + self.config['MAIN_ROOT'] +\
                                             "/PCAP/nfpa." +\
-                                            trafficType + "." + ps + "bytes.pcap" 
+                                            trafficType + "." + ps + "bytes.pcap"
                             else:
                                 #special bidirectional traffic was set
                                 tmp_tt = sbtc.splitTraffic(trafficType)
@@ -361,13 +425,13 @@ class NFPA(object):
                                 cmd +=  " -s " + self.config["recvPort"] + \
                                         ":" + self.config['MAIN_ROOT'] + \
                                         "/PCAP/nfpa." + tmp_tt[1] + "." + \
-                                        ps + "bytes.pcap"        
-                            
+                                        ps + "bytes.pcap"
+
                             self.log.info(cmd)
                             #sleep 1s for reading command
                             time.sleep(1)
-                            
-                            
+
+
                             #change dir to pktgen's main dir
                             cd_cmd = "cd " + self.config["PKTGEN_ROOT"]
                             #concatenate main command
@@ -380,20 +444,21 @@ class NFPA(object):
                                 self.log.error("ERROR OCCURRED DURING STARTING PKTGEN")
                                 self.log.error("Error: %s" % str(retval[0]))
                                 self.log.error("Exit_code: %s" % str(retval[1]))
+                                # #if previous runs succeeded analyze the .res files
+                                # self.log.info("Check whether previous runs were success...")
+                                # c="ls " + self.config['PKTGEN_ROOT'] + "/ |grep .res"
+                                # success=invoke.invoke(c)
+                                # #if stdout is '' then no files were found
+                                # if success[0] == '':
+                                #   self.log.info("There was no successful previous measurements")
+                                #   self.log.info("Exiting...")
                                 exit(-1)
-        
-            #Pktgen (re)start(s) finished, analyze results
-            self.results_analyzer = ResultsAnalyzer(self.config, type="synthetic")
-            
-            #after analyzation is done, visualize results
-            self.results = self.results_analyzer.getResultsDict()  
-            self.visualizer = Visualizer(config=self.config, 
-                                         results=self.results,
-                                         type="synthetic")
-            self.database_handler = DatabaseHandler(config=self.config, 
-                                         results=self.results,
-                                         type="synthetic")
-          
+                        #ok, we got measurements for a given traffic trace
+                        #with all the defined packetsizes
+                        # Start analyzing existing results, make plots and insert
+                        #data into the database
+                        self.startAnalyzing("synthetic", trafficType)
+
         
         if self.config["realisticTraffics"]:                
             #check realistic traffic traces
@@ -447,20 +512,20 @@ class NFPA(object):
                     self.log.error("ERROR OCCURRED DURING STARTING PKTGEN")
                     self.log.error("Error: %s" % str(retval[0]))
                     self.log.error("Exit_code: %s" % str(retval[1]))
-                    exit(-1)
+                    # if previous runs succeeded analyze the .res files
+                    self.log.info("Check whether previous runs were success...")
+                    c = "ls " + self.config['PKTGEN_ROOT'] + "/ |grep .res"
+                    success = invoke.invoke(c)
+                    # if stdout is '' then no files were found
+                    if success[0] == '':
+                      self.log.info("There was no successful previous measurements")
+                      self.log.info("Exiting...")
+                      exit(-1)
+
+            # Start analyzing existing results
+            self.startAnalyzing("realistic", realistic)
              
-            #Pktgen (re)start(s) finished, analyze results
-            self.realistic_results_analyzer = ResultsAnalyzer(self.config, 
-                                                              type="realistic")
-            
-            #after analyzation is done, visualize results
-            self.realistic_results = self.realistic_results_analyzer.getRealisticResultsDict()  
-            self.realistic_visualizer = Visualizer(config=self.config, 
-                                         results=self.realistic_results,
-                                         type="realistic")
-            self.database_handler = DatabaseHandler(config=self.config, 
-                                         results=self.realistic_results,
-                                         type="realistic")   
+
         
         #after everything is done, delete unnecessary res files
         self.deleteResFiles()
@@ -496,7 +561,7 @@ class NFPA(object):
         #besides those, only 2 symlinks exist, which could also be deleted,
         #since each restart it is recreated. However, we do not delete them!
         del_cmd = "rm -rf " + self.config["PKTGEN_ROOT"] + "/nfpa.*.res"
-        retval = invoke.invoke(del_cmd, self.log)
+        invoke.invoke(del_cmd, self.log)
 
 
 if __name__ == '__main__':

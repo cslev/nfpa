@@ -21,7 +21,7 @@ class DatabaseHandler(object):
         self.config = params.get('config', None)
         self.results = params.get('results', None)
         self.type = params.get('type', None)
-        
+        self.tt = params.get('traffic_trace', None)
         #create a reference for logger
         self.log = l.getLogger( self.__class__.__name__, 
                                 self.config['LOG_LEVEL'], 
@@ -70,163 +70,31 @@ class DatabaseHandler(object):
         mr = {}
         
         if self.type == "synthetic":
-            #first, iterate through traffic types
-            for tt in self.results:
-                #check for special bidirectional measurement
-                ul_dl = False
-                tmp_tt = [tt,tt]
-                if(sbtc.checkSpecialTraffic(tt)):
-                    ul_dl = True
-                    biDir = '1'
-                    tmp_tt = sbtc.splitTraffic(tt)
-                else:
-                    #set back biDir if no special traffic is set
-                    biDir = self.config['biDir']
-                    
-                for ps in self.results[tt]:
-                    traffic = dbh.getTraffic(tmp_tt[0], ps)
-                    
-                    pkt_res = self.results[tt][ps]
-                    for h in self.config['header_uni']:
-                        for h_h in self.config['helper_header']:
-                            self.log.debug("%s - %s - %s - %s: %s" %
-                                           (tmp_tt[0],ps,h,h_h,
-                                            pkt_res[h][h_h]))
-                            #create proper column name from header and helper_header
-                            measure_column = h + "_" + h_h
-                            mr[measure_column] = round(float(pkt_res[h][h_h]),4)
-                    
-                    self.log.debug("UniDir mr: %s" % str(mr))
-                    #now we need to insert a row
-                    bidir_id = dbh.insertMeasurement(
-                         ts = self.config['app_start_date'],
-                         name = self.config['scenario_name'],
-                         cpu = cpu,
-                         nic = nic,
-                         virtualization = virtualization,
-                         vnf = vnf,
-                         used_cpu_cores = self.config['vnf_num_cores'],
-                         traffic = traffic,
-                         repetitions = repetitions,
-                         duration = duration,
-                         sent_pps_min = mr['sent_pps_min'],
-                         sent_pps_avg = mr['sent_pps_avg'],
-                         sent_pps_max = mr['sent_pps_max'],
-                         recv_pps_min = mr['recv_pps_min'],
-                         recv_pps_avg = mr['recv_pps_avg'],
-                         recv_pps_max = mr['recv_pps_max'],
-                         miss_pps_min = mr['miss_pps_min'],
-                         miss_pps_avg = mr['miss_pps_avg'],
-                         miss_pps_max = mr['miss_pps_max'],
-                         sent_bps_min = mr['sent_bps_min'],
-                         sent_bps_avg = mr['sent_bps_avg'],
-                         sent_bps_max = mr['sent_bps_max'],
-                         recv_bps_min = mr['recv_bps_min'],
-                         recv_bps_avg = mr['recv_bps_avg'],
-                         recv_bps_max = mr['recv_bps_max'],
-                         diff_bps_min = mr['diff_bps_min'],
-                         diff_bps_avg = mr['diff_bps_avg'],
-                         diff_bps_max = mr['diff_bps_max'],
-                         user_id = user_id,
-                         comment = self.config['vnf_comment'],
-                         bidir = biDir,
-                         control_nfpa = self.config['control_nfpa'])
-                            
-                    #if bidirectional measurement was carried out, we need to
-                    #add another row
-                    if((int(self.config['biDir']) == 1) or (ul_dl)):  
-                        biDir = '1'
-                        #we need to check whether the special ul-dl bidirectional
-                        #traffic type was set. If so, then we also add header_bi
-                        #to headers var                 
-                        mr = {}
-                        
-                        #update traffic (necessary if special bidirectional
-                        #measurement was carried out
-                        traffic = dbh.getTraffic(tmp_tt[1], ps)
-                        for h in self.config['header_bi']:
-                            for h_h in self.config['helper_header']:
-                                self.log.debug("%s - %s - %s - %s: %s" %
-                                               (tmp_tt,ps,h,h_h,
-                                                pkt_res[h][h_h]))
-                                #we need to remove '_bidir' from header
-                                #we could also append min,max,avg immediately
-                                measure_column = copy.deepcopy(h)
-                                measure_column = measure_column.replace('bidir', 
-                                                                        h_h)
-                                mr[measure_column] = round(
-                                                       float(pkt_res[h][h_h]),
-                                                       4)
-                        
-                        self.log.debug("Bidir mr: %s" % str(mr))
-                        row_id = dbh.insertMeasurement(
-                         ts = self.config['app_start_date'],
-                         name = self.config['scenario_name'],
-                         cpu = cpu,
-                         nic = nic,
-                         virtualization = virtualization,
-                         vnf = vnf,
-                         used_cpu_cores=self.config['vnf_num_cores'],
-                         traffic = traffic,
-                         repetitions = repetitions,
-                         duration = duration,
-                         sent_pps_min = mr['sent_pps_min'],
-                         sent_pps_avg = mr['sent_pps_avg'],
-                         sent_pps_max = mr['sent_pps_max'],
-                         recv_pps_min = mr['recv_pps_min'],
-                         recv_pps_avg = mr['recv_pps_avg'],
-                         recv_pps_max = mr['recv_pps_max'],
-                         miss_pps_min = mr['miss_pps_min'],
-                         miss_pps_avg = mr['miss_pps_avg'],
-                         miss_pps_max = mr['miss_pps_max'],
-                         sent_bps_min = mr['sent_bps_min'],
-                         sent_bps_avg = mr['sent_bps_avg'],
-                         sent_bps_max = mr['sent_bps_max'],
-                         recv_bps_min = mr['recv_bps_min'],
-                         recv_bps_avg = mr['recv_bps_avg'],
-                         recv_bps_max = mr['recv_bps_max'],
-                         diff_bps_min = mr['diff_bps_min'],
-                         diff_bps_avg = mr['diff_bps_avg'],
-                         diff_bps_max = mr['diff_bps_max'],
-                         user_id = user_id,
-                         comment = self.config['vnf_comment'],
-                         bidir_twin_id = bidir_id,
-                         bidir = biDir,
-                         control_nfpa = self.config['control_nfpa'])
-                        
-                        
-        if self.type == "realistic":
-            biDir = self.config['biDir']
-            #first, iterate through traffic types
-            for realistic in self.results:
-                #check for special bidirectional measurement
-                ul_dl = False
-                tmp_tt = [realistic,realistic]
-                if(sbtc.checkSpecialTraffic(realistic)):
-                    ul_dl = True
-                    biDir = '1'
-                    tmp_tt = sbtc.splitTraffic(realistic)
-                else:
-                    #set back biDir if no special traffic is set
-                    biDir = self.config['biDir']
-                    
-                #there is no packet size set  for realistic traces
-                #so set here the second param to 0 (we need to use "0" instead
-                #of 0, since 0 is represented as NULL, and database will throw
-                #error of trying to inserting NULL value into NOT NULL column
-                ps = "0"
+
+            #check for special bidirectional measurement
+            ul_dl = False
+            tmp_tt = [self.tt,self.tt]
+            if(sbtc.checkSpecialTraffic(self.tt)):
+                ul_dl = True
+                biDir = '1'
+                tmp_tt = sbtc.splitTraffic(self.tt)
+            else:
+                #set back biDir if no special traffic is set
+                biDir = self.config['biDir']
+
+            for ps in self.results:
                 traffic = dbh.getTraffic(tmp_tt[0], ps)
-                
-                pkt_res = self.results[realistic]
+
+                pkt_res = self.results[ps]
                 for h in self.config['header_uni']:
                     for h_h in self.config['helper_header']:
                         self.log.debug("%s - %s - %s - %s: %s" %
-                                       (tmp_tt[0], ps,h,h_h,
+                                       (tmp_tt[0],ps,h,h_h,
                                         pkt_res[h][h_h]))
                         #create proper column name from header and helper_header
                         measure_column = h + "_" + h_h
                         mr[measure_column] = round(float(pkt_res[h][h_h]),4)
-                
+
                 self.log.debug("UniDir mr: %s" % str(mr))
                 #now we need to insert a row
                 bidir_id = dbh.insertMeasurement(
@@ -236,7 +104,7 @@ class DatabaseHandler(object):
                      nic = nic,
                      virtualization = virtualization,
                      vnf = vnf,
-                     used_cpu_cores=self.config['vnf_num_cores'],
+                     used_cpu_cores = self.config['vnf_num_cores'],
                      traffic = traffic,
                      repetitions = repetitions,
                      duration = duration,
@@ -262,18 +130,18 @@ class DatabaseHandler(object):
                      comment = self.config['vnf_comment'],
                      bidir = biDir,
                      control_nfpa = self.config['control_nfpa'])
-                        
+
                 #if bidirectional measurement was carried out, we need to
                 #add another row
-                if((int(self.config['biDir']) == 1) or (ul_dl)):  
+                if((int(self.config['biDir']) == 1) or (ul_dl)):
                     biDir = '1'
                     #we need to check whether the special ul-dl bidirectional
                     #traffic type was set. If so, then we also add header_bi
-                    #to headers var                 
+                    #to headers var
                     mr = {}
-                    
-                    #there is no packet size set  for realistic traces
-                    #so set here the second param to "0"
+
+                    #update traffic (necessary if special bidirectional
+                    #measurement was carried out
                     traffic = dbh.getTraffic(tmp_tt[1], ps)
                     for h in self.config['header_bi']:
                         for h_h in self.config['helper_header']:
@@ -283,43 +151,172 @@ class DatabaseHandler(object):
                             #we need to remove '_bidir' from header
                             #we could also append min,max,avg immediately
                             measure_column = copy.deepcopy(h)
-                            measure_column = measure_column.replace('bidir', h_h)
+                            measure_column = measure_column.replace('bidir',
+                                                                    h_h)
                             mr[measure_column] = round(
                                                    float(pkt_res[h][h_h]),
                                                    4)
-                    
+
                     self.log.debug("Bidir mr: %s" % str(mr))
                     row_id = dbh.insertMeasurement(
-                     ts = self.config['app_start_date'],
-                     name = self.config['scenario_name'],
-                     cpu = cpu,
-                     nic = nic,
-                     virtualization = virtualization,
-                     vnf = vnf,
-                     used_cpu_cores=self.config['vnf_num_cores'],
-                     traffic = traffic,
-                     repetitions = repetitions,
-                     duration = duration,
-                     sent_pps_min = mr['sent_pps_min'],
-                     sent_pps_avg = mr['sent_pps_avg'],
-                     sent_pps_max = mr['sent_pps_max'],
-                     recv_pps_min = mr['recv_pps_min'],
-                     recv_pps_avg = mr['recv_pps_avg'],
-                     recv_pps_max = mr['recv_pps_max'],
-                     miss_pps_min = mr['miss_pps_min'],
-                     miss_pps_avg = mr['miss_pps_avg'],
-                     miss_pps_max = mr['miss_pps_max'],
-                     sent_bps_min = mr['sent_bps_min'],
-                     sent_bps_avg = mr['sent_bps_avg'],
-                     sent_bps_max = mr['sent_bps_max'],
-                     recv_bps_min = mr['recv_bps_min'],
-                     recv_bps_avg = mr['recv_bps_avg'],
-                     recv_bps_max = mr['recv_bps_max'],
-                     diff_bps_min = mr['diff_bps_min'],
-                     diff_bps_avg = mr['diff_bps_avg'],
-                     diff_bps_max = mr['diff_bps_max'],
-                     user_id = user_id,
-                     comment = self.config['vnf_comment'],
-                     bidir_twin_id = bidir_id,
-                     bidir = biDir,
-                     control_nfpa = self.config['control_nfpa'])
+                       ts = self.config['app_start_date'],
+                       name = self.config['scenario_name'],
+                       cpu = cpu,
+                       nic = nic,
+                       virtualization = virtualization,
+                       vnf = vnf,
+                       used_cpu_cores=self.config['vnf_num_cores'],
+                       traffic = traffic,
+                       repetitions = repetitions,
+                       duration = duration,
+                       sent_pps_min = mr['sent_pps_min'],
+                       sent_pps_avg = mr['sent_pps_avg'],
+                       sent_pps_max = mr['sent_pps_max'],
+                       recv_pps_min = mr['recv_pps_min'],
+                       recv_pps_avg = mr['recv_pps_avg'],
+                       recv_pps_max = mr['recv_pps_max'],
+                       miss_pps_min = mr['miss_pps_min'],
+                       miss_pps_avg = mr['miss_pps_avg'],
+                       miss_pps_max = mr['miss_pps_max'],
+                       sent_bps_min = mr['sent_bps_min'],
+                       sent_bps_avg = mr['sent_bps_avg'],
+                       sent_bps_max = mr['sent_bps_max'],
+                       recv_bps_min = mr['recv_bps_min'],
+                       recv_bps_avg = mr['recv_bps_avg'],
+                       recv_bps_max = mr['recv_bps_max'],
+                       diff_bps_min = mr['diff_bps_min'],
+                       diff_bps_avg = mr['diff_bps_avg'],
+                       diff_bps_max = mr['diff_bps_max'],
+                       user_id = user_id,
+                       comment = self.config['vnf_comment'],
+                       bidir_twin_id = bidir_id,
+                       bidir = biDir,
+                       control_nfpa = self.config['control_nfpa'])
+                        
+                        
+        if self.type == "realistic":
+            biDir = self.config['biDir']
+            #check for special bidirectional measurement
+            ul_dl = False
+            tmp_tt = [self.tt,self.tt]
+            if(sbtc.checkSpecialTraffic(self.tt)):
+                ul_dl = True
+                biDir = '1'
+                tmp_tt = sbtc.splitTraffic(self.tt)
+            else:
+                #set back biDir if no special traffic is set
+                biDir = self.config['biDir']
+
+            #there is no packet size set  for realistic traces
+            #so set here the second param to 0 (we need to use "0" instead
+            #of 0, since 0 is represented as NULL, and database will throw
+            #error of trying to inserting NULL value into NOT NULL column
+            ps = "0"
+            traffic = dbh.getTraffic(tmp_tt[0], ps)
+
+            pkt_res = self.results
+            for h in self.config['header_uni']:
+                for h_h in self.config['helper_header']:
+                    self.log.debug("%s - %s - %s: %s" %
+                                   (tmp_tt[0],h,h_h,
+                                    pkt_res[h][h_h]))
+                    #create proper column name from header and helper_header
+                    measure_column = h + "_" + h_h
+                    mr[measure_column] = round(float(pkt_res[h][h_h]),4)
+
+            self.log.debug("UniDir mr: %s" % str(mr))
+            #now we need to insert a row
+            bidir_id = dbh.insertMeasurement(
+                 ts = self.config['app_start_date'],
+                 name = self.config['scenario_name'],
+                 cpu = cpu,
+                 nic = nic,
+                 virtualization = virtualization,
+                 vnf = vnf,
+                 used_cpu_cores=self.config['vnf_num_cores'],
+                 traffic = traffic,
+                 repetitions = repetitions,
+                 duration = duration,
+                 sent_pps_min = mr['sent_pps_min'],
+                 sent_pps_avg = mr['sent_pps_avg'],
+                 sent_pps_max = mr['sent_pps_max'],
+                 recv_pps_min = mr['recv_pps_min'],
+                 recv_pps_avg = mr['recv_pps_avg'],
+                 recv_pps_max = mr['recv_pps_max'],
+                 miss_pps_min = mr['miss_pps_min'],
+                 miss_pps_avg = mr['miss_pps_avg'],
+                 miss_pps_max = mr['miss_pps_max'],
+                 sent_bps_min = mr['sent_bps_min'],
+                 sent_bps_avg = mr['sent_bps_avg'],
+                 sent_bps_max = mr['sent_bps_max'],
+                 recv_bps_min = mr['recv_bps_min'],
+                 recv_bps_avg = mr['recv_bps_avg'],
+                 recv_bps_max = mr['recv_bps_max'],
+                 diff_bps_min = mr['diff_bps_min'],
+                 diff_bps_avg = mr['diff_bps_avg'],
+                 diff_bps_max = mr['diff_bps_max'],
+                 user_id = user_id,
+                 comment = self.config['vnf_comment'],
+                 bidir = biDir,
+                 control_nfpa = self.config['control_nfpa'])
+
+            #if bidirectional measurement was carried out, we need to
+            #add another row
+            if((int(self.config['biDir']) == 1) or (ul_dl)):
+                biDir = '1'
+                #we need to check whether the special ul-dl bidirectional
+                #traffic type was set. If so, then we also add header_bi
+                #to headers var
+                mr = {}
+
+                #there is no packet size set  for realistic traces
+                #so set here the second param to "0"
+                traffic = dbh.getTraffic(tmp_tt[1], ps)
+                for h in self.config['header_bi']:
+                    for h_h in self.config['helper_header']:
+                        self.log.debug("%s - %s - %s: %s" %
+                                       (tmp_tt,h,h_h,
+                                        pkt_res[h][h_h]))
+                        #we need to remove '_bidir' from header
+                        #we could also append min,max,avg immediately
+                        measure_column = copy.deepcopy(h)
+                        measure_column = measure_column.replace('bidir', h_h)
+                        mr[measure_column] = round(
+                                               float(pkt_res[h][h_h]),
+                                               4)
+
+                self.log.debug("Bidir mr: %s" % str(mr))
+                row_id = dbh.insertMeasurement(
+                 ts = self.config['app_start_date'],
+                 name = self.config['scenario_name'],
+                 cpu = cpu,
+                 nic = nic,
+                 virtualization = virtualization,
+                 vnf = vnf,
+                 used_cpu_cores=self.config['vnf_num_cores'],
+                 traffic = traffic,
+                 repetitions = repetitions,
+                 duration = duration,
+                 sent_pps_min = mr['sent_pps_min'],
+                 sent_pps_avg = mr['sent_pps_avg'],
+                 sent_pps_max = mr['sent_pps_max'],
+                 recv_pps_min = mr['recv_pps_min'],
+                 recv_pps_avg = mr['recv_pps_avg'],
+                 recv_pps_max = mr['recv_pps_max'],
+                 miss_pps_min = mr['miss_pps_min'],
+                 miss_pps_avg = mr['miss_pps_avg'],
+                 miss_pps_max = mr['miss_pps_max'],
+                 sent_bps_min = mr['sent_bps_min'],
+                 sent_bps_avg = mr['sent_bps_avg'],
+                 sent_bps_max = mr['sent_bps_max'],
+                 recv_bps_min = mr['recv_bps_min'],
+                 recv_bps_avg = mr['recv_bps_avg'],
+                 recv_bps_max = mr['recv_bps_max'],
+                 diff_bps_min = mr['diff_bps_min'],
+                 diff_bps_avg = mr['diff_bps_avg'],
+                 diff_bps_max = mr['diff_bps_max'],
+                 user_id = user_id,
+                 comment = self.config['vnf_comment'],
+                 bidir_twin_id = bidir_id,
+                 bidir = biDir,
+                 control_nfpa = self.config['control_nfpa'])

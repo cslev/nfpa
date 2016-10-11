@@ -37,11 +37,11 @@ def getLogger(class_name, level, timestamp, path):
                           path_parent_dir)
             print("EXITING...")
             exit(-1)
-    #create the log directory
-    log_dir_cmd = "mkdir -p " + path
 
-    # logger class is not ready, we set it to None for invoke
-    retval = invoke.invoke(log_dir_cmd, None)
+
+    #create the log directory
+    if not os.path.exists(path):
+        os.makedirs(path)
 
     
      # create file handler which logs even debug messages

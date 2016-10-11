@@ -353,3 +353,10 @@ v2.6
 SQLite and the main database is also altered to store control_nfpa variable as well in order to
 indicate whether the supported scenario with a given trace is configured via NFPA.
 
+v2.7
+NFPA went through a great code refactoring to solve one of the most important issue as the measurement
+data was only processed and analyzed after all measurement were done. However, if some error occurred
+before the last measurement, for instance, someone has consumed the hugepages from Pktgen, then the
+results measured so far have not been analyzed, plotted and inserted into the database.
+Now, all the measurement results are immediately analyzed trace by trace, i.e., if one measurement was
+completely successfull, then its results will not be vanished.

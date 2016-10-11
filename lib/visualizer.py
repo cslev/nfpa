@@ -34,7 +34,7 @@ class Visualizer(object):
         self.config = params.get('config', None)
         self.results = params.get('results', None)
         self.type = params.get('type', None)
-        
+        self.tt = params.get('traffic_trace', None)
         
         
         #create a reference for logger
@@ -68,13 +68,12 @@ class Visualizer(object):
                       "virt_" + self.config['virtualization'] + "/" + \
                       self.config['port_type'] + "/"
   
-        
-        try:
-            subprocess.call(["mkdir", "-p", self.prefix])
-        except e:
-            self.log.error("Unable to create res dir")
-            self.log.error(str(e))
-            exit(-1)
+
+        #check whether directory exists
+        if not os.path.exists(self.prefix):
+            os.makedirs(self.prefix)
+
+
         
         
                       
@@ -123,243 +122,122 @@ class Visualizer(object):
         if self.type == "synthetic":
 
             #all right, we got the header data
-            
-            #now, iterate through the traffic types and open a file
-            for tt in self.results:
-                ul_dl = False
-                if(sbtc.checkSpecialTraffic(tt)):
-                    ul_dl = True
-                                               
-                #assemble headers for accessing results dictionary
-                headers = copy.deepcopy(self.config['header_uni'])
-                if((int(self.config['biDir']) == 1) or (ul_dl)):  
-                    #we need to check whether the special ul-dl bidirectional
-                    #traffic type was set. If so, then we also add header_bi
-                    #to headers var                 
-                    headers += self.config['header_bi']
-       
-                #theoretical
-                header = "Size, Theor_max(p), "
-                
-                #assemble header to write out in gnuplot file
-                #the following variables are necessary to know when to stop
-                #writing commas
-                headers_cnt = 1
-                headers_len = len(headers) * len(helper_header)
-                for h in headers:
-                    for h_h in helper_header:
-                        if headers_cnt < headers_len:
-                            comma = ", "
-                        else:
-                            comma = " "
-                        header += h_h + "(" + h + ")" + comma
-                        #increase headers counter
-                        headers_cnt += 1   
-            
-                header += "\n"
-                
-                #update units
-                header = header.replace("pps", str("%spps" % pu))
-                header = header.replace("bps", str("%sbps" % bu))
 
+            ul_dl = False
+            if(sbtc.checkSpecialTraffic(self.tt)):
+                ul_dl = True
+
+            #assemble headers for accessing results dictionary
+            headers = copy.deepcopy(self.config['header_uni'])
+            if((int(self.config['biDir']) == 1) or (ul_dl)):
+                #we need to check whether the special ul-dl bidirectional
+                #traffic type was set. If so, then we also add header_bi
+                #to headers var
+                headers += self.config['header_bi']
+
+            #theoretical
+            header = "Size, Theor_max(p), "
                 
-                #replace traffic type in file name to the current one
-                data_file = self.prefix.replace("TRAFFICTYPE", str(tt))
-                
-                #update direction irrespectively whether biDir was set,so
-                #replace uniDir to biDir - if biDir was set, nothing will happen
-                if(ul_dl):
-                    data_file = data_file.replace("uniDir", "biDir")
-    
-                self.log.debug("Gnuplot data file will be: %s " % data_file)
-            
-                #assemble gnuplot arguments (input file will be the data file
-                #that stores the results
-                if not ul_dl:
-                    #if both ports are using the same pcap, we set that type
-                    #for both sent, and recv property in gnuplot params
-                    tmp_tt = [tt, tt]
-                    
-                else:
-                    #indicate in ports which traffic is what
-                    tmp_tt = sbtc.splitTraffic(tt)
-                    
-                gp_params = str("\"input_file='%s';"
-                                "pps_unit='%s';"
-                                "bps_unit='%s';"
-                                "tr1='%s';"
-                                "tr2='%s';\"" %
-                                 (data_file,
-                                  self.config['pps_unit'],
-                                  self.config['bps_unit'],
-                                  tmp_tt[0],
-                                  tmp_tt[1]))
-               
-                self.log.debug("Gnuplot params will be %s " % gp_params)
-                
-                try:
-                    #open file
-                    gp_data_file = open(data_file, 'w')
-                    #write out header
-                    gp_data_file.write(header)
-                
-                    self.log.debug("create gnuplot file for traffic type: %s " % (tt))
-                    
-                    #we need to sort the results according to the packetsizes,
-                    #since data rows should be sorted for gnuplot, otherwise
-                    #very weird charts are generated
-                    #NOTE: it could be sorted via linux cat file|sort -n, but
-                    #do not want to restrict to BASH
-                    tmp_ps_list = []
-                 
-                    
-                    #iterate through the packet sizes
-                    for ps in self.results[tt]:
-                        
-                        #so, we store the ps numbers in a list, then sort it, and 
-                        #iterate through the new list
-                        tmp_ps_list.append(int(ps))
-                    
-                    tmp_ps_list.sort()  
-                    
-                    self.log.debug(str(tmp_ps_list))
-                    
-                    
-                    for ps in tmp_ps_list:
-                        ps = str(ps)
-                        
-                        #create a simple pointer to main results dict
-                        pkt_res = self.results[tt][ps]                
-                        
-                        #theoretical
-                        one_line = ps + ", " + \
-                        str(round(float(pkt_res['theor_max']/div.divisor(pu)), 4)) + ", "
-                        
-                        #getting results and print out
-                        #the following variable is necessary to know when to stop
-                        #writing commas
-                        headers_cnt = 1
-                        headers_len = len(headers) * len(helper_header)
-                        for h in headers:
-                            for h_h in helper_header:
-                                if 'pps' in h:
-                                    #pps results needs to be divided by pps divisor
-                                    d = div.divisor(pu)
-                                elif 'bps' in h:
-                                    #bps results needs to be divided by bps divisor
-                                    d = div.divisor(bu)
-                                else:
-                                    #this part could be happened (ony if someone
-                                    #extends the programcode in a wrong manner)
-                                    self.log.error("Wrong headers are used...Segfault")
-                                    self.log.error("EXITING...")
-                                    exit(-1)
-                                
-                                #assemble one line with this embedded for loops
-                                if headers_cnt < headers_len:
-                                    comma = ", "
-                                else:
-                                    comma = " "
-                                
-                                one_line += str(round(float(pkt_res[h][h_h]/d), 4)) + comma
-                            
-                                #increase headers counter
-                                headers_cnt += 1
-                        
-                        one_line += "\n"
-                        
-                        #write out one line
-                        gp_data_file.write(one_line)
-                        
-                    #close file
-                    gp_data_file.close()
-                except IOError as e:
-                    self.log.error("Cannot open results file GNUPLOT")
-                    self.log.error(str(e))
-                    self.log.error("EXITING...")
-                    exit(-1)
-                    
-                #call gnuplot command to create chart
-                self.drawChartViaGnuplot(gp_params, ul_dl=ul_dl)
-        
-        #if realistic traffic is needed to be plotted
-        if self.type == "realistic":
-            #each realistic res will be written in different files
-            for realistic in self.results:
-                
-                self.log.debug("Visualizing %s" % realistic)
-                
-                ul_dl = False
-                if(sbtc.checkSpecialTraffic(realistic)):
-                    ul_dl = True
-                                               
-                #assemble headers for accessing results dictionary
-                headers = copy.deepcopy(self.config['header_uni'])
-                if((int(self.config['biDir']) == 1) or (ul_dl)):  
-                    #we need to check whether the special ul-dl bidirectional
-                    #traffic type was set. If so, then we also add header_bi
-                    #to headers var                 
-                    headers += self.config['header_bi']
-                
-                #assemble header in data file
-                header = "Unit(" + self.config['pps_unit']
-                header += "pps-" + self.config['bps_unit'] 
-                header += "bps), Min, Avg, Max\n"
-                #replace traffic type in file name to the current one
-                data_file = self.prefix.replace("TRAFFICTYPE", str("realitic_%s"
-                                                                   % realistic))
-                
-                #update direction irrespectively whether biDir was set,so
-                #replace uniDir to biDir - if biDir was set, nothing will happen
-                if(ul_dl):
-                    data_file = data_file.replace("uniDir", "biDir")
-    
-                self.log.debug("Gnuplot data file will be: %s " % data_file)
-            
-                #assemble gnuplot arguments (input file will be the data file
-                #that stores the results
-                if not ul_dl:
-                    #if both ports are using the same pcap, we set that type
-                    #for both sent, and recv property in gnuplot params
-                    tmp_tt = [realistic, realistic]
-                    
-                else:
-                    #indicate in ports which traffic is what
-                    tmp_tt = sbtc.splitTraffic(realistic)
-                    
-                gp_params = str("\"input_file='%s';"
-                                "pps_unit='%s';"
-                                "bps_unit='%s';"
-                                "tr1='%s';"
-                                "tr2='%s';\"" %
-                                (data_file,
-                                  self.config['pps_unit'],
-                                  self.config['bps_unit'],
-                                  tmp_tt[0],
-                                  tmp_tt[1]))
-            
-                
-                self.log.debug("Gnuplot params will be %s " % gp_params)
-                try:
-                    #open file
-                    gp_data_file = open(data_file, 'w')
-                    #write out header
-                    gp_data_file.write(header)
-                    
-                    self.log.debug("create gnuplot file for %s " % (realistic))     
-                
+            #assemble header to write out in gnuplot file
+            #the following variables are necessary to know when to stop
+            #writing commas
+            headers_cnt = 1
+            headers_len = len(headers) * len(helper_header)
+            for h in headers:
+                for h_h in helper_header:
+                    if headers_cnt < headers_len:
+                        comma = ", "
+                    else:
+                        comma = " "
+                    header += h_h + "(" + h + ")" + comma
+                    #increase headers counter
+                    headers_cnt += 1
+
+            header += "\n"
+
+            #update units
+            header = header.replace("pps", str("%spps" % pu))
+            header = header.replace("bps", str("%sbps" % bu))
+
+
+            #replace traffic type in file name to the current one
+            data_file = self.prefix.replace("TRAFFICTYPE", str(self.tt))
+
+            #update direction irrespectively whether biDir was set,so
+            #replace uniDir to biDir - if biDir was set, nothing will happen
+            if(ul_dl):
+                data_file = data_file.replace("uniDir", "biDir")
+
+            self.log.debug("Gnuplot data file will be: %s " % data_file)
+
+            #assemble gnuplot arguments (input file will be the data file
+            #that stores the results
+            if not ul_dl:
+                #if both ports are using the same pcap, we set that type
+                #for both sent, and recv property in gnuplot params
+                tmp_tt = [self.tt, self.tt]
+
+            else:
+                #indicate in ports which traffic is what
+                tmp_tt = sbtc.splitTraffic(self.tt)
+
+            gp_params = str("\"input_file='%s';"
+                            "pps_unit='%s';"
+                            "bps_unit='%s';"
+                            "tr1='%s';"
+                            "tr2='%s';\"" %
+                             (data_file,
+                              self.config['pps_unit'],
+                              self.config['bps_unit'],
+                              tmp_tt[0],
+                              tmp_tt[1]))
+
+            self.log.debug("Gnuplot params will be %s " % gp_params)
+
+            try:
+                #open file
+                gp_data_file = open(data_file, 'w')
+                #write out header
+                gp_data_file.write(header)
+
+                self.log.debug("create gnuplot file for traffic type: %s " % (self.tt))
+
+                #we need to sort the results according to the packetsizes,
+                #since data rows should be sorted for gnuplot, otherwise
+                #very weird charts are generated
+                #NOTE: it could be sorted via linux cat file|sort -n, but
+                #do not want to restrict to BASH
+                tmp_ps_list = []
+
+
+                #iterate through the packet sizes
+                for ps in self.results:
+
+                    #so, we store the ps numbers in a list, then sort it, and
+                    #iterate through the new list
+                    tmp_ps_list.append(int(ps))
+
+                tmp_ps_list.sort()
+
+                self.log.debug(str(tmp_ps_list))
+
+
+                for ps in tmp_ps_list:
+                    ps = str(ps)
+
                     #create a simple pointer to main results dict
-                    pkt_res = self.results[realistic]
-                    
-                
-                    one_line = ""
-                    
-                    
+                    pkt_res = self.results[ps]
+
+                    #theoretical
+                    one_line = ps + ", " + \
+                    str(round(float(pkt_res['theor_max']/div.divisor(pu)), 4)) + ", "
+
                     #getting results and print out
+                    #the following variable is necessary to know when to stop
+                    #writing commas
+                    headers_cnt = 1
+                    headers_len = len(headers) * len(helper_header)
                     for h in headers:
-                        #print out unit as the first column
-                        one_line += h + ", "
-                        headers_cnt = 1
                         for h_h in helper_header:
                             if 'pps' in h:
                                 #pps results needs to be divided by pps divisor
@@ -373,84 +251,202 @@ class Visualizer(object):
                                 self.log.error("Wrong headers are used...Segfault")
                                 self.log.error("EXITING...")
                                 exit(-1)
-                            
-                            if(headers_cnt < 3):
+
+                            #assemble one line with this embedded for loops
+                            if headers_cnt < headers_len:
                                 comma = ", "
                             else:
                                 comma = " "
-                            
+
                             one_line += str(round(float(pkt_res[h][h_h]/d), 4)) + comma
-                            
+
+                            #increase headers counter
                             headers_cnt += 1
-                        one_line += "\n"
-    
-                    #update unit in the first column
-                    one_line = one_line.replace("pps", str("%spps" % pu))
-                    one_line = one_line.replace("bps", str("%sbps" % bu))
-                    #update column with the traffic types used for ports
-    #                 one_line = one_line.replace("sent_pps", 
-    #                                             str("sent_%spps_%s" % (pu,
-    #                                                                    tmp_tt[0])))
-    #                 one_line = one_line.replace("recv_pps", 
-    #                                             str("recv_%spps_%s" % (pu,
-    #                                                                    tmp_tt[0])))
-    #                 one_line = one_line.replace("miss_pps", 
-    #                                             str("miss_%spps_%s" % (pu,
-    #                                                                    tmp_tt[0])))
-    #                 one_line = one_line.replace("sent_bps", 
-    #                                             str("sent_%sbps_%s" % (bu,
-    #                                                                    tmp_tt[0])))
-    #                 one_line = one_line.replace("recv_bps", 
-    #                                             str("recv_%sbps_%s" % (bu,
-    #                                                                    tmp_tt[0])))
-    #                 one_line = one_line.replace("diff_bps", 
-    #                                             str("diff_%sbps_%s" % (bu,
-    #                                                                    tmp_tt[0])))
-    #                 
-    #                 #update bidirectional header elements as well
-    #                 if((int(self.config['biDir']) == 1) or (ul_dl)): 
-    #                     one_line = one_line.replace(
-    #                                            "sent_pps_bidir", 
-    #                                            str("sent_%spps_%s" % (pu,
-    #                                                                   tmp_tt[1])))
-    #                     one_line = one_line.replace(
-    #                                            "recv_pps_bidir", 
-    #                                            str("recv_%spps_%s" % (pu,
-    #                                                                   tmp_tt[1]))) 
-    #                     
-    #                     one_line = one_line.replace(
-    #                                            "miss_pps_bidir", 
-    #                                            str("miss_%spps_%s" % (pu,
-    #                                                                   tmp_tt[1])))
-    #                     
-    #                     one_line = one_line.replace(
-    #                                            "sent_bps_bidir", 
-    #                                            str("sent_%sbps_%s" % (bu,
-    #                                                                   tmp_tt[1]))) 
-    #                     
-    #                     one_line = one_line.replace(
-    #                                            "recv_bps_bidir", 
-    #                                            str("recv_%sbps_%s" % (bu,
-    #                                                                   tmp_tt[1])))
-    #                     
-    #                     one_line = one_line.replace(
-    #                                            "diff_bps_bidir", 
-    #                                            str("diff_%sbps_%s" % (bu,
-    #                                                                   tmp_tt[1])))                       
-                   
-                    
+
+                    one_line += "\n"
+
                     #write out one line
                     gp_data_file.write(one_line)
-                        
-                    #close file
-                    gp_data_file.close()
-                except IOError as e:
-                    self.log.error("Cannot open results file GNUPLOT")
-                    self.log.error(str(e))
-                    self.log.error("EXITING...")
-                    exit(-1)
-                #call gnuplot command to create chart
-                self.drawChartViaGnuplot(gp_params, ul_dl=ul_dl)
+
+                #close file
+                gp_data_file.close()
+            except IOError as e:
+                self.log.error("Cannot open results file GNUPLOT")
+                self.log.error(str(e))
+                self.log.error("EXITING...")
+                exit(-1)
+
+            #call gnuplot command to create chart
+            self.drawChartViaGnuplot(gp_params, ul_dl=ul_dl)
+        
+        #if realistic traffic is needed to be plotted
+        elif self.type == "realistic":
+
+            self.log.debug("Visualizing %s" % self.tt)
+
+            ul_dl = False
+            if(sbtc.checkSpecialTraffic(self.tt)):
+                ul_dl = True
+
+            #assemble headers for accessing results dictionary
+            headers = copy.deepcopy(self.config['header_uni'])
+            if((int(self.config['biDir']) == 1) or (ul_dl)):
+                #we need to check whether the special ul-dl bidirectional
+                #traffic type was set. If so, then we also add header_bi
+                #to headers var
+                headers += self.config['header_bi']
+
+            #assemble header in data file
+            header = "Unit(" + self.config['pps_unit']
+            header += "pps-" + self.config['bps_unit']
+            header += "bps), Min, Avg, Max\n"
+            #replace traffic type in file name to the current one
+            data_file = self.prefix.replace("TRAFFICTYPE", str("realitic_%s"
+                                                               % self.tt))
+
+            #update direction irrespectively whether biDir was set,so
+            #replace uniDir to biDir - if biDir was set, nothing will happen
+            if(ul_dl):
+                data_file = data_file.replace("uniDir", "biDir")
+
+            self.log.debug("Gnuplot data file will be: %s " % data_file)
+
+            #assemble gnuplot arguments (input file will be the data file
+            #that stores the results
+            if not ul_dl:
+                #if both ports are using the same pcap, we set that type
+                #for both sent, and recv property in gnuplot params
+                tmp_tt = [self.tt, self.tt]
+
+            else:
+                #indicate in ports which traffic is what
+                tmp_tt = sbtc.splitTraffic(self.tt)
+
+            gp_params = str("\"input_file='%s';"
+                            "pps_unit='%s';"
+                            "bps_unit='%s';"
+                            "tr1='%s';"
+                            "tr2='%s';\"" %
+                            (data_file,
+                              self.config['pps_unit'],
+                              self.config['bps_unit'],
+                              tmp_tt[0],
+                              tmp_tt[1]))
+
+
+            self.log.debug("Gnuplot params will be %s " % gp_params)
+            try:
+                #open file
+                gp_data_file = open(data_file, 'w')
+                #write out header
+                gp_data_file.write(header)
+
+                self.log.debug("create gnuplot file for %s " % (self.tt))
+
+                #create a simple pointer to main results dict
+                pkt_res = self.results
+
+
+                one_line = ""
+
+
+                #getting results and print out
+                for h in headers:
+                    #print out unit as the first column
+                    one_line += h + ", "
+                    headers_cnt = 1
+                    for h_h in helper_header:
+                        if 'pps' in h:
+                            #pps results needs to be divided by pps divisor
+                            d = div.divisor(pu)
+                        elif 'bps' in h:
+                            #bps results needs to be divided by bps divisor
+                            d = div.divisor(bu)
+                        else:
+                            #this part could be happened (only if someone
+                            #extends the programcode in a wrong manner)
+                            self.log.error("Wrong headers are used...Segfault")
+                            self.log.error("EXITING...")
+                            exit(-1)
+
+                        if(headers_cnt < 3):
+                            comma = ", "
+                        else:
+                            comma = " "
+
+
+                        one_line += str(round(float(pkt_res[h][h_h]/d), 4)) + comma
+
+                        headers_cnt += 1
+                    one_line += "\n"
+
+                #update unit in the first column
+                one_line = one_line.replace("pps", str("%spps" % pu))
+                one_line = one_line.replace("bps", str("%sbps" % bu))
+                #update column with the traffic types used for ports
+#                 one_line = one_line.replace("sent_pps",
+#                                             str("sent_%spps_%s" % (pu,
+#                                                                    tmp_tt[0])))
+#                 one_line = one_line.replace("recv_pps",
+#                                             str("recv_%spps_%s" % (pu,
+#                                                                    tmp_tt[0])))
+#                 one_line = one_line.replace("miss_pps",
+#                                             str("miss_%spps_%s" % (pu,
+#                                                                    tmp_tt[0])))
+#                 one_line = one_line.replace("sent_bps",
+#                                             str("sent_%sbps_%s" % (bu,
+#                                                                    tmp_tt[0])))
+#                 one_line = one_line.replace("recv_bps",
+#                                             str("recv_%sbps_%s" % (bu,
+#                                                                    tmp_tt[0])))
+#                 one_line = one_line.replace("diff_bps",
+#                                             str("diff_%sbps_%s" % (bu,
+#                                                                    tmp_tt[0])))
+#
+#                 #update bidirectional header elements as well
+#                 if((int(self.config['biDir']) == 1) or (ul_dl)):
+#                     one_line = one_line.replace(
+#                                            "sent_pps_bidir",
+#                                            str("sent_%spps_%s" % (pu,
+#                                                                   tmp_tt[1])))
+#                     one_line = one_line.replace(
+#                                            "recv_pps_bidir",
+#                                            str("recv_%spps_%s" % (pu,
+#                                                                   tmp_tt[1])))
+#
+#                     one_line = one_line.replace(
+#                                            "miss_pps_bidir",
+#                                            str("miss_%spps_%s" % (pu,
+#                                                                   tmp_tt[1])))
+#
+#                     one_line = one_line.replace(
+#                                            "sent_bps_bidir",
+#                                            str("sent_%sbps_%s" % (bu,
+#                                                                   tmp_tt[1])))
+#
+#                     one_line = one_line.replace(
+#                                            "recv_bps_bidir",
+#                                            str("recv_%sbps_%s" % (bu,
+#                                                                   tmp_tt[1])))
+#
+#                     one_line = one_line.replace(
+#                                            "diff_bps_bidir",
+#                                            str("diff_%sbps_%s" % (bu,
+#                                                                   tmp_tt[1])))
+
+
+                #write out one line
+                gp_data_file.write(one_line)
+
+                #close file
+                gp_data_file.close()
+            except IOError as e:
+                self.log.error("Cannot open results file GNUPLOT")
+                self.log.error(str(e))
+                self.log.error("EXITING...")
+                exit(-1)
+            #call gnuplot command to create chart
+            self.drawChartViaGnuplot(gp_params, ul_dl=ul_dl)
                 
 
     def drawChartViaGnuplot(self, gnuplot_arguments, **params):
@@ -493,7 +489,7 @@ class Visualizer(object):
                                              
         self.log.debug("======= GNUPLOT =======")
         self.log.debug(gnuplot_command)
-        retval = invoke.invoke(gnuplot_command, self.log)
+        retval = (invoke.invoke(gnuplot_command, self.log))[0]
         if retval is not None or retval != '':
             self.log.info(retval)
             

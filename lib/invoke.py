@@ -10,7 +10,7 @@ def invoke(command, logger):
 
     :param command: the system command itself
     :param logger: logger object from the calling class to make it possible to log
-    :return: if no error: stdout, otherwise it exits the application and prints the exit_code
+    :return: if no error: list of [stdout, exit code, stderr], otherwise it exits the application and prints the exit_code
     and the corresponding error
     '''
 
@@ -42,7 +42,7 @@ def invoke(command, logger):
             logger.error("Exit_code: %s" % str(retList[1]))
         exit(-1)
 
-    return retList[0]
+    return retList
 
 
 # def check_retval(cmd, retval, logger_instance):
