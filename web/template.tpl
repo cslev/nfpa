@@ -31,7 +31,7 @@
 % dpdk_settings = ['cpu_core_mask', 'mem_channels', 'socket_mem', 'other_dpdk_params', 'port_mask', 'cpu_port_assign']
 % nf_settings = ['cpu_make', 'cpu_model', 'nic_make', 'nic_model', 'port_type',
 %                'virtualization','vnf_name', 'vnf_version', 'vnf_driver', 
-%                'vnf_driver_version', 'vnf_function', 'vnf_comment']
+%                'vnf_driver_version', 'vnf_function', 'vnf_num_cores', 'vnf_comment']
 % gnuplot_settings = ['pps_unit', 'bps_unit', 'outlier_min_percentage',
 %                     'outlier_max_percentage']
 % nfpa_control_settings = ['control_nfpa', 'control_vnf', 'control_path', 'control_args',
@@ -66,6 +66,7 @@
 %              'vnf_driver' : "(Virtual) Network Function's Driver (e.g. kernel, dpdk)<span class='req'>*</span>",
 %              'vnf_driver_version' : "(Virtual) Network Function's Driver's Version (e.g. 3.16, 2.0.0)<span class='req'>*</span>",
 %              'vnf_function' : "(Virtual) Network Function's Function (e.g. l2-switch, l3-router, vxlan)<span class='req'>*</span>",
+%              'vnf_num_cores' : "Set here the number of CPU cores the VNF is using. Use integer numbers!<span class='req'>*</span>",
 %              'vnf_comment' : "Comment (e.g. ivshmem + qemu version 2.3.4)<span class='req'>*</span>",
 %              'pps_unit' : "Desired Unit for Packet/s (e.g., k, M, G)<span class='req'>*</span>",
 %              'bps_unit' : "Desired Unit for Bit/s (e.g., k, M, G)<span class='req'>*</span>",
@@ -288,8 +289,8 @@
     </label>
     <input type="hidden" name="LOG_PATH" value="{{d['LOG_PATH']}}"/>
     <input type="hidden" name="scenario_name" value="{{d['scenario_name']}}"/>
-    <input type="hidden" name="ETL" value="{{d['ETL']}}"/>
-    <input type="hidden" name="ETL_seconds" value="{{d['ETL_seconds']}}"/>
+
+
     <input type="hidden" name="app_start_date" value="{{d['app_start_date']}}"/>
 
     <div class="button-section">

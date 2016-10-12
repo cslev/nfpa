@@ -83,7 +83,7 @@ class WEBNFPA(object):
               "initiated with Web-GUI ###")
         self.log.info("NFPA Web interface can be reached under: %s/nfpa" %
                       host_port_string_input)
-#         print("ETL: %s" % self.config['ETL'])
+        # print("ETL: %s" % self.config['ETL'])
         
         #append scenario name to self.config dictionary for later usage
         self.config['scenario_name'] = scenario_name
