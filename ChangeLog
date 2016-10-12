@@ -360,3 +360,6 @@ before the last measurement, for instance, someone has consumed the hugepages fr
 results measured so far have not been analyzed, plotted and inserted into the database.
 Now, all the measurement results are immediately analyzed trace by trace, i.e., if one measurement was
 completely successful, then its results will not be vanished.
+
+v2.7.1
+vnf_num_cores parameter could not be set via webGUI. Now, it supports it.
