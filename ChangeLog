@@ -363,3 +363,13 @@ completely successful, then its results will not be vanished.
 
 v2.7.1
 vnf_num_cores parameter could not be set via webGUI. Now, it supports it.
+
+----------=================== NFPA v3 Patrick ==================------------
+v3.0 - The new version of NFPA provides more lazyness for the user, that's why the new version's
+name comes from Patrick Star, the starfish who lives under a rock, and his intelligence is extremely
+low. However, as a really good (but not necessary) extension, we named the new version after him as
+he is the best friend of Spongebob.
+About the feauter: An email sending service has been developed, which when enabled could connect to your SMTP server with
+STARTTLS security (like Gmail), and once NFPA finished with one measurement it
+immediately sends you an email about its status, moreover, it attaches the log file,
+and all the related result files.

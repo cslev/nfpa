@@ -84,7 +84,8 @@ class SQLiteDatabaseAdapter(object):
         if not (os.path.isfile(self.db_name)):
 	    self.log.warn("DATABASE FILE NOT EXISTS...creating a new from scratch!")
             create_cmd = "cat db/create_nfpadatabase.sql | sqlite3 " + self.db_name
-            invoke.invoke(create_cmd, self.log)
+            invoke.invoke(command=create_cmd,
+                          logger=self.log)
 
             self.log.info("DATABASE FILE CREATED")
 				

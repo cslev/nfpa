@@ -3,16 +3,16 @@ import date_formatter as df
 #for create log directory
 import os
 import invoke as invoke
+
 logger = None
 colors = {
-          'info': '\033[1;92m', 
+          'info': '\033[1;92m',
           'debug': '\033[0;94m',
           'warning':'\033[1;93m',
           'error':'\033[1;31m',
-          'critical':'\033[1;31m'          
+          'critical':'\033[1;31m'
           }
 no_color = '\033[0m'
-
 
 def getLogger(class_name, level, timestamp, path):
     '''
@@ -26,7 +26,12 @@ def getLogger(class_name, level, timestamp, path):
     path - the path the log file should be saved
     '''
     logger = logging.getLogger(class_name)
-    
+
+    #if logger already has handlers, it means that it is already configured,
+    #so we just pass back the reference
+    if logger.handlers:
+        return logger
+
     timestamp = df.getDateFormat(timestamp)
     
     #remove log/ from the path, and check the parent directory's existence
@@ -98,12 +103,12 @@ def getLogger(class_name, level, timestamp, path):
 #     logging.addLevelName( logging.ERROR, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.ERROR))
    
     # create formatter and add it to the handlers
-#     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     formatter = logging.Formatter('[%(name)s] - %(levelname)s - %(message)s')
     ch.setFormatter(formatter)
     fh.setFormatter(formatter)
+
     # add the handlers to logger
     logger.addHandler(ch)
     logger.addHandler(fh)
-    
+
     return logger

@@ -39,19 +39,23 @@ def prepareOpenFlowRules(logger, path, flowrulefile,inport,outport, bidir):
     #first sed command for inport
     sed_cmd = 'sed "s/<INPORT1>/' + inport + '/" ' + fpath + ' > ' + tmp_file
     #invoke first sed
-    invoke.invoke(sed_cmd, l)
+    invoke.invoke(command=sed_cmd,
+                  logger=l)
     #second sed command for outport - From now, we already have the tmp file,
     #so we make the changes over it
     sed_cmd = 'sed -i "s/<OUTPORT2>/' + outport + '/" ' + tmp_file
-    invoke.invoke(sed_cmd, l)
+    invoke.invoke(command=sed_cmd,
+                  logger=l)
 
     #third and fourth sed if bidir is set
     if bidir:
         #note again that if there is no such inport and outport in the flow rule files
         #sed doesn't do anything, thus it won't mess the file even if we call it
         sed_cmd = 'sed -i "s/<INPORT2>/' + outport + '/" ' + tmp_file
-        invoke.invoke(sed_cmd, l)
+        invoke.invoke(command=sed_cmd,
+                      logger=l)
         sed_cmd = 'sed -i "s/<OUTPORT1>/' + inport + '/" ' + tmp_file
-        invoke.invoke(sed_cmd, l)
+        invoke.invoke(command=sed_cmd,
+                      logger=l)
 
     return tmp_file

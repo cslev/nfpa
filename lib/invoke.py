@@ -1,7 +1,7 @@
 from subprocess import (PIPE, Popen)
 
     
-def invoke(command, logger):
+def invoke(**params):
     '''
     This helper function uses subprocess lib to execute system command.
     This could be helpful in case of errors, since reading the return value
@@ -10,9 +10,15 @@ def invoke(command, logger):
 
     :param command: the system command itself
     :param logger: logger object from the calling class to make it possible to log
+    :param email_adapter: the main instance of email adapter to make this function able to send
+    the final log message if an error occurred.
     :return: if no error: list of [stdout, exit code, stderr], otherwise it exits the application and prints the exit_code
     and the corresponding error
     '''
+
+    command = params.get('command', None)
+    logger = params.get('logger', None)
+    email_adapter = params.get('email_adapter', None)
 
     process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
     stdout,stderr= process.communicate()
@@ -36,10 +42,15 @@ def invoke(command, logger):
             print("Error during executing command: %s" % command)
             print("Error: %s" % str(retList[2]))
             print("Exit_code: %s" % str(retList[1]))
+            if (email_adapter is not None) and (not email_adapter.sendErrorMail()):
+                print("Sending ERROR email did not succeed...")
         else:
             logger.error("Error during executing command: %s" % command)
             logger.error("Error: %s" % str(retList[2]))
             logger.error("Exit_code: %s" % str(retList[1]))
+            if (email_adapter is not None) and (not email_adapter.sendErrorMail()):
+                logger.error("Sending ERROR email did not succeed...")
+
         exit(-1)
 
     return retList

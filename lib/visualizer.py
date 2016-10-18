@@ -20,7 +20,6 @@ import special_bidir_traffic_checker as sbtc
 import logger as l
 import invoke as invoke
 
-import subprocess
 
 class Visualizer(object):
     
@@ -250,6 +249,9 @@ class Visualizer(object):
                                 #extends the programcode in a wrong manner)
                                 self.log.error("Wrong headers are used...Segfault")
                                 self.log.error("EXITING...")
+                                if (self.config['email_adapter'] is not None) and \
+                                    (not self.config['email_adapter'].sendErrorMail()):
+                                    self.log.error("Sending ERROR email did not succeed...")
                                 exit(-1)
 
                             #assemble one line with this embedded for loops
@@ -274,6 +276,9 @@ class Visualizer(object):
                 self.log.error("Cannot open results file GNUPLOT")
                 self.log.error(str(e))
                 self.log.error("EXITING...")
+                if (self.config['email_adapter'] is not None) and \
+                    (not self.config['email_adapter'].sendErrorMail()):
+                    self.log.error("Sending ERROR email did not succeed...")
                 exit(-1)
 
             #call gnuplot command to create chart
@@ -301,7 +306,7 @@ class Visualizer(object):
             header += "pps-" + self.config['bps_unit']
             header += "bps), Min, Avg, Max\n"
             #replace traffic type in file name to the current one
-            data_file = self.prefix.replace("TRAFFICTYPE", str("realitic_%s"
+            data_file = self.prefix.replace("TRAFFICTYPE", str("realistic_%s"
                                                                % self.tt))
 
             #update direction irrespectively whether biDir was set,so
@@ -367,6 +372,9 @@ class Visualizer(object):
                             #extends the programcode in a wrong manner)
                             self.log.error("Wrong headers are used...Segfault")
                             self.log.error("EXITING...")
+                            if (self.config['email_adapter'] is not None) and \
+                                (not self.config['email_adapter'].sendErrorMail()):
+                                self.log.error("Sending ERROR email did not succeed...")
                             exit(-1)
 
                         if(headers_cnt < 3):
@@ -444,6 +452,9 @@ class Visualizer(object):
                 self.log.error("Cannot open results file GNUPLOT")
                 self.log.error(str(e))
                 self.log.error("EXITING...")
+                if (self.config['email_adapter'] is not None) and \
+                    (not self.config['email_adapter'].sendErrorMail()):
+                    self.log.error("Sending ERROR email did not succeed...")
                 exit(-1)
             #call gnuplot command to create chart
             self.drawChartViaGnuplot(gp_params, ul_dl=ul_dl)
@@ -489,13 +500,19 @@ class Visualizer(object):
                                              
         self.log.debug("======= GNUPLOT =======")
         self.log.debug(gnuplot_command)
-        retval = (invoke.invoke(gnuplot_command, self.log))[0]
+        retval = (invoke.invoke(command=gnuplot_command,
+                                logger=self.log,
+                                email_adapter=self.config['email_adapter']))[0]
         if retval is not None or retval != '':
             self.log.info(retval)
             
 
-        
-        
+    def getPrefixToPlots(self):
+        '''
+        This function is devoted to pass the path to the plot files
+        :return: almost whole path to the plots (until timestamp)
+        '''
+        return self.prefix
         
         
         

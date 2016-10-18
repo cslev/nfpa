@@ -26,7 +26,7 @@ def readConfigFile(config_file):
     #list for realistic traffics
     realisticTraffics = []
     
-    config['version'] = "v2.7"
+    config['version'] = "v3.0 alpha"
     
     
     
@@ -107,8 +107,8 @@ def readConfigFile(config_file):
     config['app_start_date'] = str(ts)
     
     # calculateTimeLeft()
-    
-    
+
+
     return (True,config)
 
 
@@ -121,6 +121,40 @@ def getConfigComments():
                     "accessing the central web site. Register first at" +\
                     " http://ios.tmit.bme.hu/nfpa to take the " +\
                     "desired username.",
+
+                    'email_service':
+                    "Email sending service. This will send you an email with " +\
+                    "the measured results trace by trace. A log file is also " +\
+                    "attached to know whether a failure has occurred. " +\
+                    "You need to have an email address and access to the smtp " +\
+                    "server of it. GMAIL is definitely working, others may not. " +\
+                    "Ensure your firewall does not block such outgoing requests! "+\
+                    "Use true/false to indicate your preference.",
+
+                    'email_from':
+                    "The sender email address. Usually, the same as email_username",
+
+
+                    'email_to':
+                    "The recipient email address, where the results are sent",
+
+                    'email_server':
+                    "The SMTP server's port",
+
+                    'email_port':
+                    "The SMTP server's port",
+
+                    'email_username':
+                    "Your username for SMTP server - usually the same as email_from",
+
+                    'email_password':
+                    "Your password for SMTP server",
+
+
+                    'email_timeout':
+                    "Define here the timeout in seconds you allow for NFPA to "+\
+                    "connect to SMTP server. Setting it to 5 is a reasonable " +\
+                    " configuration.",
                     
                     'PKTGEN_ROOT':
                     "The root directory of your installed PktGen. Required "+\
@@ -368,10 +402,10 @@ def getConfigComments():
                     
                     'measurementDuration':
                     "Time in seconds one measurement lasts, " + 
-                    "For instance, 20 means that traffic will be generated " +
-                    "for 20 seconds for each pre-set packet sizes, or even 20 " +
+                    "For instance, 30 means that traffic will be generated " +
+                    "for 30 seconds for each pre-set packet sizes, or even 30 " +
                     "seconds long will be the pcap-files replayed (in case of " +
-                    "synthetic or realistic traffic traces). If not sure, use 20! " + 
+                    "synthetic or realistic traffic traces). If not sure, use 30! " +
                     "Use 0 to indicate an infinite, never ending measurement " + 
                     "for running in the background. In this case, measurement_num " + 
                     "argument has no meaning",
@@ -481,9 +515,28 @@ def writeConfigFile(c):
     splitToMultipleLines(cc['username'], file)
     file.write("username=" + c['username'] + "\n")
     file.write("### ================================================== ###\n\n")
-    
+
+
+    file.write("### ----------------- Email Settings ------------------ ###\n")
+    splitToMultipleLines(cc['email_service'], file)
+    file.write("email_service=" + c['email_service'] + "\n\n")
+    splitToMultipleLines(cc['email_from'], file)
+    file.write("email_from=" + c['email_from'] + "\n\n")
+    splitToMultipleLines(cc['email_to'], file)
+    file.write("email_to=" + c['email_to'] + "\n\n")
+    splitToMultipleLines(cc['email_server'], file)
+    file.write("email_server=" + c['email_server'] + "\n\n")
+    splitToMultipleLines(cc['email_server'], file)
+    file.write("email_port=" + c['email_port'] + "\n\n")
+    splitToMultipleLines(cc['email_username'], file)
+    file.write("email_username=" + c['email_username'] + "\n\n")
+    splitToMultipleLines(cc['email_password'], file)
+    file.write("email_password=" + c['email_password'] + "\n\n")
+    splitToMultipleLines(cc['email_timeout'], file)
+    file.write("email_timeout=" + c['email_timeout'] + "\n")
+    file.write("### ================================================== ###\n\n")
+
     file.write("### ------ Filesystem & OS Related Settings ---------- ###\n")
-#     file.write("#" + cc['PKTGEN_ROOT'] + "\n")
     splitToMultipleLines(cc['PKTGEN_ROOT'], file)
     file.write("PKTGEN_ROOT=" + c['PKTGEN_ROOT'] + "\n\n")
     splitToMultipleLines(cc['PKTGEN_BIN'], file)

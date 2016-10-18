@@ -10,6 +10,7 @@ import time
 import datetime
 import special_bidir_traffic_checker as sbtc
 import read_write_config_file as rwcf
+from send_mail import EmailAdapter
 
 import subprocess
 import invoke as invoke
@@ -18,6 +19,8 @@ import invoke as invoke
 import sys
 sys.path.append("db/")
 from database_adapter import SQLiteDatabaseAdapter
+
+
 
 class ReadConfig(object):
     '''
@@ -53,7 +56,8 @@ class ReadConfig(object):
         else:
             print(tmp_cfg[1])
             exit(-1)
-            
+
+
         
         #create a list of dictionary indexes for easier iterating though data
         #actually, these are the measured data units/names stored and placed in
@@ -67,12 +71,16 @@ class ReadConfig(object):
                                       'sent_bps_bidir', 'recv_bps_bidir', 'diff_bps_bidir']
         
         self._config['helper_header'] = ['min', 'avg', 'max']
- 
-                  
-        self.log = l.getLogger( self.__class__.__name__, 
-                                self._config['LOG_LEVEL'], 
+
+
+
+        self.log = l.getLogger( self.__class__.__name__,
+                                self._config['LOG_LEVEL'],
                                 self._config['app_start_date'],
                                 self._config['LOG_PATH'])
+
+        # self.log=logging.getLogger(self.__class__.__name__)
+
 
         # set supported control APIs
         self._config["controllers"] = ("openflow")
@@ -81,6 +89,8 @@ class ReadConfig(object):
         
         #create an instance of database helper and store it in config dictionary
         self._config["dbhelper"] = SQLiteDatabaseAdapter(self._config)
+
+
 
         # parse config params
         configSuccess = self.checkConfig()
@@ -153,9 +163,15 @@ class ReadConfig(object):
         if self._config["control_nfpa"] == "true":
             #make it a boolean variable for easier checks later
             self._config["control_nfpa"]=bool("true") #this makes it True
-        else:
+        elif self._config["control_nfpa"] == "false":
             # make it a boolean variable for easier checks later
             self._config["control_nfpa"]=bool(0) #this makes it False
+        else:
+            #type
+            self.log.warn("contron_nfpa has a typo (%s) -- fallback to False" %
+                          self._config['control_nfpa'])
+            self._config["control_nfpa"] = bool(0)  # this makes it False
+
 
         #if control_nfpa is True we check the other related parameters, otherwise
         #these are unnecessary
@@ -365,15 +381,17 @@ class ReadConfig(object):
         # first get the relevant information from the OS
         #commands for getting hugepage information
         free_hugepages_cmd = "cat /proc/meminfo |grep HugePages_Free"
-
         total_hugepages_cmd = "cat /proc/meminfo | grep HugePages_Total"
         hugepage_size_cmd = "cat /proc/meminfo|grep Hugepagesize"
 
         #get the data - invoce.check_retval will analyze the return values as well, and as a third
         #parameter, we need to pass him our self.log instance to make him able to write out error messages
-        free_hugepages = (invoke.invoke(free_hugepages_cmd,self.log))[0]
-        total_hugepages = (invoke.invoke(total_hugepages_cmd, self.log))[0]
-        hugepage_size = (invoke.invoke(hugepage_size_cmd, self.log))[0]
+        free_hugepages = (invoke.invoke(command=free_hugepages_cmd,
+                                        logger=self.log))[0]
+        total_hugepages = (invoke.invoke(command=total_hugepages_cmd,
+                                        logger=self.log))[0]
+        hugepage_size = (invoke.invoke(command=hugepage_size_cmd,
+                                        logger=self.log))[0]
 
         #get the second part of the outputs
         free_hugepages = free_hugepages.split(":")[1]
@@ -402,8 +420,8 @@ class ReadConfig(object):
         if(hugepage_size_unit == "kB"):
             hugepage_size = hugepage_size/1024
         else:
-            self.error("Cannot determine Hugepage size (check lines 320-355 in read_config.py to improve code) :(")
-            exit(-1)
+            self.error("Cannot determine Hugepage size (check lines 364-405 in read_config.py to improve code) :(")
+            return -1
 
         self.log.info("Hugepage size in MB: %s" % hugepage_size)
         self.log.info("Total hugepages: %s" % total_hugepages)
@@ -411,11 +429,11 @@ class ReadConfig(object):
 
         if(total_hugepages == 0):
             self.log.error("Hugepages are not enabled? Check the output of: cat /proc/meminfo |grep -i hugepages")
-            # exit(-1)
+            return -1
 
         if(free_hugepages == 0):
             self.log.error("There is no hugepages left! Check the output of: cat /proc/meminfo |grep -i hugepages")
-            # exit(-1)
+            return -1
 
         # check socket_mem param if exists or not empty
         if (("socket_mem" in self._config) and (len(self._config["socket_mem"]) > 0)):
@@ -435,7 +453,7 @@ class ReadConfig(object):
                 self.log.error("Insufficient hugepages! Your required setting '%s' (MB) does not correspond to the available " \
                                "resources %s (MB)" %(self._config["socket_mem"], (free_hugepages*hugepage_size)))
                 self.log.error("Check the output of: cat /proc/meminfo |grep -i hugepages")
-                # exit(-1)
+                return -1
 
 
     #check biDir param
@@ -490,16 +508,20 @@ class ReadConfig(object):
         self.log.debug("username: %s" % self._config['username'])
         self.log.debug("control_nfpa: %s" % self._config['control_nfpa'])
         self.log.debug("control_vnf: %s" % self._config['control_vnf'])
-        self.log.debug("control_path: %s" % self._config["control_path"])
-        self.log.debug("control_args: %s" % self._config["control_args"])
-        self.log.debug("control_mgmt: %s" % self._config["control_mgmt"])
+        self.log.debug("control_path: %s" % self._config['control_path'])
+        self.log.debug("control_args: %s" % self._config['control_args'])
+        self.log.debug("control_mgmt: %s" % self._config['control_mgmt'])
+        self.log.debug("email_service: %s" % self._config['email_service'])
+        if self._config['email_service'].lower() == "true":
+            self.log.debug("email_from: %s" % self._config['email_from'])
+            self.log.debug("email_to: %s" % self._config['email_to'])
+            self.log.debug("email_server: %s" % self._config['email_server'])
+            self.log.debug("email_port: %s" % self._config['email_port'])
+            self.log.debug("email_username: %s" % self._config['email_username'])
+            self.log.debug("email_password: HIDDEN to not store in logs")
+            self.log.debug("email_timeout: %s" % self._config['email_timeout'])
 
 
-#         self._config['password'] = "entertm1"
-#         self._config['email'] = "sdn-tmit@sdn.tmit.hu"
-#         self.log.debug("password: %s" % self._config['password'])
-#         self.log.debug("email: %s" % self._config['email'])
-    
          
 
         self._config['dbhelper'].connect()
@@ -613,16 +635,19 @@ class ReadConfig(object):
         #remove all existing nfpa lua scripts
         self.log.info("Remove old symlinks...")
         remove_cmd = "rm -rf " + self._config["PKTGEN_ROOT"] + "/nfpa_simple.lua"  
-        invoke.invoke(remove_cmd, self.log)
+        invoke.invoke(command=remove_cmd,
+                      logger=self.log)
 
 
         remove_cmd = "rm -rf " + self._config["PKTGEN_ROOT"] + "/nfpa_traffic.lua"                       
-        invoke.invoke(remove_cmd, self.log)
+        invoke.invoke(command=remove_cmd,
+                      logger=self.log)
 
         
         remove_cmd = "rm -rf " +  self._config["PKTGEN_ROOT"] + \
                      "/nfpa_realistic.lua"                       
-        invoke.invoke(remove_cmd, self.log)
+        invoke.invoke(command=remove_cmd,
+                      logger=self.log)
 
         
         self.log.info("DONE")
@@ -632,7 +657,8 @@ class ReadConfig(object):
                 "/lib/nfpa_simple.lua " + self._config["PKTGEN_ROOT"] + \
                 "/nfpa_simple.lua"
         self.log.info(symlink_cmd)  
-        invoke.invoke(symlink_cmd, self.log)
+        invoke.invoke(command=symlink_cmd,
+                      logger=self.log)
 
         #create symlink for nfpa_traffic.lua
         self.log.info("create symlinks")
@@ -640,7 +666,8 @@ class ReadConfig(object):
                 "/lib/nfpa_traffic.lua " + self._config["PKTGEN_ROOT"] + \
                 "/nfpa_traffic.lua"
         self.log.info(symlink_cmd)  
-        invoke.invoke(symlink_cmd, self.log)
+        invoke.invoke(command=symlink_cmd,
+                      logger=self.log)
 
          
         #create symlink for nfpa_realistic.lua
@@ -649,7 +676,8 @@ class ReadConfig(object):
                 "/lib/nfpa_realistic.lua " + self._config["PKTGEN_ROOT"] + \
                 "/nfpa_realistic.lua"
         self.log.info(symlink_cmd)  
-        invoke.invoke(symlink_cmd, self.log)
+        invoke.invoke(command=symlink_cmd,
+                      logger=self.log)
 
     
             
@@ -729,18 +757,7 @@ class ReadConfig(object):
                             self.log.error("Are you sure you have the corresponding "
                                          "PCAP file(s) in directory: %s/PCAP ?" % 
                                          self._config["MAIN_ROOT"])
-#                             #if simple traffic was set, then we could step back
-#                             #to only measure simple scenario
-#                             if simple_traffic_set:
-#                                 self.log.warning("For packet size %s, only simple"
-#                                               " traffic could be measured" % 
-#                                               packetSize)
-#                             #if no simple scenario is required, then nothing can
-#                             #be done with a missing pcap file - we need to exit
-#                             else:
-#                                 self.log.error("No simple traffic type was set. "
-#                                               "Unable to handle packetsize %s " % 
-#                                               packetSize)
+
                             return False
                         else:
                             self.log.info("[FOUND]")

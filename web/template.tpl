@@ -26,6 +26,8 @@
 % main_dict = {}
 % main_dict_heads = {}
 % user_settings = ['username']
+% email_settings = ['email_service', 'email_from', 'email_to', 'email_server',
+%                   'email_port', 'email_username', 'email_password', 'email_timeout']
 % filesystem_settings = ['PKTGEN_ROOT', 'PKTGEN_BIN', 'MAIN_ROOT','RES_DIR',
 %                        'LOG_LEVEL']
 % dpdk_settings = ['cpu_core_mask', 'mem_channels', 'socket_mem', 'other_dpdk_params', 'port_mask', 'cpu_port_assign']
@@ -44,6 +46,14 @@
 % #                    'recvPort', 'biDir']
 % labels =  {
 %              'username' : "Your username<span class='req'>*</span>",
+%              'email_service' : "Indicate whether you want to receive emails with statuses and results<span class='req'>*</span>",
+%              'email_from' : "Email sender's address<span class='req'>*(if email service is enabled)</span>",
+%              'email_to' : "Recipient's address<span class='req'>*(if email service is enabled)</span>",
+%              'email_server' : "Email sending server's IP or FQDN<span class='req'>*(if email service is enabled)</span>",
+%              'email_port' : "Email sending server's PORT<span class='req'>*(if email service is enabled)</span>",
+%              'email_username' : "Your username<span class='req'>*(if email service is enabled)</span>",
+%              'email_password' : "Your password<span class='req'>*(if email service is enabled)</span>",
+%              'email_timeout' : "The time in seconds you give NFPA to try to connect to your server<span class='req'>*(if email service is enabled)</span>",
 %              'PKTGEN_ROOT' : "Pktgen's root directory<span class='req'>*</span>",
 %              'PKTGEN_BIN' : "Pktgen's binary (under Pktgen's root)<span class='req'>*</span>",
 %              'MAIN_ROOT' :  "NFPA's main root<span class='req'>*</span>",
@@ -96,18 +106,20 @@
 %            }
 % main_dict[1] = user_settings
 % main_dict_heads[1] = "User Settings"
-% main_dict[2] = filesystem_settings
-% main_dict_heads[2] = "Filesystem & OS Related Settings"
-% main_dict[3] = dpdk_settings
-% main_dict_heads[3] = "Pktgen and DPDK arguments"
-% main_dict[4] = nf_settings
-% main_dict_heads[4] = "Network Function Hardware & Software Related Settings"
-% main_dict[5] = gnuplot_settings
-% main_dict_heads[5] = "Gnuplot/Presenting Related Settings"
-% main_dict[6] = traffic_settings
-% main_dict_heads[6] = "Traffic Generating/PktGen Related Settings"
-% main_dict[7] = nfpa_control_settings
-% main_dict_heads[7] = "Let NFPA configure your VNF (experimental)"
+% main_dict[2] = email_settings
+% main_dict_heads[2] = "Emailing service"
+% main_dict[3] = filesystem_settings
+% main_dict_heads[3] = "Filesystem & OS Related Settings"
+% main_dict[4] = dpdk_settings
+% main_dict_heads[4] = "Pktgen and DPDK arguments"
+% main_dict[5] = nf_settings
+% main_dict_heads[5] = "Network Function Hardware & Software Related Settings"
+% main_dict[6] = gnuplot_settings
+% main_dict_heads[6] = "Gnuplot/Presenting Related Settings"
+% main_dict[7] = traffic_settings
+% main_dict_heads[7] = "Traffic Generating/PktGen Related Settings"
+% main_dict[8] = nfpa_control_settings
+% main_dict_heads[8] = "Let NFPA configure your VNF"
 % list_of_values = ["packetSizes", "realisticTraffics", "trafficTypes"]
 
 
@@ -231,6 +243,19 @@
                     <option value="1" {{pm_1}}>1</option>    
                     <option value="3" {{pm_3}}>3</option>
                   </select>
+
+                % elif j == "email_service":
+                %   email_yes = ""
+                %   email_no = ""
+                %   if d[j]:
+                %     email_yes = "selected"
+                %   else:
+                %     email_no = "selected"
+                %   end
+                   <select name={{j}}>
+                     <option value="true" {{email_yes}}>True</option>
+                     <option value="false" {{email_no}}>False</option>
+                   </select>
                 % elif j == "control_nfpa":
                 %   manage_yes = ""
                 %   manage_no = ""

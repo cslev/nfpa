@@ -14,8 +14,9 @@ from read_config import ReadConfig
 from results_analyzer import ResultsAnalyzer
 from visualizer import Visualizer
 from database_handler import DatabaseHandler
+from send_mail import EmailAdapter
 import time
-import copy
+
 import special_bidir_traffic_checker as sbtc
 import logger as l
 import date_formatter as df
@@ -26,7 +27,8 @@ import flow_rules_preparator as flow_prep
 sys.path.append("web/")
 from web_nfpa import WEBNFPA
 
-
+import inspect
+import pdb
 
 class NFPA(object):
     '''This is the main class'''
@@ -57,8 +59,7 @@ class NFPA(object):
         file.close()
         
     def initialize(self):
-#         print("Main class instantiated")
-        
+
         
         #read config
         self.rc = ReadConfig()
@@ -67,13 +68,13 @@ class NFPA(object):
             return -1
             
         self.config = self.rc.getConfig()
-        
-        
-       
-        self.log = l.getLogger( self.__class__.__name__, 
-                                self.config['LOG_LEVEL'], 
-                                self.config['app_start_date'],
-                                self.config['LOG_PATH'])
+
+
+
+        self.log = l.getLogger(self.__class__.__name__,
+                               self.config['LOG_LEVEL'],
+                               self.config['app_start_date'],
+                               self.config['LOG_PATH'])
         
         
         self.pid_file=self.config['MAIN_ROOT'] + "/" + "nfpa.pid"
@@ -85,7 +86,7 @@ class NFPA(object):
         #temporary res files in PKTGEN_ROOT/ still remains existing and can
         #influence a latter measurement results in a wrong way
         self.log.info("Clean up old .res files in PKTGEN's root dir...")
-        self.deleteResFiles()
+        # self.deleteResFiles()
         self.log.info("[DONE]")
 
         #create a tmp directory for flow rules under nfpa/of_rules
@@ -96,8 +97,8 @@ class NFPA(object):
         self.log.debug("tmp directory created under of_rules")
         
         
-        self.log.info("### Measurement scenario '" + self.scenario_name + "' has been" 
-              "initiated ###")
+        self.log.info("### Measurement scenario '" + self.scenario_name + \
+                      "' has been initiated ###")
         
         
         #append scenario name to self.config dictionary for later usage
@@ -105,17 +106,26 @@ class NFPA(object):
 
         
         self.log.info(str(self.config))
-    
-        self.log.info("Log file for this measurement is: %s/%s" % 
-                      (self.config['MAIN_ROOT'], 
-                       df.getDateFormat(self.config['app_start_date'])))
+        #assembling log file path
+        self.log_file_path = self.config['MAIN_ROOT'] + "/log/log_" + \
+                             df.getDateFormat(self.config['app_start_date']) +\
+                             ".log"
+
+        self.log.info("Log file for this measurement is: %s" % self.log_file_path)
         self.log.info("THANKS FOR USING NFPA FOR MEASURING")
 
         self.storePID(str(os.getpid()))
         self.log.debug("NFPA PID stored")
-        
-   
-   
+
+        # create an instance of the EmailAdapter and store this object in self.config
+        # if email service was enabled in the config file
+        if self.config['email_service'].lower() == "true":
+            self.config['email_adapter'] = EmailAdapter(self.config)
+        else:
+            self.config['email_adapter'] = None
+
+
+
     def exiting(self):
         '''
         This small function only prints out EXITING and call system.exit with
@@ -123,6 +133,9 @@ class NFPA(object):
         Used only for function checkConfig()'s return values 
         '''
         self.log.error("EXITING...")
+        if (self.config['email_adapter'] is not None) and \
+            (not self.config['email_adapter'].sendErrorMail()):
+            self.log.error("Sending ERROR email did not succeed...")
         exit(-1)
         
     def configureVNFRemote(self, vnf_function, traffictype):
@@ -149,13 +162,17 @@ class NFPA(object):
                         self.config["control_mgmt"] + " "
             cmd = ofctl_cmd.replace("<C>", "del-flows")
             self.log.debug("control cmd: %s" % cmd)
-            invoke.invoke(cmd, self.log)
+            invoke.invoke(command=cmd,
+                          logger=self.log,
+                          email_adapter=self.config['email_adapter'])
             self.log.info("Flow rules deleted")
 
             # second, delete groups
             cmd = ofctl_cmd.replace("<C>", "del-groups")
             self.log.debug("control cmd: %s" % cmd)
-            invoke.invoke(cmd, self.log)
+            invoke.invoke(command=cmd,
+                          logger=self.log,
+                          email_adapter=self.config['email_adapter'])
             self.log.info("Groups deleted")
 
             #OK, flows are deleted, so replace 'del-flows' to 'add-flows' for
@@ -171,6 +188,9 @@ class NFPA(object):
                     self.log.error("Missing flow rule file: %s" % scenario_path)
                     self.log.error("NFPA does not know how to configure VNF to act as a bridge")
                     self.log.error("More info: http://ios.tmit.bme.hu/nfpa")
+                    if (self.config['email_adapter'] is not None) and \
+                        (not self.config['email_adapter'].sendErrorMail()):
+                        self.log.error("Sending ERROR email did not succeed...")
                     exit(-1)
 
                 if self.config["biDir"] == 1:
@@ -187,7 +207,9 @@ class NFPA(object):
                                                                bidir)
                 cmd = ofctl_cmd.replace("<C>","add-flows") + scenario_path
                 self.log.info("add-flows via '%s'" % cmd)
-                invoke.invoke(cmd, self.log)
+                invoke.invoke(command=cmd,
+                              logger=self.log,
+                              email_adapter=self.config['email_adapter'])
                 # print out stdout if any
                 self.log.info("Flows added")
                 return True
@@ -203,7 +225,9 @@ class NFPA(object):
                 self.log.error("NFPA does not know how to configure VNF to act as " + \
                                "%s for the given trace %s" % (vnf_function,traffictype))
                 self.log.error("More info: http://ios.tmit.bme.hu/nfpa")
-
+                if (self.config['email_adapter'] is not None) and \
+                    (not self.config['email_adapter'].sendErrorMail()):
+                    self.log.error("Sending ERROR email did not succeed...")
                 exit(-1)
 
 
@@ -222,7 +246,9 @@ class NFPA(object):
                 cmd = ofctl_cmd.replace("<C>","add-groups")
                 cmd += " " + group_path
                 self.log.info("add-groups via '%s'" % cmd)
-                invoke.invoke(cmd, self.log)
+                invoke.invoke(command=cmd,
+                              logger=self.log,
+                              email_adapter=self.config['email_adapter'])
             else:
                 self.log.info("No group file was found...continue")
 
@@ -236,6 +262,9 @@ class NFPA(object):
                 self.log.error("Configuring your VNF by NFPA for bi-directional scenario " +
                                "is currently not supported")
                 self.log.error("Please verify your nfpa.cfg")
+                if (self.config['email_adapter'] is not None) and \
+                    (not self.config['email_adapter'].sendErrorMail()):
+                    self.log.error("Sending ERROR email did not succeed...")
                 exit(-1)
                 #save biDir setting in a boolean to later use for flow_prep.prepareOpenFlowRules()
                 # bidir = True
@@ -259,7 +288,9 @@ class NFPA(object):
             cmd = ofctl_cmd.replace("<C>","add-flows") + scenario_path
             self.log.info("add-flows via '%s'" % cmd)
             self.log.info("This may take some time...")
-            invoke.invoke(cmd, self.log)
+            invoke.invoke(command=cmd,
+                          logger=self.log,
+                          email_adapter=self.config['email_adapter'])
             self.log.info("Flows added")
             return True
         ############    =============   ###########
@@ -267,57 +298,57 @@ class NFPA(object):
 
         else:
             self.log.error("Currently, only openflow is supported!")
+            if (self.config['email_adapter'] is not None) and \
+                (not self.config['email_adapter'].sendErrorMail()):
+                self.log.error("Sending ERROR email did not succeed...")
             exit(-1)
 
 
     def startAnalyzing(self, traffic_type, traffic_trace):
-      '''
-      This function actually called after pktgen measurements are done, and it instantiate
-      results_analyzer and visualizer class, to analyze the successful result files and
-      create plots of the results
-      :return:
-      '''
-      tt = traffic_type
-      trace = traffic_trace
+        '''
+        This function actually called after pktgen measurements are done, and it instantiate
+        results_analyzer and visualizer class, to analyze the successful result files and
+        create plots of the results
+        :return:
+        '''
 
-      #synthetic and realistic results are process differently, so
-      #different class variables are used to store the data
-      if tt == "synthetic":
+
+        tt = traffic_type
+        trace = traffic_trace
+
+        #to indicate the email_adapter, which traffic type is analyzed
+        is_synthetic = True
+        if tt == "realistic":
+            is_synthetic=False
+
+
+        self.log.debug("Analyzing trace (%s,%s)" % (tt,trace))
+        curframe = inspect.currentframe()
+        calframe = inspect.getouterframes(curframe, 2)
+        self.log.debug('caller name: %s' % calframe[1][3])
+
+        # #synthetic and realistic results are process differently, so
+        # #different class variables are used to store the data
+
         # Pktgen (re)start(s) finished, analyze results
-        self.results_analyzer = ResultsAnalyzer(self.config,
-                                                trafficType=tt,
-                                                traffic_trace=trace)
+        results_analyzer = ResultsAnalyzer(self.config,
+                                            trafficType=tt,
+                                            traffic_trace=trace)
 
         # after analyzation is done, visualize results
-        self.results = self.results_analyzer.getResultsDict()
-        self.visualizer = Visualizer(config=self.config,
-                                     results=self.results,
-                                     type=tt,
-                                     traffic_trace=trace)
-        self.database_handler = DatabaseHandler(config=self.config,
-                                                results=self.results,
-                                                type=tt,
-                                                traffic_trace=trace)
-      elif tt == "realistic":
-        # Pktgen (re)start(s) finished, analyze results
-        self.results_analyzer = ResultsAnalyzer(self.config,
-                                                trafficType=tt,
-                                                traffic_trace=trace)
-
-        #after analyzation is done, visualize results
-        self.results = self.results_analyzer.getResultsDict()
-        self.visualizer = Visualizer(config=self.config,
-                                     results=self.results,
-                                     type=tt,
-                                     traffic_trace=trace)
-        self.database_handler = DatabaseHandler(config=self.config,
-                                     results=self.results,
-                                     type=tt,
-                                     traffic_trace=trace)
-      else:
-        self.log.error("Traffic type became malformed before analyzation process would have started")
-        exit(-1)
-
+        results = results_analyzer.getResultsDict()
+        visualizer = Visualizer(config=self.config,
+                                 results=results,
+                                 type=tt,
+                                 traffic_trace=trace)
+        database_handler = DatabaseHandler(config=self.config,
+                                            results=results,
+                                            type=tt,
+                                            traffic_trace=trace)
+        # send notification email -- Last boolean parameter indicates synthetic case
+        if (self.config['email_adapter'] is not None) and \
+            (not self.config['email_adapter'].sendResultsMail(trace, is_synthetic)):
+            self.log.warn("Sending email did not succeed...SKIPPING")
 
 
     def startPktgenMeasurements(self):
@@ -337,105 +368,115 @@ class NFPA(object):
             
             self.log.info(str("Pktgen will be started %s times" % 
                               self.config["measurement_num"]))
-            #main loop of pktgen based measurements
-            for i in range(0,int(self.config["measurement_num"])):
-                #iterate through traffic types
-                for trafficType in self.config["trafficTypes"]:
-                    #first, measure simple scenarios (if desired)
-                    if(trafficType == "simple"):
 
-                        # configure VNF if set
-                        if self.config["control_nfpa"]:
-                            if not self.configureVNFRemote(self.config["vnf_function"],trafficType):
-                                # configuring vnf did not succeed
-                                exit(-1)
+            #iterate through traffic types
+            for trafficType in self.config["trafficTypes"]:
+                #first, measure simple scenarios (if desired)
+                if(trafficType == "simple"):
+                    self.log.warn("SIMPLE TRACE - %s" % trafficType)
 
-                        #create config file for LUA script
-                        self.rc.generateLuaConfigFile(trafficType,
-                                                      self.config["packetSizes"],
-                                                      None)
-                        #append simple lua script to pktgen command
-                        cmd = self.rc.assemblePktgenCommand()
-                        cmd += " -f nfpa_simple.lua"
-                        self.log.info("PKTgen command: %s" % cmd)
+                    # configure VNF if set
+                    if self.config["control_nfpa"]:
+                        if not self.configureVNFRemote(self.config["vnf_function"],trafficType):
+                            # configuring vnf did not succeed
+                            if (self.config['email_adapter'] is not None) and \
+                                (not self.config['email_adapter'].sendErrorMail()):
+                                self.log.error("Sending ERROR email did not succeed...")
+                            exit(-1)
 
-                        #sleep 1s for reading command
-                        time.sleep(1)
+                    #create config file for LUA script
+                    self.rc.generateLuaConfigFile(trafficType,
+                                                  self.config["packetSizes"],
+                                                  None)
+                    #append simple lua script to pktgen command
+                    cmd = self.rc.assemblePktgenCommand()
+                    cmd += " -f nfpa_simple.lua"
+                    self.log.info("PKTgen command: %s" % cmd)
 
-                        #change dir to pktgen's main dir
-                        cd_cmd = "cd " + self.config["PKTGEN_ROOT"]
+                    #sleep 1s for reading command
+                    time.sleep(1)
 
-                        #concatenate main command
-                        main_cmd = cd_cmd + " && " + cmd
-                        #here should be start the actual pktgen command!
-                        #we can't use our invoke function, since we could
-                        #not follow pktgen's output due to forking
-                        retval=os.system(main_cmd)
-                        if(retval != 0):
+                    #change dir to pktgen's main dir
+                    cd_cmd = "cd " + self.config["PKTGEN_ROOT"]
+
+                    #concatenate main command
+                    main_cmd = cd_cmd + " && " + cmd
+                    #here should be start the actual pktgen command!
+                    #we can't use our invoke function, since we could
+                    #not follow pktgen's output due to forking
+
+                    #start pktgen in measurement_num times
+                    for i in range(0, int(self.config["measurement_num"])):
+                        retval = os.system(main_cmd)
+                        if (retval != 0):
                             self.log.error("ERROR OCCURRED DURING STARTING PKTGEN")
                             self.log.error("Error: %s" % str(retval[0]))
                             self.log.error("Exit_code: %s" % str(retval[1]))
+                            if (self.config['email_adapter'] is not None) and \
+                                    (not self.config['email_adapter'].sendErrorMail()):
+                                self.log.error("Sending ERROR email did not succeed...")
                             exit(-1)
 
-                        # ok, we got measurements for a given traffic trace
-                        # with all the defined packetsizes
-                        # Start analyzing existing results, make plots and insert
-                        # data into the database
-                        self.startAnalyzing("synthetic", trafficType)
+
+                else:
+                    self.log.warn("SYNTHETIC TRACE - %s" % trafficType)
+
+                    # configure VNF if set
+                    if self.config["control_nfpa"]:
+                        if not self.configureVNFRemote(self.config["vnf_function"], trafficType):
+                            # configuring vnf did not succeed
+                            if (self.config['email_adapter'] is not None) and \
+                                (not self.config['email_adapter'].sendErrorMail()):
+                                self.log.error("Sending ERROR email did not succeed...")
+                            exit(-1)
+
+                    for ps in self.config['packetSizes']:
+                        #create config file for LUA script
+                        self.rc.generateLuaConfigFile(trafficType,
+                                                      [ps],
+                                                      None)
+                        #create the command first part
+                        cmd = self.rc.assemblePktgenCommand()
+                        #no special bidirectional traffic was not set
+                        if not sbtc.checkSpecialTraffic(trafficType):
+                            cmd += " -f nfpa_traffic.lua -s " + \
+                                  self.config["sendPort"] + ":" + \
+                                  self.config['MAIN_ROOT'] + \
+                                  "/PCAP/nfpa." +\
+                                  trafficType + "." + ps + "bytes.pcap"
+
+                            #if bidDir is set, we need to set pcap file for the
+                            #other port as well (add this part to the cmd)
+                            if(int(self.config["biDir"]) == 1):
+                                cmd +=  " -s " + self.config["recvPort"] +\
+                                        ":" + self.config['MAIN_ROOT'] +\
+                                        "/PCAP/nfpa." +\
+                                        trafficType + "." + ps + "bytes.pcap"
+                        else:
+                            #special bidirectional traffic was set
+                            tmp_tt = sbtc.splitTraffic(trafficType)
+                            cmd += " -f nfpa_traffic.lua -s " + \
+                                    self.config["sendPort"] + ":" + \
+                                    self.config['MAIN_ROOT'] + \
+                                    "/PCAP/nfpa." + tmp_tt[0] + "." + \
+                                    ps + "bytes.pcap"
+                            cmd +=  " -s " + self.config["recvPort"] + \
+                                    ":" + self.config['MAIN_ROOT'] + \
+                                    "/PCAP/nfpa." + tmp_tt[1] + "." + \
+                                    ps + "bytes.pcap"
+
+                        self.log.info(cmd)
+                        #sleep 1s for reading command
+                        time.sleep(1)
 
 
+                        #change dir to pktgen's main dir
+                        cd_cmd = "cd " + self.config["PKTGEN_ROOT"]
+                        #concatenate main command
+                        main_cmd = cd_cmd + " && " + cmd
 
-                    else:
-                        # configure VNF if set
-                        if self.config["control_nfpa"]:
-                            if not self.configureVNFRemote(self.config["vnf_function"], trafficType):
-                                # configuring vnf did not succeed
-                                exit(-1)
-
-                        for ps in self.config['packetSizes']:
-                            #create config file for LUA script
-                            self.rc.generateLuaConfigFile(trafficType,
-                                                          [ps],
-                                                          None)
-                            #create the command first part
-                            cmd = self.rc.assemblePktgenCommand()
-                            #no special bidirectional traffic was not set
-                            if not sbtc.checkSpecialTraffic(trafficType):
-                                cmd += " -f nfpa_traffic.lua -s " + \
-                                      self.config["sendPort"] + ":" + \
-                                      self.config['MAIN_ROOT'] + \
-                                      "/PCAP/nfpa." +\
-                                      trafficType + "." + ps + "bytes.pcap"
-
-                                #if bidDir is set, we need to set pcap file for the
-                                #other port as well (add this part to the cmd)
-                                if(int(self.config["biDir"]) == 1):
-                                    cmd +=  " -s " + self.config["recvPort"] +\
-                                            ":" + self.config['MAIN_ROOT'] +\
-                                            "/PCAP/nfpa." +\
-                                            trafficType + "." + ps + "bytes.pcap"
-                            else:
-                                #special bidirectional traffic was set
-                                tmp_tt = sbtc.splitTraffic(trafficType)
-                                cmd += " -f nfpa_traffic.lua -s " + \
-                                        self.config["sendPort"] + ":" + \
-                                        self.config['MAIN_ROOT'] + \
-                                        "/PCAP/nfpa." + tmp_tt[0] + "." + \
-                                        ps + "bytes.pcap"
-                                cmd +=  " -s " + self.config["recvPort"] + \
-                                        ":" + self.config['MAIN_ROOT'] + \
-                                        "/PCAP/nfpa." + tmp_tt[1] + "." + \
-                                        ps + "bytes.pcap"
-
-                            self.log.info(cmd)
-                            #sleep 1s for reading command
-                            time.sleep(1)
-
-
-                            #change dir to pktgen's main dir
-                            cd_cmd = "cd " + self.config["PKTGEN_ROOT"]
-                            #concatenate main command
-                            main_cmd = cd_cmd + " && " + cmd
+                        # start pktgen in measurement_num times
+                        for i in range(0, int(self.config["measurement_num"])):
                             #here should be start the actual pktgen command!
                             #we can't use our invoke function, since we could
                             #not follow pktgen's output due to forking
@@ -444,25 +485,23 @@ class NFPA(object):
                                 self.log.error("ERROR OCCURRED DURING STARTING PKTGEN")
                                 self.log.error("Error: %s" % str(retval[0]))
                                 self.log.error("Exit_code: %s" % str(retval[1]))
-                                # #if previous runs succeeded analyze the .res files
-                                # self.log.info("Check whether previous runs were success...")
-                                # c="ls " + self.config['PKTGEN_ROOT'] + "/ |grep .res"
-                                # success=invoke.invoke(c)
-                                # #if stdout is '' then no files were found
-                                # if success[0] == '':
-                                #   self.log.info("There was no successful previous measurements")
-                                #   self.log.info("Exiting...")
+                                if (self.config['email_adapter'] is not None) and \
+                                    (not self.config['email_adapter'].sendErrorMail()):
+                                    self.log.error("Sending ERROR email did not succeed...")
                                 exit(-1)
-                        #ok, we got measurements for a given traffic trace
-                        #with all the defined packetsizes
-                        # Start analyzing existing results, make plots and insert
-                        #data into the database
-                        self.startAnalyzing("synthetic", trafficType)
+                    #ok, we got measurements for a given traffic trace
+                    #with all the defined packetsizes
+
+                # Start analyzing existing results, make plots and insert
+                #data into the database
+                self.startAnalyzing("synthetic", trafficType)
 
         
         if self.config["realisticTraffics"]:                
             #check realistic traffic traces
             for realistic in self.config["realisticTraffics"]:
+                self.log.warn("REALISTIC TRACE -- %s" % realistic)
+
                 #create config file for LUA script
                 self.rc.generateLuaConfigFile(None, 
                                               None,
@@ -504,31 +543,30 @@ class NFPA(object):
                 cd_cmd = "cd " + self.config["PKTGEN_ROOT"]
                 #concatenate main command
                 main_cmd = cd_cmd + " && " + cmd
-                #here should be start the actual pktgen command!
-                #we can't use our invoke function, since we could
-                #not follow pktgen's output due to forking
-                retval=os.system(main_cmd)
-                if(retval != 0):
-                    self.log.error("ERROR OCCURRED DURING STARTING PKTGEN")
-                    self.log.error("Error: %s" % str(retval[0]))
-                    self.log.error("Exit_code: %s" % str(retval[1]))
-                    # if previous runs succeeded analyze the .res files
-                    self.log.info("Check whether previous runs were success...")
-                    c = "ls " + self.config['PKTGEN_ROOT'] + "/ |grep .res"
-                    success = invoke.invoke(c)
-                    # if stdout is '' then no files were found
-                    if success[0] == '':
-                      self.log.info("There was no successful previous measurements")
-                      self.log.info("Exiting...")
-                      exit(-1)
 
-            # Start analyzing existing results
-            self.startAnalyzing("realistic", realistic)
+                # start pktgen in measurement_num times
+                for i in range(0, int(self.config["measurement_num"])):
+                    #here should be start the actual pktgen command!
+                    #we can't use our invoke function, since we could
+                    #not follow pktgen's output due to forking
+                    retval=os.system(main_cmd)
+                    if(retval != 0):
+                        self.log.error("ERROR OCCURRED DURING STARTING PKTGEN")
+                        self.log.error("Error: %s" % str(retval[0]))
+                        self.log.error("Exit_code: %s" % str(retval[1]))
+
+                        if (self.config['email_adapter'] is not None) and \
+                            (not self.config['email_adapter'].sendErrorMail()):
+                            self.log.error("Sending ERROR email did not succeed...")
+                        exit(-1)
+
+                # Start analyzing existing results
+                self.startAnalyzing("realistic", realistic)
              
 
         
         #after everything is done, delete unnecessary res files
-        self.deleteResFiles()
+        # self.deleteResFiles()
 
         stop = time.time()        
         start = self.config['app_start_date'] 
@@ -536,11 +574,8 @@ class NFPA(object):
         running_time =  float(stop) - float(start)
         running_time = str(datetime.timedelta(seconds=running_time))
         self.log.info(str("Time elapsed: %s") % running_time)
-        log = self.config['LOG_PATH'] + \
-              "log_" + \
-              str(df.getDateFormat(self.config['app_start_date']) + \
-              ".log")
-        self.log.info("Log file can be found under: %s" % str(log))
+
+        self.log.info("Log file can be found under: %s" % self.log_file_path)
         self.log.info("THANK YOU FOR USING NFPA %s" % self.config['version'])
 
         if(self.reset_terminal):
@@ -548,7 +583,7 @@ class NFPA(object):
             time.sleep(1)
             os.system("reset")
             #print out log automatically in this case to simulate 'no-reset' effect
-            print_log_cmd="cat " + log
+            print_log_cmd="cat " + self.log_file_path
             os.system(print_log_cmd)
               
     
@@ -561,7 +596,8 @@ class NFPA(object):
         #besides those, only 2 symlinks exist, which could also be deleted,
         #since each restart it is recreated. However, we do not delete them!
         del_cmd = "rm -rf " + self.config["PKTGEN_ROOT"] + "/nfpa.*.res"
-        invoke.invoke(del_cmd, self.log)
+        invoke.invoke(command=del_cmd,
+                      logger=self.log)
 
 
 if __name__ == '__main__':
@@ -618,6 +654,16 @@ if __name__ == '__main__':
         status = main.initialize()
         if(status == -1):
             main.exiting()
-        #start PktGen based measurements
-        main.startPktgenMeasurements()
+
+        try:
+            #start PktGen based measurements
+            main.startPktgenMeasurements()
+        except Exception as e:
+            main.log.error(e)
+            time.sleep(1)
+            os.system("reset")
+            # print out log automatically in this case to simulate 'no-reset' effect
+            print_log_cmd = "cat " + main.log_file_path
+            os.system(print_log_cmd)
+
         

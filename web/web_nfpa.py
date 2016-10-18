@@ -202,6 +202,14 @@ class WEBNFPA(object):
                                  "control_vnf_outport",
                                  "control_mgmt"]
 
+        email_list = ["email_from",
+                      "email_to",
+                      "email_server",
+                      "email_port",
+                      "email_username",
+                      "email_password",
+                      "email_timeout"]
+
 
 
         for i in c:
@@ -227,8 +235,12 @@ class WEBNFPA(object):
 #         print(c)
 
         #if control_nfpa is not set, then we do not check the further related fields
-        if c["control_nfpa"] == "false":
+        if c["control_nfpa"].lower() == "false":
             no_check_list += remote_control_list
+
+        #if email_service is false, then we do not check the further related fields
+        if c["email_service"].lower() == "false":
+            no_check_list += email_list
 
         #load back the version info into c
         c['version'] = version
