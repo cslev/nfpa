@@ -374,3 +374,6 @@ STARTTLS security (like Gmail), and once NFPA finished with one measurement it
 immediately sends you an email about its status, moreover, it attaches the log file,
 and all the related result files.
 
+v3.0.1 - NFPA logo is added to webGUI, and some usability issues has been worked around in webGUI, 
+for instance, when a feature is disabled the corresponding elements became disabled as well, i.e.,
+they became uneditable.
