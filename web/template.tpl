@@ -123,15 +123,16 @@
 % list_of_values = ["packetSizes", "realisticTraffics", "trafficTypes"]
 
 
-<h1>Network Function Performance Analyzer configuration
+<h1 style="background-image:url('static/pictures/szittyaLogo_v3_patrick_small.png');
+           background-repeat: no-repeat;
+           background-position:98% 50%;">Network Function Performance Analyzer configuration
   <span>
-    Set up the configuration for measurement 
+    Set up the configuration for measurement
       <span class="scenario_name">
         {{d['scenario_name']}}
       </span>
   </span>
-  </h1>
-  
+</h1>
 <!--<img src="static/pictures/logo.png" alt="logo" style="height:100px; float:right;z-index:-3;"/>-->
 
 
@@ -252,7 +253,7 @@
                 %   else:
                 %     email_no = "selected"
                 %   end
-                   <select name={{j}}>
+                   <select name={{j}} id="{{j}}" onchange="disable_elements('{{j}}')">
                      <option value="true" {{email_yes}}>True</option>
                      <option value="false" {{email_no}}>False</option>
                    </select>
@@ -264,7 +265,7 @@
                 %   else:
                 %     manage_no = "selected"
                 %   end
-                   <select name={{j}}>
+                   <select name={{j}} id="{{j}}" onchange="disable_elements('{{j}}')">
                      <option value="true" {{manage_yes}}>True</option>
                      <option value="false" {{manage_no}}>False</option>
                    </select>
@@ -278,7 +279,7 @@
                      <option value="openflow" {{openflow_selected}}>OpenFlow</option>
                    </select>
                 % else:
-                  <input type="text" name="{{j}}" value="{{d[j]}}" />
+                  <input type="text" name="{{j}}" value="{{d[j]}}" id="{{j}}"/>
                 % end
             % else:
               % if d[j] is None:

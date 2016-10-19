@@ -4,6 +4,21 @@ body
 	background-color:#cccccc;
 }
 
+div.banner
+{
+
+    margin:0px auto;
+
+    background-color: #2A88AD;
+    min-height:160px;
+    height:100%;
+    width:110%;
+    background-image:url('../pictures/szittyaLogo_v3_patrick_small.png');
+    background-repeat: no-repeat;
+    padding-left:-10%;
+
+}
+
 
 div.measurement
 {
@@ -105,11 +120,12 @@ table.config
     -moz-border-radius: 10px 10px 0 0;
     color: #fff;
     text-shadow: 1px selected1px 3px rgba(0, 0, 0, 0.12);
-    font: normal 30px 'Helvetica', serif;
+    font: normal 40px 'Helvetica', serif;
     -moz-box-shadow: inset 0px 2px 2px 0px rgba(255, 255, 255, 0.17);
     -webkit-box-shadow: inset 0px 2px 2px 0px rgba(255, 255, 255, 0.17);
     box-shadow: inset 0px 2px 2px 0px rgba(255, 255, 255, 0.17);
     border: 1px solid #257C9E;
+    min-height:130px;
 }
 .form-style-10 h1 > span{
     display: block;
