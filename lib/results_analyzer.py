@@ -2,7 +2,6 @@
 This class is devoted for analyzing the results and create gnuplot compatible
 output
 '''
-
 import divisor as div
 import os
 import copy
@@ -143,62 +142,62 @@ class ResultsAnalyzer(object):
             for ps in self.config['packetSizes']:
                 self._results[ps] = {}
 
-            # create sub dicts of the list of  measured components
-            # (sent(pps),recv(pps), etc.)
-            for h in headers:
-                self._results[ps][h] = []
+                # create sub dicts of the list of  measured components
+                # (sent(pps),recv(pps), etc.)
+                for h in headers:
+                    self._results[ps][h] = []
 
 
-            # assemble res file path
-            file_name = self.config["PKTGEN_ROOT"] + "/nfpa." + \
-                      self.trace + "." + ps + \
-                      "bytes.res"
-            # check file exists
-            ok = os.path.isfile(file_name)
-            if not ok:
-                self.log.error("ERROR: file %s not exists (skipping)" %
-                             file_name)
-            # Open res file and parse each line of it
-            with open(file_name, 'r') as lines:
-                for line in lines:
-                    # remove blank spaces
-                    line = line.strip()
-                    # removed blank lines
-                    if not line:
-                        continue
-                    # print out first line, but only print out!
-                    # in the following we omit it, when results are
-                    # parsed
-                    self.log.debug(line)
-                    # omit commented lines in analyzing
-                    if (line.startswith("#", 0, 1)):
-                        continue
-                    # split config params
-                    # self.log.info(line)
+                # assemble res file path
+                file_name = self.config["PKTGEN_ROOT"] + "/nfpa." + \
+                          self.trace + "." + ps + \
+                          "bytes.res"
+                # check file exists
+                ok = os.path.isfile(file_name)
+                if not ok:
+                    self.log.error("ERROR: file %s not exists (skipping)" %
+                                 file_name)
+                # Open res file and parse each line of it
+                with open(file_name, 'r') as lines:
+                    for line in lines:
+                        # remove blank spaces
+                        line = line.strip()
+                        # removed blank lines
+                        if not line:
+                            continue
+                        # print out first line, but only print out!
+                        # in the following we omit it, when results are
+                        # parsed
+                        self.log.debug(line)
+                        # omit commented lines in analyzing
+                        if (line.startswith("#", 0, 1)):
+                            continue
+                        # split config params
+                        # self.log.info(line)
 
-                    # split line according to tabs, then we got
-                    # 0=snt(pps)
-                    # 1=rec(pps)
-                    # 2=miss(pps)
-                    # 3=snt(bps)
-                    # 4=rec(bps)
-                    # 5=diff(bps)
-                    # from 6 comes the same results, but for
-                    # bidirectional results
-                    results_as_list = line.split("|")
-                    # append results
-                    for i, h in enumerate(headers):
-                        try:
-                            self._results[ps][h].append(results_as_list[i])
-                        except IndexError as ie:
-                            self.log.error("Error during parsing res file")
-                            self.log.error("splitted line: %s" %
-                            str(results_as_list))
-                            self.log.error(ie)
-                            if (self.config['email_adapter'] is not None) and \
-                            (not self.config['email_adapter'].sendErrorMail()):
-                                self.log.error("Sending ERROR email did not succeed...")
-                            exit(-1)
+                        # split line according to tabs, then we got
+                        # 0=snt(pps)
+                        # 1=rec(pps)
+                        # 2=miss(pps)
+                        # 3=snt(bps)
+                        # 4=rec(bps)
+                        # 5=diff(bps)
+                        # from 6 comes the same results, but for
+                        # bidirectional results
+                        results_as_list = line.split("|")
+                        # append results
+                        for i, h in enumerate(headers):
+                            try:
+                                self._results[ps][h].append(results_as_list[i])
+                            except IndexError as ie:
+                                self.log.error("Error during parsing res file")
+                                self.log.error("splitted line: %s" %
+                                str(results_as_list))
+                                self.log.error(ie)
+                                if (self.config['email_adapter'] is not None) and \
+                                (not self.config['email_adapter'].sendErrorMail()):
+                                    self.log.error("Sending ERROR email did not succeed...")
+                                exit(-1)
 
         ######### REALISTIC TRAFFIC TYPE CASE ############
         elif self.tt == "realistic":

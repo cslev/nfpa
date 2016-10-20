@@ -86,7 +86,7 @@ class NFPA(object):
         #temporary res files in PKTGEN_ROOT/ still remains existing and can
         #influence a latter measurement results in a wrong way
         self.log.info("Clean up old .res files in PKTGEN's root dir...")
-        # self.deleteResFiles()
+        self.deleteResFiles()
         self.log.info("[DONE]")
 
         #create a tmp directory for flow rules under nfpa/of_rules
@@ -560,7 +560,7 @@ class NFPA(object):
 
         
         #after everything is done, delete unnecessary res files
-        # self.deleteResFiles()
+        self.deleteResFiles()
 
         stop = time.time()        
         start = self.config['app_start_date'] 
