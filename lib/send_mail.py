@@ -3,7 +3,7 @@ from email.MIMEMultipart import MIMEMultipart
 from email.mime.text import MIMEText
 import date_formatter as df
 import logger as l
-import pdb
+# import pdb
 
 
 class EmailAdapter(object):
@@ -49,6 +49,7 @@ class EmailAdapter(object):
         self.msg['From'] = self.config['email_from']
         self.msg['To'] = self.config['email_to']
 
+
         # assembling payload, starting with the text message
         self.tmp_text = "Your measurement " + self.config['scenario_name'] + \
                         " with the following setup:" + \
@@ -68,7 +69,7 @@ class EmailAdapter(object):
 
         self.tmp_text += "\n\nwith trace " + current_trace + \
                          " has been finished.\n"
-        pdb.set_trace()
+        # pdb.set_trace()
         if is_trace_synthetic:
             #synthetic traffic traces generate more files with different
             #naming convenctions
@@ -111,11 +112,7 @@ class EmailAdapter(object):
 
 
 
-        self.tmp_text += "Thanks for using NFPA " + self.config['version'] + "\n" +\
-                    "Observed a problem?! Go to http://nfpa.tmit.bme.hu and/or \n" +\
-                    "Subscribe to the nfpa-users mailing list under " +\
-                    "http://lendulet.tmit.bme.hu/cgi-bin/mailman/listinfo/nfpa-users'>"
-
+        self._addFooter()
 
 
         text=MIMEText(self.tmp_text)
@@ -139,13 +136,35 @@ class EmailAdapter(object):
         return self._sendEmail()
 
 
+
+    def _addFooter(self):
+        '''
+        This function adds standard footer to the email's text message
+        :return:
+        '''
+        self.tmp_text += "Thanks for using NFPA " + self.config['version'] + "\n" + \
+                         "Observed a problem?! Go to http://nfpa.tmit.bme.hu and/or \n" + \
+                         "Subscribe to the nfpa-users mailing list under " + \
+                         "http://lendulet.tmit.bme.hu/cgi-bin/mailman/listinfo/nfpa-users'>"
+
     def sendErrorMail(self):
         '''
         This function only send log files and error message
         :return:
         '''
+
+        self.msg = MIMEMultipart()
+        self.msg['Subject'] = self.SUBJECT
+        self.msg['From'] = self.config['email_from']
+        self.msg['To'] = self.config['email_to']
+
+
         self.log.info("Sending email with the log file...")
-        self.tmp_text += "ERROR occurred during measurement...log file attached.\n\n\n"
+        self.tmp_text = "ERROR occurred during measurement...log file attached.\n\n\n"
+        self._addFooter()
+
+        text = MIMEText(self.tmp_text)
+        self.msg.attach(text)
 
         #attach log file to message
         self._attachLogFile()

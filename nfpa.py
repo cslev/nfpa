@@ -410,8 +410,7 @@ class NFPA(object):
                         retval = os.system(main_cmd)
                         if (retval != 0):
                             self.log.error("ERROR OCCURRED DURING STARTING PKTGEN")
-                            self.log.error("Error: %s" % str(retval[0]))
-                            self.log.error("Exit_code: %s" % str(retval[1]))
+
                             if (self.config['email_adapter'] is not None) and \
                                     (not self.config['email_adapter'].sendErrorMail()):
                                 self.log.error("Sending ERROR email did not succeed...")
@@ -419,8 +418,6 @@ class NFPA(object):
 
 
                 else:
-                    self.log.warn("SYNTHETIC TRACE - %s" % trafficType)
-
                     # configure VNF if set
                     if self.config["control_nfpa"]:
                         if not self.configureVNFRemote(self.config["vnf_function"], trafficType):
@@ -483,8 +480,7 @@ class NFPA(object):
                             retval=os.system(main_cmd)
                             if(retval != 0):
                                 self.log.error("ERROR OCCURRED DURING STARTING PKTGEN")
-                                self.log.error("Error: %s" % str(retval[0]))
-                                self.log.error("Exit_code: %s" % str(retval[1]))
+
                                 if (self.config['email_adapter'] is not None) and \
                                     (not self.config['email_adapter'].sendErrorMail()):
                                     self.log.error("Sending ERROR email did not succeed...")
@@ -500,7 +496,6 @@ class NFPA(object):
         if self.config["realisticTraffics"]:                
             #check realistic traffic traces
             for realistic in self.config["realisticTraffics"]:
-                self.log.warn("REALISTIC TRACE -- %s" % realistic)
 
                 #create config file for LUA script
                 self.rc.generateLuaConfigFile(None, 
@@ -552,8 +547,7 @@ class NFPA(object):
                     retval=os.system(main_cmd)
                     if(retval != 0):
                         self.log.error("ERROR OCCURRED DURING STARTING PKTGEN")
-                        self.log.error("Error: %s" % str(retval[0]))
-                        self.log.error("Exit_code: %s" % str(retval[1]))
+
 
                         if (self.config['email_adapter'] is not None) and \
                             (not self.config['email_adapter'].sendErrorMail()):
