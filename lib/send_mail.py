@@ -30,7 +30,7 @@ class EmailAdapter(object):
         # get current timestamp
         self.st = df.getDateFormat(self.config['app_start_date'])
 
-        self.SUBJECT = "[NFPA-SERVICE]"
+        self.SUBJECT = "[NFPA-SERVICE] "
 
 
 
