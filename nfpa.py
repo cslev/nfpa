@@ -44,6 +44,7 @@ class NFPA(object):
         #default name TEST
         self.scenario_name = kwargs.get("scenario_name","TEST")
         self.reset_terminal = kwargs.get("reset_terminal", True)
+        self.no_database = kwargs.get("no_database", False)
         
   
     def storePID(self, new_pid):
@@ -341,10 +342,13 @@ class NFPA(object):
                                  results=results,
                                  type=tt,
                                  traffic_trace=trace)
-        database_handler = DatabaseHandler(config=self.config,
-                                            results=results,
-                                            type=tt,
-                                            traffic_trace=trace)
+
+        #check whether user wants to store the results in the database
+        if not self.no_database:
+            database_handler = DatabaseHandler(config=self.config,
+                                                results=results,
+                                                type=tt,
+                                                traffic_trace=trace)
         # send notification email -- Last boolean parameter indicates synthetic case
         if (self.config['email_adapter'] is not None) and \
             (not self.config['email_adapter'].sendResultsMail(trace, is_synthetic)):
@@ -617,6 +621,13 @@ if __name__ == '__main__':
                         "one may need to logout and login again to clear that mess. " +
                         "If you want to disable, however, the use this argument.",
                         required=False)
+    parser.add_argument('-d', '--nodatabase',
+                        action="store_true",
+                        default=False,
+                        help="DO NOT STORE results in the database! This feature is " +
+                        "mainly for development purposes, however in some testing phases one "+
+                        "may do not want to make mess in the database!",
+                        required=False)
     
     args = parser.parse_args()
     
@@ -633,7 +644,7 @@ if __name__ == '__main__':
 
     #initialize main NFPA class, which can be passed as a pointer to WEBNFPA
     #as well
-    main = NFPA(scenario_name=args.name[0],reset_terminal=args.noreset)
+    main = NFPA(scenario_name=args.name[0],reset_terminal=args.noreset, no_database=args.nodatabase)
 
     
     #web based gui
