@@ -159,16 +159,23 @@ class EmailAdapter(object):
                          "Subscribe to the nfpa-users mailing list under " + \
                          "http://lendulet.tmit.bme.hu/cgi-bin/mailman/listinfo/nfpa-users'>"
 
-    def sendErrorMail(self):
+    def sendErrorMail(self, **params):
         '''
         This function only send log files and error message
+        :params - some other stuffs to send it via email, e.g., current trace
         :return:
         '''
 
+        current_trace = params.get('current_trace', None)
+
+
         addition_to_subject="ERROR: " + \
                             self.config['vnf_name'] + " as " + \
-                            self.config['vnf_function'] + " with trace " +\
-                            current_trace
+                            self.config['vnf_function']\
+
+        #if current_trace was set, i.e., failure happened during starting pktgen, then we pass that parameter as well
+        if current_trace is not None:
+            addition_to_subject+= " with trace " + current_trace
 
         self.msg = MIMEMultipart()
         self.msg['Subject'] = self.SUBJECT + addition_to_subject
