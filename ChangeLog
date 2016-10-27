@@ -381,3 +381,6 @@ they became uneditable.
 v3.0.2 - Bugfixes
 
 v3.0.3 - Bugfixes
+
+v3.0.4 - Modify email sending service - now the SUBJECT also reflects some details, and ERROR message also contains
+the measurement setup data.

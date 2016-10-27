@@ -30,7 +30,7 @@ class EmailAdapter(object):
         # get current timestamp
         self.st = df.getDateFormat(self.config['app_start_date'])
 
-        self.SUBJECT = "[NFPA-SERVICE] NFPA has just finished one of your measurements"
+        self.SUBJECT = "[NFPA-SERVICE]"
 
 
 
@@ -44,29 +44,20 @@ class EmailAdapter(object):
         '''
         self.log.info("Sending email with the results...")
 
+        addition_to_subject="Finished: " + \
+                            self.config['vnf_name'] + " as " + \
+                            self.config['vnf_function'] + " with trace " +\
+                            current_trace
+
+
         self.msg = MIMEMultipart()
-        self.msg['Subject'] = self.SUBJECT
+        self.msg['Subject'] = self.SUBJECT + addition_to_subject
         self.msg['From'] = self.config['email_from']
         self.msg['To'] = self.config['email_to']
 
 
         # assembling payload, starting with the text message
-        self.tmp_text = "Your measurement " + self.config['scenario_name'] + \
-                        " with the following setup:" + \
-                        "\nDetails (that you may forget so far: \n" + \
-                        "vnf_name: " + self.config['vnf_name'] + "\n" + \
-                        "vnf_version: " + self.config['vnf_version'] + "\n" + \
-                        "vnf_driver: " + self.config['vnf_driver'] + "\n" + \
-                        "vnf_driver_version: " + self.config['vnf_driver_version'] + "\n" + \
-                        "vnf_function: " + self.config['vnf_function'] + "\n" + \
-                        "vnf_num_cores: " + self.config['vnf_num_cores'] + "\n" + \
-                        "vnf_comment: " + self.config['vnf_comment'] + "\n\n" + \
-                        "cpu_make: " + self.config['cpu_make'] + "\n" + \
-                        "cpu_model: " + self.config['cpu_model'] + "\n" + \
-                        "nic_make: " + self.config['nic_make'] + "\n" + \
-                        "nic_model: " + self.config['nic_model'] + "\n" + \
-                        "port_type:" + self.config['port_type'] + "\n\n"
-
+        self.tmp_text = self._assembleDetails()
         self.tmp_text += "\n\nwith trace " + current_trace + \
                          " has been finished.\n"
         # pdb.set_trace()
@@ -135,7 +126,28 @@ class EmailAdapter(object):
         #call the practical sending function
         return self._sendEmail()
 
+    def _assembleDetails(self):
+        '''
+        This function assembles the main body of the email containing the measurement details
+        :return - String: the email body
+        '''
+        body = "Your measurement " + self.config['scenario_name'] + \
+                   " with the following setup:" + \
+                   "\nDetails (that you may forget so far): \n" + \
+                   "vnf_name: " + self.config['vnf_name'] + "\n" + \
+                   "vnf_version: " + self.config['vnf_version'] + "\n" + \
+                   "vnf_driver: " + self.config['vnf_driver'] + "\n" + \
+                   "vnf_driver_version: " + self.config['vnf_driver_version'] + "\n" + \
+                   "vnf_function: " + self.config['vnf_function'] + "\n" + \
+                   "vnf_num_cores: " + self.config['vnf_num_cores'] + "\n" + \
+                   "vnf_comment: " + self.config['vnf_comment'] + "\n\n" + \
+                   "cpu_make: " + self.config['cpu_make'] + "\n" + \
+                   "cpu_model: " + self.config['cpu_model'] + "\n" + \
+                   "nic_make: " + self.config['nic_make'] + "\n" + \
+                   "nic_model: " + self.config['nic_model'] + "\n" + \
+                   "port_type:" + self.config['port_type'] + "\n\n"
 
+        return body
 
     def _addFooter(self):
         '''
@@ -153,14 +165,22 @@ class EmailAdapter(object):
         :return:
         '''
 
+        addition_to_subject="ERROR: " + \
+                            self.config['vnf_name'] + " as " + \
+                            self.config['vnf_function'] + " with trace " +\
+                            current_trace
+
         self.msg = MIMEMultipart()
-        self.msg['Subject'] = self.SUBJECT
+        self.msg['Subject'] = self.SUBJECT + addition_to_subject
         self.msg['From'] = self.config['email_from']
         self.msg['To'] = self.config['email_to']
 
 
         self.log.info("Sending email with the log file...")
+
         self.tmp_text = "ERROR occurred during measurement...log file attached.\n\n\n"
+        self.tmp_text += self._assembleDetails()
+
         self._addFooter()
 
         text = MIMEText(self.tmp_text)
