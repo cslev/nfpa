@@ -28,5 +28,5 @@ Are the software-based solutions (ever going to be) able to cope with the foreve
 
 Project homepage is available under:
 
-[http://ios.tmit.bme.hu/nfpa](http://ios.tmit.bme.hu/nfpa)
+[http://nfpa.tmit.bme.hu](http://nfpa.tmit.bme.hu)
 
