@@ -45,6 +45,7 @@ class NFPA(object):
         self.scenario_name = kwargs.get("scenario_name","TEST")
         self.reset_terminal = kwargs.get("reset_terminal", True)
         self.no_database = kwargs.get("no_database", False)
+        self.config_file = kwargs.get("config_file", "nfpa.cfg")
         
   
     def storePID(self, new_pid):
@@ -63,7 +64,7 @@ class NFPA(object):
 
         
         #read config
-        self.rc = ReadConfig()
+        self.rc = ReadConfig(self.config_file)
         if(self.rc == -1):
             #error during reading config
             return -1
@@ -628,6 +629,10 @@ if __name__ == '__main__':
                         "mainly for development purposes, however in some testing phases one "+
                         "may do not want to make mess in the database!",
                         required=False)
+    parser.add_argument('-c', '--cfg', nargs=1,
+                        default=['nfpa.cfg'],
+                        help="Specify a path to the config file. [Default: nfpa.cfg]",
+                        required=False)
     
     args = parser.parse_args()
     
@@ -644,7 +649,10 @@ if __name__ == '__main__':
 
     #initialize main NFPA class, which can be passed as a pointer to WEBNFPA
     #as well
-    main = NFPA(scenario_name=args.name[0],reset_terminal=args.noreset, no_database=args.nodatabase)
+    main = NFPA(scenario_name=args.name[0],
+                reset_terminal=args.noreset,
+                no_database=args.nodatabase,
+                config_file=args.cfg[0])
 
     
     #web based gui

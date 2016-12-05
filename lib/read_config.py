@@ -41,15 +41,17 @@ class ReadConfig(object):
     '''
 
 
-    def __init__(self):
+    def __init__(self, config_file):
         '''
         Constructor
         '''
 
+        #check the path to the config_file
+
         #dictionary for storing configuration parameters read from config file
         self._config = {}
         #read config
-        tmp_cfg = rwcf.readConfigFile("nfpa.cfg")
+        tmp_cfg = rwcf.readConfigFile(config_file)
         #check whether it was successful
         if tmp_cfg[0] == True:
             self._config = tmp_cfg[1]
@@ -522,7 +524,6 @@ class ReadConfig(object):
             self.log.debug("email_timeout: %s" % self._config['email_timeout'])
 
 
-         
 
         self._config['dbhelper'].connect()
         #check user

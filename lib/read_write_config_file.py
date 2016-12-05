@@ -26,10 +26,8 @@ def readConfigFile(config_file):
     #list for realistic traffics
     realisticTraffics = []
     
-    config['version'] = "v3.0.4 beta"
-    
-    
-    
+    config['version'] = "v3.2"
+
     
     #Logger class will check whether DEBUG is set correctly
     #DEBUG param will later updated

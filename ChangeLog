@@ -385,6 +385,10 @@ v3.0.3 - Bugfixes
 v3.0.4 - Modify email sending service - now the SUBJECT also reflects some details, and ERROR message also contains
 the measurement setup data.
 
-v3.1 - New starting parameter has added. If someone does not want to store the measurements data in the database, since
+v3.1 - New starting argument has added. If someone does not want to store the measurements data in the database, since
 they are just for testing purposes and the user does not want to mess up the database with test results just use -d, or
 --nodatabase starting parameter to reach this end.
+
+v3.2 - New starting parameter has added for defining the path to the config file (nfpa.cfg). Now, it became easier
+to automatically start NFPA multiple times consecutively for different use-cases, e.g., for different VNFs, by defining
+multiple config files. See the output of python nfpa.py -h
