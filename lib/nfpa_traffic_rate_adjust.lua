@@ -324,7 +324,7 @@ function change_rate (port, exact, increase)
   -- changing the sending rate exactly to a value
   if port_1
   then
-    pktgen.set(port,"rate", sending_rate);
+    pktgen.set(port,"rate", sending_rate_1);
   else
     pktgen.set(port,"rate", sending_rate_2);
   end
