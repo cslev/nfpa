@@ -406,8 +406,8 @@ function start_measurement ()
   
 
   -- wait some seconds to avoid slow start
-  --~ print("Waiting for heating up\n");
-  --~ sleep(3);
+  print("Waiting for heating up\n");
+  sleep(3);
 
   if(tonumber(config["biDir"]) == 1)
   then
