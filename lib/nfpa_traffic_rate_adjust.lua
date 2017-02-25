@@ -292,6 +292,7 @@ function change_rate (port, exact, increase)
     -- bi-dir scenario
     last_sending_rate_2 = senging_rate_2;
     scale_factor_2=math.floor(scale_factor_2/2);
+  end
   -- binary search's next step for the best rate
   if exact == -1
   then
@@ -461,18 +462,6 @@ function start_measurement ()
       change_rate(tonumber(config["sendPort"]),sending_rate_1,false);
       measure2();
       sending_rate_found_1 = true;
-
-      if tonumber(config["biDir"]) == 1
-      then
-        if math.abs(sending_rate_2 - last_sending_rate_2) == 1
-        then
-          print("We reached a possibly good sending rate for port " ..
-                config["sendPort"]);
-          sending_rate_2=sending_rate_2+1; -- increase sending rate the greater value
-          change_rate(tonumber(config["recvPort"]),sending_rate_2,false);
-          measure2();
-          sending_rate_found_2 = true;
-      end
     else
     
       -- check threshold
@@ -502,33 +491,45 @@ function start_measurement ()
           measure2();
         end
       end
-      
+    end
+
+      -- BiDir scenario
       if tonumber(config["biDir"]) == 1
       then
-        -- check threshold
-        if threshold_2 < miss_avg_2
+        if math.abs(sending_rate_2 - last_sending_rate_2) == 1
         then
-          -- recv and sent are still too far from each other
-          print("Threshold not met! -- still adjusting");
-          change_rate(tonumber(config["recvPort"]),-1,false);
-          measure2();          
+          print("We reached a possibly good sending rate for port " ..
+                config["sendPort"]);
+          sending_rate_2=sending_rate_2+1; -- increase sending rate the greater value
+          change_rate(tonumber(config["recvPort"]),sending_rate_2,false);
+          measure2();
+          sending_rate_found_2 = true;
         else
-          -- threshold reached - we may jumped to much, check greater rate
-          print("Threshold  for port ".. config["sendPort"] .. " met...");
-          if sending_rate_2 > 99
+          -- check threshold
+          if threshold_2 < miss_avg_2
           then
-            print("Best sending rate for port " .. config["recvPort"] ..
-                  "was 100%...measuring this rate...");
+            -- recv and sent are still too far from each other
+            print("Threshold not met! -- still adjusting");
+            change_rate(tonumber(config["recvPort"]),-1,false);
             measure2();
-            sending_rate_found_2 = true;
           else
-            change_rate(tonumber(config["recvPort"]),-1,true);
-            measure2();
+            -- threshold reached - we may jumped to much, check greater rate
+            print("Threshold  for port ".. config["sendPort"] .. " met...");
+            if sending_rate_2 > 99
+            then
+              print("Best sending rate for port " .. config["recvPort"] ..
+                    "was 100%...measuring this rate...");
+              measure2();
+              sending_rate_found_2 = true;
+            else
+              change_rate(tonumber(config["recvPort"]),-1,true);
+              measure2();
+            end
           end
         end
       end
       
-    end
+
   
     -- this will stop the loop
     if sending_rate_found_1 and sending_rate_found_2
