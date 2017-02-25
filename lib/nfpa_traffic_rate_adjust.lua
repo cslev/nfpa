@@ -341,9 +341,10 @@ function start_measurement ()
   number_of_packetsizes = #pktSizes;
   -- calculating estimated measurement duration
   -- heating up=3s, cooldown=3s, config["measurementDuration"], number_of_packetsizes
+  esimtated_time = " less than a minute!"
   if tonumber(config["measurementDuration"]) ~= 0
   then
-    esimtated_time = " less than a minute!"
+
     infinite_measurement = false;
   else
     estimated_time = "INFINITE"
