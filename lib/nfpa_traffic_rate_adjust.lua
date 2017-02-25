@@ -367,7 +367,7 @@ function start_measurement ()
   io.output(file);
   
   -- set initial sending rate for send port
-  pktgen.set(tonumber(config["sendPort"]),"rate", sending_rate);
+  pktgen.set(tonumber(config["sendPort"]),"rate", sending_rate_1);
 
   -- start sending packets    
   pktgen.start(tonumber(config["sendPort"]));
