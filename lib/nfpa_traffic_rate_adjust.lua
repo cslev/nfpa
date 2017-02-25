@@ -436,7 +436,7 @@ function start_measurement ()
   
   sending_rate_found = false;
   error_rate = 0.01
-  while not sending_rate_found and infinite_measurement 
+  while (sending_rate_found == false) or (infinite_measurement == true)
   do
     -- miss and rate values for port 1
     miss_avg  = sent_avg - recv_avg;
