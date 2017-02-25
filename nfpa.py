@@ -226,7 +226,7 @@ class NFPA(object):
                 self.log.error("Missing flow rule file: %s" % scenario_path)
                 self.log.error("NFPA does not know how to configure VNF to act as " + \
                                "%s for the given trace %s" % (vnf_function,traffictype))
-                self.log.error("More info: http://ios.tmit.bme.hu/nfpa")
+                self.log.error("More info: http://nfpa.tmit.bme.hu")
                 if (self.config['email_adapter'] is not None) and \
                     (not self.config['email_adapter'].sendErrorMail()):
                     self.log.error("Sending ERROR email did not succeed...")
@@ -441,7 +441,7 @@ class NFPA(object):
                         cmd = self.rc.assemblePktgenCommand()
                         #no special bidirectional traffic was not set
                         if not sbtc.checkSpecialTraffic(trafficType):
-                            cmd += " -f nfpa_traffic.lua -s " + \
+                            cmd += " -f nfpa_traffic_rate_adjust.lua -s " + \
                                   self.config["sendPort"] + ":" + \
                                   self.config['MAIN_ROOT'] + \
                                   "/PCAP/nfpa." +\
@@ -457,7 +457,7 @@ class NFPA(object):
                         else:
                             #special bidirectional traffic was set
                             tmp_tt = sbtc.splitTraffic(trafficType)
-                            cmd += " -f nfpa_traffic.lua -s " + \
+                            cmd += " -f nfpa_traffic_rate_adjust.lua -s " + \
                                     self.config["sendPort"] + ":" + \
                                     self.config['MAIN_ROOT'] + \
                                     "/PCAP/nfpa." + tmp_tt[0] + "." + \
