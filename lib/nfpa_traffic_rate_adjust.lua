@@ -300,7 +300,7 @@ function change_rate (port, exact, increase)
   then
     if increase == false
     then
-      print("decreasing sending rate from " .. last_sending_rate_1 .. " to " .. scale_factor_1);
+      print("decreasing sending rate from " .. last_sending_rate_1 .. " to " .. sending_rate_1);
       if port_1
       then
         sending_rate_1 = sending_rate_1 - scale_factor_1;
@@ -308,7 +308,7 @@ function change_rate (port, exact, increase)
         sending_rate_2 = sending_rate_2 - scale_factor_2;
       end
     else
-      print("increasing sending rate from " .. last_sending_rate_1 .. " to " .. scale_factor_1);
+      print("increasing sending rate from " .. last_sending_rate_1 .. " to " .. sending_rate_1);
       if port_1
       then
         sending_rate_1 = sending_rate_1 + scale_factor_1;
