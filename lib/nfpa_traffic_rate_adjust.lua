@@ -367,7 +367,7 @@ function start_measurement ()
   io.output(file);
   
   -- set initial sending rate for send port
-  pktgen.set(tonumber(config["sendPort"],"rate", sending_rate));
+  pktgen.set(tonumber(config["sendPort"]),"rate", sending_rate);
 
   -- start sending packets    
   pktgen.start(tonumber(config["sendPort"]));
@@ -375,7 +375,7 @@ function start_measurement ()
   if(tonumber(config["biDir"]) == 1)
   then
     -- set initial sending rate for the other port as well
-    pktgen.set(tonumber(config["recvPort"],"rate", sending_rate_2));
+    pktgen.set(tonumber(config["recvPort"]),"rate", sending_rate_2);
     -- start traffic on the other port as well
     pktgen.start(tonumber(config["recvPort"]));
   end
