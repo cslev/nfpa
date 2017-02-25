@@ -18,7 +18,7 @@ pktSizes = {};
 -- setting sending rate to 100% at the beginning
 -- rate for port 1
 sending_rate_1=100;
-scale_factor_1=sending_rate;
+scale_factor_1=sending_rate_1;
 last_sending_rate_1=sending_rate_1;
 -- rate for port 2
 sending_rate_2=100;
