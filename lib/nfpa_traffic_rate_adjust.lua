@@ -204,7 +204,7 @@ function measure2 ()
     recv_avg=recv_avg + recv_pkts;
     
     -- capture bidirectional traffic as well if biDir was set
-    if(tonumber(config["biDir"]) == 1)
+    if tonumber(config["biDir"]) == 1
     then
       -- get sent packet/s data
       sent_pkts2 = portRates[tonumber(config["recvPort"])].pkts_tx;
@@ -212,21 +212,22 @@ function measure2 ()
       sent_bps2 = math.floor(sent_pkts2*(config["packetSize"]+20)*8);
       -- get received packet/s data
       recv_pkts2 = portRates[tonumber(config["sendPort"])].pkts_rx;
-      -- calculate receiving throughput in mbps    
-      recv_bps2 = math.floor(recv_pkts2*(config["packetSize"]+20)*8);  
+      -- calculate receiving throughput in mbps
+      recv_bps2 = math.floor(recv_pkts2*(config["packetSize"]+20)*8);
       -- calculate the number of missing packets
       miss_pkts2 = sent_pkts2 - recv_pkts2;
       -- calculate the difference between sent and received mbit/s
       diff_bps2 = sent_bps2 - recv_bps2;
       -- log data into file
       -- prettify output
-      io.write("|" .. sent_pkts2 .. "|" .. recv_pkts2 ..  "|".. miss_pkts2 
-              .. "|" .. sent_bps2 ..  "|" .. recv_bps2 .. "|" .. diff_bps2);      
-    
+      io.write("|" .. sent_pkts2 .. "|" .. recv_pkts2 ..  "|".. miss_pkts2
+              .. "|" .. sent_bps2 ..  "|" .. recv_bps2 .. "|" .. diff_bps2);
+
       send_avg_2 = sent_avg_2 + sent_pkts2;
-      recv_avg_2 = recv_avg_2 + recv_pkts2:
+      recv_avg_2 = recv_avg_2 + recv_pkts2;
+
     end
-    
+
                      
                
     io.write("\n");
@@ -250,7 +251,7 @@ function measure2 ()
     recv_avg_2 = math.floor(recv_avg_2/measure_time);
   end
   
-  if measure2_called > 3:
+  if measure2_called > 3
   then
     --check recv values to see whether VNF was configured properly
     if recv_avg == 0
@@ -260,14 +261,14 @@ function measure2 ()
       os.exit(-2);
     end
     
-    if tonumber(config["biDir"]) == 1 and recv_avg_2 == 0:
+    if tonumber(config["biDir"]) == 1 and recv_avg_2 == 0
     then
       print("There is not packets received on port " .. 
             config["sendPort"] .. "! - EXITING...");
       os.exit(-2);
     end
   
-  
+  end
   
 end
 -- ====================== END FUNCTION ========================
@@ -282,16 +283,18 @@ function change_rate (port, exact, increase)
   port_1 = false;
   
   if port == tonumber(config["sendPort"])
+  then
     -- uni-dir scenario
-    last_sending_rate = sending_rate;
+    last_sending_rate_1 = sending_rate_1;
     port_1 = true;
+    scale_factor_1=math.floor(scale_factor_1/2);
   else
     -- bi-dir scenario
     last_sending_rate_2 = senging_rate_2;
+    scale_factor_2=math.floor(scale_factor_2/2);
   -- binary search's next step for the best rate
   if exact == -1
   then
-    scale_factor=math.floor(scale_factor/2);
     if increase == false
     then
       if port_1
@@ -362,14 +365,15 @@ function start_measurement ()
   io.output(file);
   
   -- set initial sending rate for send port
-  pktgen.set(tonumber(config["sendPort"],"rate", sending_rate);
+  pktgen.set(tonumber(config["sendPort"],"rate", sending_rate));
+
   -- start sending packets    
   pktgen.start(tonumber(config["sendPort"]));
   -- set the other port as well if biDir is set
   if(tonumber(config["biDir"]) == 1)
   then
     -- set initial sending rate for the other port as well
-    pktgen.set(tonumber(config["recvPort"],"rate", sending_rate_2);
+    pktgen.set(tonumber(config["recvPort"],"rate", sending_rate_2));
     -- start traffic on the other port as well
     pktgen.start(tonumber(config["recvPort"]));
   end
@@ -422,7 +426,7 @@ function start_measurement ()
   sending_rate_found_2 = false;
   -- if biDir is not set, then we set this variable to true for easing
   -- further checks below
-  if tonumber(config["biDir"]) == 0:
+  if tonumber(config["biDir"]) == 0
   then
     sending_rate_2 = true;
   end
@@ -458,7 +462,7 @@ function start_measurement ()
       measure2();
       sending_rate_found_1 = true;
 
-      if tonumber(config["biDir"]) == 1:
+      if tonumber(config["biDir"]) == 1
       then
         if math.abs(sending_rate_2 - last_sending_rate_2) == 1
         then
@@ -489,7 +493,7 @@ function start_measurement ()
           measure2();
           sending_rate_found_1 = true;
           
-          if(tonumber(config["biDir"] == 0:
+          if tonumber(config["biDir"]) == 0
           then
             sending_rate_found = true;
           end
@@ -499,7 +503,7 @@ function start_measurement ()
         end
       end
       
-      if tonumber(config["biDir"]) == 1:
+      if tonumber(config["biDir"]) == 1
       then
         -- check threshold
         if threshold_2 < miss_avg_2
