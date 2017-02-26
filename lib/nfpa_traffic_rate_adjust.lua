@@ -290,67 +290,6 @@ function change_rate (port, exact, increase)
 end
 -- ====================== END FUNCTION ========================
 
----- +++++++++++++++++++++++++ FUNCTION ++++++++++++++++++++++++++++
---function change_rate (port, exact, increase)
----- adjusting rates for port - if exact is -1, reducing always by the
----- base factor, otherwise rate is set to the value of exact
---
---  -- according to this variable the checking for biDir use case is simpler
---  port_1 = false;
---
---  if port == tonumber(config["sendPort"])
---  then
---    -- uni-dir scenario
---    last_sending_rate_1 = sending_rate_1;
---    port_1 = true;
---    scale_factor_1=math.floor(scale_factor_1/2);
---  else
---    -- bi-dir scenario
---    last_sending_rate_2 = senging_rate_2;
---    scale_factor_2=math.floor(scale_factor_2/2);
---  end
---  -- binary search's next step for the best rate
---  if exact == -1
---  then
---    if increase == false
---    then
---
---      if port_1
---      then
---        sending_rate_1 = sending_rate_1 - scale_factor_1;
---        print("decreasing sending rate from " .. last_sending_rate_1 .. " to " .. sending_rate_1);
---      else
---        sending_rate_2 = sending_rate_2 - scale_factor_2;
---      end
---    else
---
---      if port_1
---      then
---        print("increasing sending rate from " .. last_sending_rate_1 .. " to " .. sending_rate_1);
---        sending_rate_1 = sending_rate_1 + scale_factor_1;
---      else
---        sending_rate_2 = sending_rate_2 + scale_factor_2;
---      end
---    end
---  else
---    if port_1
---    then
---      sending_rate = exact;
---    else
---      sending_rate_2 = exact;
---    end
---  end
---
---  -- changing the sending rate exactly to a value
---  if port_1
---  then
---    pktgen.set(port,"rate", sending_rate_1);
---  else
---    pktgen.set(port,"rate", sending_rate_2);
---  end
---
---end
--- ====================== END FUNCTION ========================
 
 
 
@@ -394,8 +333,22 @@ function measure ()
     portRates = pktgen.portStats("all", "rate");
     -- get sent packet/s data
     sent_pkts = portRates[tonumber(config["sendPort"])].pkts_tx;
+    -- calculate sending throughput in mbps
+    sent_bps = math.floor(sent_pkts*(config["packetSize"]+20)*8);
     -- get received packet/s data
     recv_pkts = portRates[tonumber(config["recvPort"])].pkts_rx;
+    -- calculate receiving throughput in mbps
+    recv_bps = math.floor(recv_pkts*(config["packetSize"]+20)*8);
+    -- calculate the number of missing packets
+    miss_pkts = sent_pkts - recv_pkts;
+    -- calculate the difference between sent and received mbit/s
+    diff_bps = sent_bps - recv_bps;
+
+  -- log data into file
+    -- prettify output
+    io.write(sent_pkts .. "|" .. recv_pkts ..  "|".. miss_pkts .. "|" ..
+             sent_bps ..  "|" .. recv_bps .. "|" .. diff_bps);
+
 
     print("Send\tRecv");
     print(sent_pkts .. "\t" .. recv_pkts);
