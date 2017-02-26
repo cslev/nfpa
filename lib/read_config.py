@@ -644,9 +644,6 @@ class ReadConfig(object):
         invoke.invoke(command=remove_cmd,
                       logger=self.log)
 
-        remove_cmd = "rm -rf " + self._config["PKTGEN_ROOT"] + "/nfpa_traffic_rate_adjust.lua"
-        invoke.invoke(command=remove_cmd,
-                      logger=self.log)
         
         remove_cmd = "rm -rf " +  self._config["PKTGEN_ROOT"] + \
                      "/nfpa_realistic.lua"                       
@@ -673,14 +670,6 @@ class ReadConfig(object):
         invoke.invoke(command=symlink_cmd,
                       logger=self.log)
 
-        # create symlink for nfpa_traffic_rate_adjust.lua
-        self.log.info("create symlinks")
-        symlink_cmd = "ln -s " + self._config["MAIN_ROOT"] + \
-                      "/lib/nfpa_traffic_rate_adjust.lua " + self._config["PKTGEN_ROOT"] + \
-                      "/nfpa_traffic_rate_adjust.lua"
-        self.log.info(symlink_cmd)
-        invoke.invoke(command=symlink_cmd,
-                      logger=self.log)
 
          
         #create symlink for nfpa_realistic.lua

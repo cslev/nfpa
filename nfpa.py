@@ -441,7 +441,7 @@ class NFPA(object):
                         cmd = self.rc.assemblePktgenCommand()
                         #no special bidirectional traffic was not set
                         if not sbtc.checkSpecialTraffic(trafficType):
-                            cmd += " -f nfpa_traffic_rate_adjust.lua -s " + \
+                            cmd += " -f nfpa_traffic.lua -s " + \
                                   self.config["sendPort"] + ":" + \
                                   self.config['MAIN_ROOT'] + \
                                   "/PCAP/nfpa." +\
@@ -457,7 +457,7 @@ class NFPA(object):
                         else:
                             #special bidirectional traffic was set
                             tmp_tt = sbtc.splitTraffic(trafficType)
-                            cmd += " -f nfpa_traffic_rate_adjust.lua -s " + \
+                            cmd += " -f nfpa_traffic.lua -s " + \
                                     self.config["sendPort"] + ":" + \
                                     self.config['MAIN_ROOT'] + \
                                     "/PCAP/nfpa." + tmp_tt[0] + "." + \
