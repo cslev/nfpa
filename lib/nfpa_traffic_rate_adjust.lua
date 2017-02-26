@@ -424,6 +424,13 @@ function start_measurement ()
   
   print("Estimated time needed for this traffic trace is: " .. estimated_time);
 
+  pktgen.set(tonumber(config["sendPort"]),"rate", sending_rate);
+  pktgen.start(tonumber(config["sendPort"]));
+
+  -- wait some seconds to avoid slow start
+  print("Waiting for heating up\n");
+  sleep(3);
+
   
   tune_in();
 
