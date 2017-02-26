@@ -16,14 +16,10 @@ pktSizes = {};
 
 
 -- setting sending rate to 100% at the beginning
--- rate for port 1
-sending_rate_1=100;
-scale_factor_1=sending_rate_1;
-last_sending_rate_1=sending_rate_1;
--- rate for port 2
-sending_rate_2=100;
-scale_factor_2=sending_rate_1;
-last_sending_rate_2=sending_rate_1;
+sending_rate=100;
+scale_factor=sending_rate;
+last_sending_rate=sending_rate;
+
 
 
 
@@ -135,14 +131,6 @@ end
 -- ====================== END FUNCTION ========================
 
 
--- since measurement now is not bounded by a measurementDuration from
--- nfpa.cfg, and might a certain scenario is not configured correctly,
--- this scipt would never quit
--- For this very reason, we create a simple variable, which stores how
--- many times this measure2() was called.
--- if it was called more than 3 times, and the recv_avg values are 0, 
--- then we need to quit!
-measure2_called = 0;
 
 
 -- +++++++++++++++++++++++++ FUNCTION ++++++++++++++++++++++++++++
@@ -275,66 +263,144 @@ function measure2 ()
 end
 -- ====================== END FUNCTION ========================
 
-
 -- +++++++++++++++++++++++++ FUNCTION ++++++++++++++++++++++++++++
 function change_rate (port, exact, increase)
 -- adjusting rates for port - if exact is -1, reducing always by the
 -- base factor, otherwise rate is set to the value of exact
-  
-  -- according to this variable the checking for biDir use case is simpler
-  port_1 = false;
-  
-  if port == tonumber(config["sendPort"])
-  then
-    -- uni-dir scenario
-    last_sending_rate_1 = sending_rate_1;
-    port_1 = true;
-    scale_factor_1=math.floor(scale_factor_1/2);
-  else
-    -- bi-dir scenario
-    last_sending_rate_2 = senging_rate_2;
-    scale_factor_2=math.floor(scale_factor_2/2);
-  end
-  -- binary search's next step for the best rate
+
+  last_sending_rate = sending_rate;
+
   if exact == -1
   then
+    -- sometimes the rate only changes below 10%. In this case, we just
+    -- step down until 1% (sadly, float numbers are not supported)
+    scale_factor=math.floor(scale_factor/2);
     if increase == false
     then
-
-      if port_1
-      then
-        sending_rate_1 = sending_rate_1 - scale_factor_1;
-        print("decreasing sending rate from " .. last_sending_rate_1 .. " to " .. sending_rate_1);
-      else
-        sending_rate_2 = sending_rate_2 - scale_factor_2;
-      end
+      sending_rate = sending_rate - scale_factor;
     else
-
-      if port_1
-      then
-        print("increasing sending rate from " .. last_sending_rate_1 .. " to " .. sending_rate_1);
-        sending_rate_1 = sending_rate_1 + scale_factor_1;
-      else
-        sending_rate_2 = sending_rate_2 + scale_factor_2;
-      end
+      sending_rate = sending_rate + scale_factor;
     end
   else
-    if port_1
-    then
-      sending_rate = exact;
-    else
-      sending_rate_2 = exact;
-    end
+    sending_rate = exact;
   end
-  
-  -- changing the sending rate exactly to a value
-  if port_1
-  then
-    pktgen.set(port,"rate", sending_rate_1);
-  else
-    pktgen.set(port,"rate", sending_rate_2);
+  -- changing the sending rate
+  pktgen.set(port,"rate", sending_rate);
+
+end
+-- ====================== END FUNCTION ========================
+
+---- +++++++++++++++++++++++++ FUNCTION ++++++++++++++++++++++++++++
+--function change_rate (port, exact, increase)
+---- adjusting rates for port - if exact is -1, reducing always by the
+---- base factor, otherwise rate is set to the value of exact
+--
+--  -- according to this variable the checking for biDir use case is simpler
+--  port_1 = false;
+--
+--  if port == tonumber(config["sendPort"])
+--  then
+--    -- uni-dir scenario
+--    last_sending_rate_1 = sending_rate_1;
+--    port_1 = true;
+--    scale_factor_1=math.floor(scale_factor_1/2);
+--  else
+--    -- bi-dir scenario
+--    last_sending_rate_2 = senging_rate_2;
+--    scale_factor_2=math.floor(scale_factor_2/2);
+--  end
+--  -- binary search's next step for the best rate
+--  if exact == -1
+--  then
+--    if increase == false
+--    then
+--
+--      if port_1
+--      then
+--        sending_rate_1 = sending_rate_1 - scale_factor_1;
+--        print("decreasing sending rate from " .. last_sending_rate_1 .. " to " .. sending_rate_1);
+--      else
+--        sending_rate_2 = sending_rate_2 - scale_factor_2;
+--      end
+--    else
+--
+--      if port_1
+--      then
+--        print("increasing sending rate from " .. last_sending_rate_1 .. " to " .. sending_rate_1);
+--        sending_rate_1 = sending_rate_1 + scale_factor_1;
+--      else
+--        sending_rate_2 = sending_rate_2 + scale_factor_2;
+--      end
+--    end
+--  else
+--    if port_1
+--    then
+--      sending_rate = exact;
+--    else
+--      sending_rate_2 = exact;
+--    end
+--  end
+--
+--  -- changing the sending rate exactly to a value
+--  if port_1
+--  then
+--    pktgen.set(port,"rate", sending_rate_1);
+--  else
+--    pktgen.set(port,"rate", sending_rate_2);
+--  end
+--
+--end
+-- ====================== END FUNCTION ========================
+
+
+
+-- +++++++++++++++++++++++++ FUNCTION ++++++++++++++++++++++++++++
+function tune_in ()
+  sent_avg=0;
+  recv_avg=0;
+  print("Tuning in with sending rate ".. sending_rate .."% for 3 secs...");
+  sleep(3);
+
+  print("Measure");
+  for i=1,3
+  do
+    -- get port data
+    portRates = pktgen.portStats("all", "rate");
+    -- get sent packet/s data
+    sent_pkts = portRates[tonumber(config["sendPort"])].pkts_tx;
+    -- get received packet/s data
+    recv_pkts = portRates[tonumber(config["recvPort"])].pkts_rx;
+
+    sent_avg=sent_avg + sent_pkts;
+    recv_avg=recv_avg + recv_pkts;
+    sleep(1);
   end
-  
+
+  sent_avg=math.floor(sent_avg/3);
+  recv_avg=math.floor(recv_avg/3);
+
+end
+-- ====================== END FUNCTION ========================
+
+
+-- +++++++++++++++++++++++++ FUNCTION ++++++++++++++++++++++++++++
+function measure ()
+  print("Best sending rate is " .. sending_rate .. "%!");
+  -- further warmup with the final sending_rate
+  sleep(3);
+  for i=1,3
+  do
+    -- get port data
+    portRates = pktgen.portStats("all", "rate");
+    -- get sent packet/s data
+    sent_pkts = portRates[tonumber(config["sendPort"])].pkts_tx;
+    -- get received packet/s data
+    recv_pkts = portRates[tonumber(config["recvPort"])].pkts_rx;
+
+    print("Send\tRecv");
+    print(sent_pkts .. "\t" .. recv_pkts);
+    sleep(1);
+  end
 end
 -- ====================== END FUNCTION ========================
 
@@ -350,221 +416,69 @@ function start_measurement ()
   estimated_time = " less than a minute!"
   if tonumber(config["measurementDuration"]) ~= 0
   then
-
     infinite_measurement = false;
   else
     estimated_time = "INFINITE"
     infinite_measurement = true;
   end
   
-  print("Estimated time needed for this traffic trace is: " .. estimated_time ..
-  " seconds");
+  print("Estimated time needed for this traffic trace is: " .. estimated_time);
 
   
-  -- print("FILE CHECK");
-  -- check output file existence    
-  file_exists=file_check("nfpa.".. traffic .. "bytes.res");
-  
-  
-  -- create file descriptor for output
-  local file = io.open("nfpa.".. traffic .. "bytes.res","a");
+  tune_in();
 
-  -- set default output file to the created file descriptor
-  io.output(file);
-  
-  -- set initial sending rate for send port
-  pktgen.set(tonumber(config["sendPort"]),"rate", sending_rate_1);
-
-  -- start sending packets    
-  pktgen.start(tonumber(config["sendPort"]));
-  -- set the other port as well if biDir is set
-  if(tonumber(config["biDir"]) == 1)
-  then
-    -- set initial sending rate for the other port as well
-    pktgen.set(tonumber(config["recvPort"]),"rate", sending_rate_2);
-    -- start traffic on the other port as well
-    pktgen.start(tonumber(config["recvPort"]));
-  end
-
-
-  -- print out results to file
-  -- if file already exists, no header information is required
-  if(file_exists)
-  then
-    -- write out actual size as a keyword to the file in order to know
-    -- some basic information when later the file is analyzed
-    -- and add theoretical max value for the given packet size
-    -- io.write(size .. "\n");
-    
-    io.write("#Snt(pps)|Rcv(pps)|Miss(pps)|Snt(bps)|Rcv(bps)|" ..
-             "Diff(bps)");
-    -- make header other port's traffic as well if biDir is set
-    if(tonumber(config["biDir"]) == 1)
-    then
-      io.write("|Snt2(pps)|Rcv2(pps)|Miss2(pps)|Snt2(bps)|Rcv2(bps)|" ..
-                "Diff2(bps)");
-    end
-    
-    io.write("\n");
-  end             
-  -- print out results to the console as well
-  -- print("Results for: " .. size .. "byte packets\n");
-  
-
-  -- wait some seconds to avoid slow start
-  print("Waiting for heating up\n");
-  sleep(3);
-  -- start an initial measurement
-  measure2();
-
-  if(tonumber(config["biDir"]) == 1)
-  then
-    print("Bi-directional measurement started with " .. traffic .. 
-          " bytes packets\n");
-  else
-    print("Measurement started with " .. traffic .. " bytes packets\n");  
-  end  
-  -- print("Go grab a coffee...");
-
-  -- loop according to measurement_duration, in each cycle 1 sec sleep is 
-  -- invoked, and in each iteration we measure the sending pkts/s rate and the
-  -- received pkts/s rate and print them out
-  -- infinite loop by default, and will break if measurementDuration 
-  -- was set properly
-  sending_rate_found_1 = false;
-  
-  sending_rate_found_2 = false;
-  -- if biDir is not set, then we set this variable to true for easing
-  -- further checks below
-  if tonumber(config["biDir"]) == 0
-  then
-    sending_rate_2 = true;
-  end
-  
-  
-  sending_rate_found = false;
   error_rate = 0.01
-  while (sending_rate_found == false) or (infinite_measurement == true)
-  do
-    -- miss and rate values for port 1
-    miss_avg  = sent_avg - recv_avg;
-    threshold = sent_avg * error_rate;
-    
-    print("Threshold:" .. threshold);
-    if tonumber(config["biDir"]) == 1
-    then
-        -- miss and rate values for port 2
-      miss_avg_2 = sent_avg_2 - recv_avg_2;
-      threshold_2 = sent_avg_2 * error_rate;
-      print("Threshold for othe port:" .. threshold_2);
-    end  
-    
-  --~ print("Sending rate: " .. sending_rate);
 
-  -- if sending_rate is altering among 2 values that are next to each 
-  -- other, we quit!
-    if math.abs(sending_rate_1 - last_sending_rate_1) == 1
+  sending_rate_found = false
+
+  while not sending_rate_found
+  do
+
+    miss_pkts = sent_avg - recv_avg;
+    threshold = sent_avg*error_rate;
+
+
+    print("\nSent:" .. sent_avg);
+    print("Recv:" .. recv_avg);
+    print("Miss:" .. miss_pkts);
+
+    print("Threshold:" .. threshold);
+    --~ print("Sending rate: " .. sending_rate);
+
+    -- if sending_rate is altering among 2 values that are next to each
+    -- other, we quit!
+    if math.abs(sending_rate - last_sending_rate) == 1
     then
-      print("We reached a possibly good sending rate for port " ..
-            config["sendPort"]);
-      sending_rate_1=sending_rate_1+1; -- increase sending rate the greater value
-      change_rate(tonumber(config["sendPort"]),sending_rate_1,false);
-      measure2();
-      sending_rate_found_1 = true;
+      print("We reached a possibly good sending rate");
+      sending_rate=sending_rate+1; -- increase sending rate the greater value
+      change_rate(tonumber(config["sendPort"]),sending_rate,false);
+      sending_rate_found = true
+      measure();
     else
-    
+
       -- check threshold
-      if threshold < miss_avg
+      if threshold < miss_pkts
       then
         -- recv and sent are still too far from each other
-        print("Threshold not met! -- still adjusting");
+        print("Threshold not reached!");
         change_rate(tonumber(config["sendPort"]),-1,false);
-        measure2();
-        
+        tune_in();
+
       else
         -- threshold reached - we may jumped to much, check greater rate
-        print("Threshold  for port ".. config["sendPort"] .. " met...");
-        if sending_rate_1 > 99
+        print("Threshold meet...");
+        if sending_rate > 99
         then
-          print("Best sending rate for port " .. config["sendPort"] ..
-                "was 100%...measuring this rate...");
-          measure2();
-          sending_rate_found_1 = true;
-          
-          if tonumber(config["biDir"]) == 0
-          then
-            sending_rate_found = true;
-          end
+          print("Best sending rate was 100%...measuring this rate...");
+          sending_rate_found = true;
+          measure();
         else
           change_rate(tonumber(config["sendPort"]),-1,true);
-          measure2();
+          tune_in();
         end
       end
     end
-
-      -- BiDir scenario
-      if tonumber(config["biDir"]) == 1
-      then
-        if math.abs(sending_rate_2 - last_sending_rate_2) == 1
-        then
-          print("We reached a possibly good sending rate for port " ..
-                config["sendPort"]);
-          sending_rate_2=sending_rate_2+1; -- increase sending rate the greater value
-          change_rate(tonumber(config["recvPort"]),sending_rate_2,false);
-          measure2();
-          sending_rate_found_2 = true;
-        else
-          -- check threshold
-          if threshold_2 < miss_avg_2
-          then
-            -- recv and sent are still too far from each other
-            print("Threshold not met! -- still adjusting");
-            change_rate(tonumber(config["recvPort"]),-1,false);
-            measure2();
-          else
-            -- threshold reached - we may jumped to much, check greater rate
-            print("Threshold  for port ".. config["sendPort"] .. " met...");
-            if sending_rate_2 > 99
-            then
-              print("Best sending rate for port " .. config["recvPort"] ..
-                    "was 100%...measuring this rate...");
-              measure2();
-              sending_rate_found_2 = true;
-            else
-              change_rate(tonumber(config["recvPort"]),-1,true);
-              measure2();
-            end
-          end
-        end
-      end
-      
-
-  
-    -- this will stop the loop
-    if sending_rate_found_1 and sending_rate_found_2
-    then
-      sending_rate_found = true;
-    end
-
   end
-
-  -- stop traffic
-  pktgen.stop(tonumber(config["sendPort"]));
-  
-  -- stop traffic on the other port if biDir was set
-  if(tonumber(config["biDir"]) == 1)
-  then
-    pktgen.stop(tonumber(config["recvPort"]));    
-  end
-  -- wait some seconds to reach 0 traffic
-  print("Cooling down\n")
-  sleep(3);
-  
-  
-  io.close(file);
-  
-  -- print("Estimated time left for this measurement is: " .. estimated_time);
-
 end
 -- ====================== END FUNCTION ========================
 
