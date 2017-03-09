@@ -23,7 +23,7 @@ set term post noenh color eps 20
 set datafile separator ","
 
 #Setting the x and y axis's fonts
-#set xtics font "Times-Roman, 28" 
+#set xtics font "Times-Roman, 28"
 #set ytics font "Times-Roman, 28"
 
 #Setting x and y axis's labels and their offset

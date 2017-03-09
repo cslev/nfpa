@@ -8,20 +8,19 @@ BPS_UNIT=bps_unit
 TR1=tr1
 TR2=tr2
 
-#set term postscript 
+set term postscript 
+set termoption dashed
 
 #this makes legend out of the diagram and gets these titles from the first line 
 #of the datafile
 #set key autotitle columnhead out   
 
 #setting output style
-#set term post noenh color eps 20 font "Verdana"
 set size 1.5,1.0
 set terminal postscript eps noenhanced color 20 font "Verdana"
+
 #set separator
 set datafile separator ","
-
-set encoding utf8
 
 #Setting the x and y axis's fonts
 set xtics font ", 22"
@@ -45,29 +44,36 @@ set output OUTPUT_BASENAME."sent_recv_".PPS_UNIT."pps.eps"
 p INPUT_DATA u 1:2:2:2:xtic(1) with yerrorlines pt 1 ps 3 lw 8 lt 1 lc rgb "#C9C9C9" title "Elméleti max", \
   INPUT_DATA u 1:4:3:5:xtic(1) with yerrorlines pt 4 ps 2 lw 6 lt 1 dt 2 lc rgb "#FF8100" title "Küldött-".TR1, \
   INPUT_DATA u 1:7:6:8:xtic(1) with yerrorlines pt 10 ps 3 lw 6 lt 1 dt 3 lc rgb "#008F37" title "Fogadott-".TR1
+  INPUT_DATA u 1:22:21:23:xtic(1) with yerrorlines pt 12 ps 2 lw 6 lt 1 dt 4 lc rgb "#B500FF" title "Küldött-".TR2, \
+  INPUT_DATA u 1:25:24:26:xtic(1) with yerrorlines pt 8 ps 3 lw 6 lt 1 dt 5 lc rgb "#BDFF00" title "Fogadott-".TR2
+  
 
 
 ### MISSED PACKETS ###
 #Setting output
 set output OUTPUT_BASENAME."miss_".PPS_UNIT."pps.eps"
-p INPUT_DATA u 1:10:9:11:xtic(1) with yerrorlines pt 2 ps 3 lw 6 lt 1 dt 4 lc rgb "#F90C38" title "Elveszett-".TR1
+p INPUT_DATA u 1:10:9:11:xtic(1) with yerrorlines pt 2 ps 3 lw 6 lt 1 dt 4 lc rgb "#F90C38" title "Elveszett-".TR1, \
+  INPUT_DATA u 1:28:27:29:xtic(1) with yerrorlines pt 3 ps 3 lw 6 lt 1 dt 4 lc rgb "#F90CB9" title "Elveszett-".TR2
   
 
 #### Throughput Mbit/s #####
 ## SENT VS RECV ###
 #Setting output
 set output OUTPUT_BASENAME."sent_recv_".BPS_UNIT."bps.eps"
-set ylabel BPS_UNIT."bit/s" offset 1.5,0 font ", 28"
+set ylabel BPS_UNIT."bit/s" offset 1.5,0 font "Times-Roman, 28"
+
 #this actually puts out the results
 p INPUT_DATA u 1:13:12:14:xtic(1) with yerrorlines pt 4 ps 2 lw 6 lt 1 dt 2 lc rgb "#FF8100" title "Küldött-".TR1, \
-  INPUT_DATA u 1:16:15:17:xtic(1) with yerrorlines pt 10 ps 3 lw 6 lt 1 dt 3 lc rgb "#008F37" title "Fogadott-".TR1
+  INPUT_DATA u 1:16:15:17:xtic(1) with yerrorlines pt 10 ps 3 lw 6 lt 1 dt 3 lc rgb "#008F37" title "Fogadott-".TR1, \
+  INPUT_DATA u 1:31:30:32:xtic(1) with yerrorlines pt 12 ps 2 lw 6 lt 1 dt 4 lc rgb "#B500FF" title "Küldött-".TR2, \
+  INPUT_DATA u 1:34:33:35:xtic(1) with yerrorlines pt 8 ps 3 lw 6 lt 1 dt 5 lc rgb "#BDFF00" title "Fogadott-".TR2
 
 
 ### DIFFERENCE BETWEEN SENT BPS AND RECV BPS
 ## SENT VS RECV ###
 #Setting output
 set output OUTPUT_BASENAME."diff_".BPS_UNIT."bps.eps"
-p INPUT_DATA u 1:19:18:20:xtic(1) with yerrorlines pt 2 ps 3 lw 6 lt 1 dt 4 lc rgb "#F90C38" title "Különbség-".TR1
-
+p INPUT_DATA u 1:19:18:20:xtic(1) with yerrorlines pt 2 ps 3 lw 6 lt 1 dt 4 lc rgb "#F90C38" title "Különbség-".TR1, \
+  INPUT_DATA u 1:37:36:38:xtic(1) with yerrorlines pt 3 ps 3 lw 6 lt 1 dt 4 lc rgb "#F90CB9" title "Különbség-".TR2
 
 
