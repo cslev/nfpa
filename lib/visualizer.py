@@ -476,7 +476,7 @@ class Visualizer(object):
         self.log.debug(gnuplot_arguments)
         #synthetic traffic/measurements have different GNUplot plotter files
         if(self.type == "synthetic"):
-            plotter_file = "/lib/plotter.gp"
+            plotter_file = "/lib/plotter_hun.gp"
             #if bi directional measurement was set, we use different gnuplot file
             if((int(self.config["biDir"]) == 1) or ul_dl):
                 plotter_file = "/lib/plotter_bidir.gp"
