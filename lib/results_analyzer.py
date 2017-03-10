@@ -398,6 +398,10 @@ class ResultsAnalyzer(object):
         # sorted
         if self.tt != "realistic":
             for ps in self._results:
+                # append self._results with a new key,value pair
+                # add theoretical value
+                self._results[ps]['theor_max'] = self.calculateTheoreticalMax(ps)
+
                 for res in self._results[ps]:
                     # lenght
                     l = len(self._results[ps][res])
@@ -415,10 +419,39 @@ class ResultsAnalyzer(object):
 
                     self.log.debug("min-max-avg for %s-%s-%s: %d-%d-%0.4f" %
                                  (self.trace, ps, res, min, max, avg))
-                    # copying calculated metrics into the temporary dictionary
-                    tmp_dict['max'] = copy.deepcopy(max)
-                    tmp_dict['min'] = copy.deepcopy(min)
-                    tmp_dict['avg'] = copy.deepcopy(avg)
+
+                    #in some cases pktgen and the precision of the NIC could result in higher
+                    #packet rates than theoretical, like a 10G NIC may produces 10.004G.
+                    #In order to not confuse the user and don't make confusing plots where
+                    #sending rate might higher than the theoretical, here we reduce back the
+                    #rates to theoretical rate in such cases
+                    if max >= self._results[ps]['theor_max']:
+                        self.log.debug("MAX value (%d) was higher than theoretical one (%0.4f)!"
+                                       "Reducing back measurement data to avoid confusion!" %
+                                       (max, self._results[ps]['theor_max']))
+                        tmp_dict['max'] = copy.deepcopy(self._results[ps]['theor_max'])
+                    else:
+                        # copying calculated metrics into the temporary dictionary
+                        tmp_dict['max'] = copy.deepcopy(max)
+
+                    if min >= self._results[ps]['theor_max']:
+                        self.log.debug("MIN value (%d) was higher than theoretical one (%0.4f)!"
+                                       "Reducing back measurement data to avoid confusion!" %
+                                       (min, self._results[ps]['theor_max']))
+                        tmp_dict['min'] = copy.deepcopy(self._results[ps]['theor_max'])
+                    else:
+                        # copying calculated metrics into the temporary dictionary
+                        tmp_dict['min'] = copy.deepcopy(min)
+
+                    if avg >= self._results[ps]['theor_max']:
+                        self.log.debug("AVG value (%d) was higher than theoretical one (%0.4f)!"
+                                       "Reducing back measurement data to avoid confusion!" %
+                                       (avg, self._results[ps]['theor_max']))
+                        tmp_dict['avg'] = copy.deepcopy(self._results[ps]['theor_max'])
+                    else:
+                        # copying calculated metrics into the temporary dictionary
+                        tmp_dict['avg'] = copy.deepcopy(avg)
+
 
                     # update results dictionary by changing type of list to dict
                     self._results[ps][res] = {}
@@ -427,9 +460,6 @@ class ResultsAnalyzer(object):
                     # now, it is safe to delete/clear tmp_dict for the next
                     # iteration of the loops
 
-                # append self._results with a new key,value pair
-                # add theoretical value
-                self._results[ps]['theor_max'] = self.calculateTheoreticalMax(ps)
         else:
             for res in self._results:
                 # lenght
@@ -463,7 +493,7 @@ class ResultsAnalyzer(object):
 
 
         self.log.info("[DONE]")
-        self.log.debug(str(self._results))
+        self.log.debug(str(self._results))5
 
 
 
