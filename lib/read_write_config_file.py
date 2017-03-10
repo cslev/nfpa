@@ -288,7 +288,10 @@ def getConfigComments():
                     "ivshmem or userspace vhost for virtual ethernet, or " +
                     "other methods how the virtual interface are connected. " +
                     "So, anything you feel necessary to position the results.",
-        
+
+                    'plot_language':
+                    "Change plotting language here: currently supported: eng,hun",
+
                     'pps_unit':
                     "Set up the unit of the desired packet/s results in order "+
                     "to obtain them more human readable. Set this to empty " +

@@ -476,10 +476,10 @@ class Visualizer(object):
         self.log.debug(gnuplot_arguments)
         #synthetic traffic/measurements have different GNUplot plotter files
         if(self.type == "synthetic"):
-            plotter_file = "/lib/plotter_hun.gp"
+            plotter_file = "/lib/plotter_" + self.config['plot_language'] + ".gp"
             #if bi directional measurement was set, we use different gnuplot file
             if((int(self.config["biDir"]) == 1) or ul_dl):
-                plotter_file = "/lib/plotter_bidir.gp"
+                plotter_file = "/lib/plotter_bidir_" + self.config['plot_language'] + ".gp"
                 
             #assemble gnuplot command
             gnuplot_command = "gnuplot -e " + gnuplot_arguments + " " + \
