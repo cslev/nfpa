@@ -60,7 +60,7 @@ p INPUT_DATA u 1:10:9:11:xtic(1) with yerrorlines pt 2 ps 3 lw 6 lt 1 dt 4 lc rg
 ## SENT VS RECV ###
 #Setting output
 set output OUTPUT_BASENAME."sent_recv_".BPS_UNIT."bps.eps"
-set ylabel BPS_UNIT."bit/s" offset 1.5,0 font "Times-Roman, 28"
+set ylabel BPS_UNIT."bit/s" offset 1.5,0 font ", 28"
 
 #this actually puts out the results
 p INPUT_DATA u 1:13:12:14:xtic(1) with yerrorlines pt 4 ps 2 lw 6 lt 1 dt 2 lc rgb "#FF8100" title "Küldött-".TR1, \
