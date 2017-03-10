@@ -493,7 +493,7 @@ class ResultsAnalyzer(object):
 
 
         self.log.info("[DONE]")
-        self.log.debug(str(self._results))5
+        self.log.debug(str(self._results))
 
 
 
