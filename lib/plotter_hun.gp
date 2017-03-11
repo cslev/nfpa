@@ -21,6 +21,8 @@ set terminal postscript eps noenhanced color 20 font "Verdana"
 #set separator
 set datafile separator ","
 
+set xrange [64:1500]
+
 set encoding utf8
 
 #Setting the x and y axis's fonts
