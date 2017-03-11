@@ -272,7 +272,8 @@ class ResultsAnalyzer(object):
         This process will calculate the theoretical maximum according to the
         given packet size and the set port_type in nfpa.cfg.
         Then it converts it to the desired unit.
-        return int - the theoretical maximum
+        :param  packetsize Int - calculate theoretical value accordingly
+        return int - the theoretical maximum converted into the desired unit
         '''
         # get the port type from config file
         port_type = str(self.config['port_type']).split("_")[0]
@@ -425,33 +426,38 @@ class ResultsAnalyzer(object):
                     #In order to not confuse the user and don't make confusing plots where
                     #sending rate might higher than the theoretical, here we reduce back the
                     #rates to theoretical rate in such cases
-                    if max >= self._results[ps]['theor_max']:
-                        self.log.debug("MAX value (%d) was higher than theoretical one (%0.4f)!"
-                                       "Reducing back measurement data to avoid confusion!" %
-                                       (max, self._results[ps]['theor_max']))
-                        tmp_dict['max'] = copy.deepcopy(self._results[ps]['theor_max'])
-                    else:
-                        # copying calculated metrics into the temporary dictionary
-                        tmp_dict['max'] = copy.deepcopy(max)
+                    if 'pps' in res:
+                        #only if pps data is processed, bps are always much higher than theoretical pps
+                        if max >= self._results[ps]['theor_max']:
+                            self.log.debug("MAX value (%d) was higher than theoretical one (%0.4f)!"
+                                           "Reducing back measurement data to avoid confusion!" %
+                                           (max, self._results[ps]['theor_max']))
+                            tmp_dict['max'] = copy.deepcopy(self._results[ps]['theor_max'])
+                        else:
+                            # copying calculated metrics into the temporary dictionary
+                            tmp_dict['max'] = copy.deepcopy(max)
 
-                    if min >= self._results[ps]['theor_max']:
-                        self.log.debug("MIN value (%d) was higher than theoretical one (%0.4f)!"
-                                       "Reducing back measurement data to avoid confusion!" %
-                                       (min, self._results[ps]['theor_max']))
-                        tmp_dict['min'] = copy.deepcopy(self._results[ps]['theor_max'])
+                        if min >= self._results[ps]['theor_max']:
+                            self.log.debug("MIN value (%d) was higher than theoretical one (%0.4f)!"
+                                           "Reducing back measurement data to avoid confusion!" %
+                                           (min, self._results[ps]['theor_max']))
+                            tmp_dict['min'] = copy.deepcopy(self._results[ps]['theor_max'])
+                        else:
+                            # copying calculated metrics into the temporary dictionary
+                            tmp_dict['min'] = copy.deepcopy(min)
+
+                        if avg >= self._results[ps]['theor_max']:
+                            self.log.debug("AVG value (%d) was higher than theoretical one (%0.4f)!"
+                                           "Reducing back measurement data to avoid confusion!" %
+                                           (avg, self._results[ps]['theor_max']))
+                            tmp_dict['avg'] = copy.deepcopy(float(self._results[ps]['theor_max']))
+                        else:
+                            # copying calculated metrics into the temporary dictionary
+                            tmp_dict['avg'] = copy.deepcopy(avg)
                     else:
-                        # copying calculated metrics into the temporary dictionary
                         tmp_dict['min'] = copy.deepcopy(min)
-
-                    if avg >= self._results[ps]['theor_max']:
-                        self.log.debug("AVG value (%d) was higher than theoretical one (%0.4f)!"
-                                       "Reducing back measurement data to avoid confusion!" %
-                                       (avg, self._results[ps]['theor_max']))
-                        tmp_dict['avg'] = copy.deepcopy(self._results[ps]['theor_max'])
-                    else:
-                        # copying calculated metrics into the temporary dictionary
+                        tmp_dict['max'] = copy.deepcopy(max)
                         tmp_dict['avg'] = copy.deepcopy(avg)
-
 
                     # update results dictionary by changing type of list to dict
                     self._results[ps][res] = {}
