@@ -401,7 +401,7 @@ class ResultsAnalyzer(object):
             for ps in self._results:
 
                 theor_max = self.calculateTheoreticalMax(ps)
-                self.log.debug("theoretical max for packet size %d is: %d" % (ps,theor_max))
+                self.log.debug("theoretical max for packet size %s is: %d" % (ps,theor_max))
 
                 for res in self._results[ps]:
                     # lenght
