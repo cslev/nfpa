@@ -392,3 +392,22 @@ they are just for testing purposes and the user does not want to mess up the dat
 v3.2 - New starting parameter has added for defining the path to the config file (nfpa.cfg). Now, it became easier
 to automatically start NFPA multiple times consecutively for different use-cases, e.g., for different VNFs, by defining
 multiple config files. See the output of python nfpa.py -h
+
+-- CBT FORK
+v3.3 - Added access gateway use case that aggregates subscribers located behind customer endpoints to the Internet.
+It consists of a Virtual Provider Endpoint (VPE) that serves Internet access to subscribers located behind Customer
+Endpoints (CEs). For brevity, we identify CEs with the MAC address and we assume that the operator sets 10 CEs, each
+serving 20 users provisioned with a private IP address that is unique within the CE. Table 0 separates user-to-network
+traffic on a per-CE basis from network-to-user traffic; user-to-network traffic goes to per-CE flow tables
+(table 11, etc.) that match the source IP address to identify the user and rewrite the source address to a unique public
+IP address (realizing a NAT), and finally to the IP routing table (table 200) that contains 10K random IP prefixes;
+packets from yet unseen users will in turn be forwarded to the controller to perform admission control and allocate a
+unique IP address. Network-to-user traffic on the other hand goes to table 110, which matches on the destination IP to
+identify the user and the CE, swaps the destination IPs back to the private IP addresses, and then sends packets
+to the proper CE.
+
+v3.4 - Add hungarian language support for gnuplot plots. It can be set in nfpa.cfg under gnuplot related settings.
+
+v3.4.1 - Minor changes to nfpa_traffic.lua. Originally one measurement lasted until the trace with all of its packetsizes
+has been measured. However, since results are being analyzed for each traffic trace (consisting only one size of packets
+at a time), some codes became unnecessary.
