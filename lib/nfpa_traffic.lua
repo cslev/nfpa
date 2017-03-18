@@ -137,7 +137,7 @@ function start_measurement ()
   -- heating up=3s, cooldown=3s, config["measurementDuration"], number_of_packetsizes
   if tonumber(config["measurementDuration"]) ~= 0
   then
-    estimated_time = tonumber(config["measurementDuration"]) +  number_of_packetsizes*6;
+    estimated_time = tonumber(config["measurementDuration"]) +  6;
     -- reducing factor for estimated time - the following should be multiplied
     -- in each iteration of the loop below
     reduce_factor = tonumber(config["measurementDuration"]) + 6;
