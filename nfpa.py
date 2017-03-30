@@ -144,20 +144,27 @@ class NFPA(object):
             self.log.error("Sending ERROR email did not succeed...")
         exit(-1)
         
-    def configureVNFRemote(self, vnf_function, traffictype):
+    def configureVNFRemote(self, traffictype):
         '''
-        This function will configure the remote vnf via pre-installed tools
-        located on the same machine where NFPA is.
-        Only works for some predefined vnf_function and traffictraces
-
-        :return: True - if success, False - if not
+        Configure the remote vnf via pre-installed tools located on the same
+        machine where NFPA is.  Only works for some predefined vnf_function
+        and traffictraces
         '''
+        if not self.config["control_nfpa"]:
+            # Nothing to if 'control_nfpa' is not set
+            return
 
+        vnf_function = self.config["vnf_function"]
         mod = self.config.get("control_mod")
-        if mod:
-            return mod.configure_remote_vnf(self, vnf_function, traffictype)
-        else:
+        err = True
+        if not mod:
             self.exit("Plugin for control_vnf not found: %s" % mod)
+        try:
+            err = mod.configure_remote_vnf(self, vnf_function, traffictype)
+        except Exception as e:
+            self.log.debug('%s' % e)
+        if err:
+            self.exit("Configuring vnf did not succeed")
 
 
     def startAnalyzing(self, traffic_type, traffic_trace):
@@ -235,10 +242,7 @@ class NFPA(object):
                 if(trafficType == "simple"):
                     self.log.info("SIMPLE TRACE - %s" % trafficType)
 
-                    # configure VNF if set
-                    if self.config["control_nfpa"]:
-                        if not self.configureVNFRemote(self.config["vnf_function"],trafficType):
-                            self.exit("Configuring vnf did not succeed")
+                    self.configureVNFRemote(trafficType)
 
                     #create config file for LUA script
                     self.rc.generateLuaConfigFile(trafficType,
@@ -268,10 +272,7 @@ class NFPA(object):
                             self.exit("ERROR OCCURRED DURING STARTING PKTGEN")
 
                 else:
-                    # configure VNF if set
-                    if self.config["control_nfpa"]:
-                        if not self.configureVNFRemote(self.config["vnf_function"], trafficType):
-                            self.exit("Configuring vnf did not succeed")
+                    self.configureVNFRemote(trafficType)
 
                     for ps in self.config['packetSizes']:
                         #create config file for LUA script
