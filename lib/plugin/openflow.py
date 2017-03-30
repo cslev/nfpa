@@ -52,10 +52,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
             log.error("Missing flow rule file: %s" % scenario_path)
             log.error("NFPA does not know how to configure VNF to act as a bridge")
             log.error("More info: http://ios.tmit.bme.hu/nfpa")
-            if (config['email_adapter'] is not None) and \
-                (not config['email_adapter'].sendErrorMail()):
-                log.error("Sending ERROR email did not succeed...")
-            exit(-1)
+            return False
 
         if config["biDir"] == 1:
             #change flow rule file if bidir was set
@@ -87,11 +84,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
         log.error("NFPA does not know how to configure VNF to act as " + \
                        "%s for the given trace %s" % (vnf_function,traffictype))
         log.error("More info: http://nfpa.tmit.bme.hu")
-        if (config['email_adapter'] is not None) and \
-            (not config['email_adapter'].sendErrorMail()):
-            log.error("Sending ERROR email did not succeed...")
-        exit(-1)
-
+        return False
 
     #If flow file exists try to find corresponding groups
     scenario_path = scenario_path.replace(".flows",".groups")
@@ -122,10 +115,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
         log.error("Configuring your VNF by NFPA for bi-directional scenario " +
                        "is currently not supported")
         log.error("Please verify your nfpa.cfg")
-        if (config['email_adapter'] is not None) and \
-            (not config['email_adapter'].sendErrorMail()):
-            log.error("Sending ERROR email did not succeed...")
-        exit(-1)
+        return False
         #save biDir setting in a boolean to later use for flow_prep.prepareOpenFlowRules()
         # bidir = True
         # scenario_path=scenario_path.replace("unidir","bidir")
@@ -135,7 +125,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
         #                    "%s for the given trace %s in bi-directional mode" %
         #                    (vnf_function,traffictype))
         #     log.error("More info: http://ios.tmit.bme.hu/nfpa")
-        #     exit(-1)
+        #     return False
 
     #replace metadata in flow rule files
     scenario_path = flow_prep.prepareOpenFlowRules(log,
