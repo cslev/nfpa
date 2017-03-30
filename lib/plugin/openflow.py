@@ -25,10 +25,9 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
                                        config["control_vnf_inport"],
                                        config["control_vnf_outport"], bidir)
     
-    # temporary variable for bidir status - it is needed for flow_rules_preparator
     bidir = int(config["biDir"]) == 1
 
-    # first, delete the flows
+    # First, delete the flows
     ofctl_cmd = config["control_path"] + " " + \
                 config["control_args"] +\
                 " <C> " + \
@@ -36,18 +35,17 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     cmd = ofctl_cmd.replace("<C>", "del-flows")
     invoke1(cmd, "Deleting flow rules")
 
-    # second, delete groups
+    # Second, delete groups
     cmd = ofctl_cmd.replace("<C>", "del-groups")
     invoke1(cmd, "Deleting groups")
 
-    #OK, flows are deleted, so replace 'del-flows' to 'add-flows' for
-    # easier usage later
+    # Replace 'del-flows' to 'add-flows' for easier usage later
     cmd = ofctl_cmd.replace("<C>", "add-flows")
-    #first check vnf_function, if it is bridge, then no special stuff needs
-    #to be setup regardless of the traces
+
     ############     BRIDGE ###########
     if config["vnf_function"].lower() == "bridge":
-        #add birdge rules - located under of_rules
+        # Setup does not depend on the traces
+        # Add birdge rules - located under of_rules
         scenario_path = vnf_function + "_unidir.flows"
         if not (os.path.isfile(str(of_path + scenario_path))):
             log.error("Missing flow rule file: %s" % scenario_path)
@@ -56,65 +54,51 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
             return False
 
         if bidir:
-            #change flow rule file if bidir was set
-            scenario_path = scenario_path.replace("unidir","bidir")
+            # Change flow rule file
+            scenario_path = scenario_path.replace("unidir", "bidir")
 
-        #prepare flow rule file
         scenario_path = prepare_rules(scenario_path, bidir)
-        cmd = ofctl_cmd.replace("<C>","add-flows") + scenario_path
+        cmd = ofctl_cmd.replace("<C>", "add-flows") + scenario_path
         invoke1(cmd, "Adding flows")
         return True
-    ############    =============   ###########
-
 
     ############     OTHER CASES    ###########
-    #check whether flow rules exists?
-    #convention vnf_function.trace_direction.flows
+    # Check whether flow rules exists
+    # Convention vnf_function.trace_direction.flows
     scenario_path = vnf_function + "." + traffictype + "_unidir.flows"
     if not (os.path.isfile(str(of_path + scenario_path))):
         log.error("Missing flow rule file: %s" % scenario_path)
-        log.error("NFPA does not know how to configure VNF to act as " + \
-                       "%s for the given trace %s" % (vnf_function,traffictype))
+        log.error("NFPA does not know how to configure VNF to act as " +
+                  "%s for the given trace %s" % (vnf_function, traffictype))
         log.error("More info: http://nfpa.tmit.bme.hu")
         return False
 
-    #If flow file exists try to find corresponding groups
-    scenario_path = scenario_path.replace(".flows",".groups")
+    # If flow file exists try to find corresponding groups
+    scenario_path = scenario_path.replace(".flows", ".groups")
     log.info("Looking for group file: %s" % scenario_path)
     if (os.path.isfile(str(of_path + scenario_path))):
         log.info("Group file found for this scenario: %s" % scenario_path)
-        #prepare group file, i.e., replace port related meta data
+        # Prepare group file, i.e., replace port related metadata
         group_path = prepare_rules(scenario_path, False) #TODO: bidir handling
-        cmd = ofctl_cmd.replace("<C>","add-groups")
+        cmd = ofctl_cmd.replace("<C>", "add-groups")
         cmd += " " + group_path
         invoke1(cmd, "Adding groups")
     else:
         log.info("No group file was found...continue")
 
-    #change back to the .flows file from .groups
+    # Change back to the .flows file from .groups
     scenario_path = scenario_path.replace(".groups", ".flows")
 
-    #if biDir is set, then other file is needed where the same rules are present
-    #in the reverse direction
+    #if biDir is set, another file has the rules for reverse direction
     if bidir:
-        #biDir for remote vnf configuration is currently not supported!
         log.error("Configuring your VNF by NFPA for bi-directional scenario " +
-                       "is currently not supported")
-        log.error("Please verify your nfpa.cfg")
+                  "is currently not supported")
+        log.error("Check the value of 'biDir' in nfpa.cfg")
         return False
-        #save biDir setting in a boolean to later use for flow_prep.prepareOpenFlowRules()
-        # scenario_path=scenario_path.replace("unidir","bidir")
-        # if not (os.path.isfile(str(of_path + scenario_path))):
-        #     log.error("Missing flow rule file: %s" % scenario_path)
-        #     log.error("NFPA does not know how to configure VNF to act as " + \
-        #                    "%s for the given trace %s in bi-directional mode" %
-        #                    (vnf_function,traffictype))
-        #     log.error("More info: http://ios.tmit.bme.hu/nfpa")
-        #     return False
 
-    #replace metadata in flow rule files
+    # Replace metadata in flow rule files
     scenario_path = prepare_rules(scenario_path, bidir)
-    #assemble command ovs-ofctl
-    cmd = ofctl_cmd.replace("<C>","add-flows") + scenario_path
+    # Assemble command ovs-ofctl
+    cmd = ofctl_cmd.replace("<C>", "add-flows") + scenario_path
     invoke1(cmd, "Adding flows")
     return True
