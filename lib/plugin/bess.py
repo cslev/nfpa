@@ -1,3 +1,4 @@
+import logger as l
 from invoke import invoke
 
 def configure_remote_vnf(nfpa, vnf_function, traffictype):
@@ -10,8 +11,11 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     '''
     # Path to .bess files
     config = nfpa.config
+    log = l.getLogger(__name__, config['LOG_LEVEL'], config['app_start_date'],
+                      config['LOG_PATH'])
+
     bess_path = config["MAIN_ROOT"] + "/bess"
-    invoke1 = lambda cmd: invoke(command=cmd, logger=nfpa.log,
+    invoke1 = lambda cmd: invoke(command=cmd, logger=log,
                                  email_adapter=config['email_adapter'])
 
     # Reset bess daemon
@@ -19,9 +23,9 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     base_cmd = base_cmd % config.get('control_mgmt', 'localhost 10514')
 
     cmd = base_cmd + 'daemon reset || true'
-    nfpa.log.debug("control cmd: %s" % cmd)
+    log.debug("control cmd: %s" % cmd)
     invoke1(cmd)
-    nfpa.log.info("Daemon reset")
+    log.info("Daemon reset")
 
     inport = config["control_vnf_inport"]
     outport = config["control_vnf_outport"]
