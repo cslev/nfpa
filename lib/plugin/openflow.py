@@ -24,7 +24,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
                                        config["control_vnf_outport"], bidir)
     
     # temporary variable for bidir status - it is needed for flow_rules_preparator
-    bidir = False
+    bidir = int(config["biDir"]) == 1
 
     # first, delete the flows
     ofctl_cmd = config["control_path"] + " " + \
@@ -57,10 +57,9 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
             log.error("More info: http://ios.tmit.bme.hu/nfpa")
             return False
 
-        if config["biDir"] == 1:
+        if bidir:
             #change flow rule file if bidir was set
             scenario_path = scenario_path.replace("unidir","bidir")
-            bidir=True
 
         #prepare flow rule file
         scenario_path = prepare_rules(scenario_path, bidir)
@@ -103,14 +102,13 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
 
     #if biDir is set, then other file is needed where the same rules are present
     #in the reverse direction
-    if (int(config["biDir"]) == 1):
+    if bidir:
         #biDir for remote vnf configuration is currently not supported!
         log.error("Configuring your VNF by NFPA for bi-directional scenario " +
                        "is currently not supported")
         log.error("Please verify your nfpa.cfg")
         return False
         #save biDir setting in a boolean to later use for flow_prep.prepareOpenFlowRules()
-        # bidir = True
         # scenario_path=scenario_path.replace("unidir","bidir")
         # if not (os.path.isfile(str(of_path + scenario_path))):
         #     log.error("Missing flow rule file: %s" % scenario_path)
