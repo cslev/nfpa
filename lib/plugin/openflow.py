@@ -1,7 +1,7 @@
 import os
-import logger as l
+from logger import getLogger
 from invoke import invoke
-import flow_rules_preparator as flow_prep
+from flow_rules_preparator import prepareOpenFlowRules as prepare_OF_rules
 
 def configure_remote_vnf(nfpa, vnf_function, traffictype):
     '''
@@ -11,10 +11,9 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     :return: True - if success, False - if not
 
     '''
-
     config = nfpa.config
-    log = l.getLogger(__name__, config['LOG_LEVEL'], config['app_start_date'],
-                      config['LOG_PATH'])
+    log = getLogger(__name__, config['LOG_LEVEL'], config['app_start_date'],
+                    config['LOG_PATH'])
     of_path = config["MAIN_ROOT"] + "/of_rules/"   # path to the openflow rules
     bidir = int(config["biDir"]) == 1
     def invoke1(cmd, msg):
@@ -22,26 +21,22 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
         invoke(command=cmd, logger=log, email_adapter=config['email_adapter'])
         log.info("%s: done" % msg)
     def check_file_exists(filename, traffictype=None):
-        if (os.path.isfile(str(of_path + filename))):
+        if os.path.isfile(str(of_path + filename)):
             return
-        vnf = config['vnf_function']
         log.error('Missing flow rule file: %s' % filename)
-        msg = 'Cannot configure VNF to act as a %s' % vnf
+        msg = 'Cannot configure VNF to act as a %s' % config['vnf_function']
         if traffictype:
             msg += ' for the given trace (%s)' % traffictype
         log.error(msg)
-        log.error("More info: http://ios.tmit.bme.hu/nfpa")
+        log.error("More info: http://nfpa.tmit.bme.hu")
         open(filename) # Raise exception
-
-    prepare_rules = lambda path: \
-        flow_prep.prepareOpenFlowRules(log, of_path, path,
-                                       config["control_vnf_inport"],
-                                       config["control_vnf_outport"], bidir)
+    def prepare_rules(path):
+        prepare_OF_rules(log, of_path, path, config["control_vnf_inport"],
+                         config["control_vnf_outport"], bidir)
 
     # First, delete the flows
     ofctl_cmd = config["control_path"] + " " + \
-                config["control_args"] +\
-                " <C> " + \
+                config["control_args"] + " <C> " + \
                 config["control_mgmt"] + " "
     cmd = ofctl_cmd.replace("<C>", "del-flows")
     invoke1(cmd, "Deleting flow rules")
@@ -50,7 +45,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     cmd = ofctl_cmd.replace("<C>", "del-groups")
     invoke1(cmd, "Deleting groups")
 
-    ############     BRIDGE ###########
+    ############     BRIDGE     ###########
     if config["vnf_function"].lower() == "bridge":
         # Setup does not depend on the traces
         # Add birdge rules - located under of_rules
@@ -65,7 +60,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
         invoke1(cmd, "Adding flows")
         return True
 
-    ############     OTHER CASES    ###########
+    ############     OTHER CASES     ###########
     # Filename convention: vnf_function.trace_direction.flows
     if bidir:
         log.error("Bi-directional scenario for this VNF is not yet supported")
