@@ -151,8 +151,7 @@ class NFPA(object):
         and traffictraces
         '''
         if not self.config["control_nfpa"]:
-            # Nothing to if 'control_nfpa' is not set
-            return
+            return # Nothing to do
 
         vnf_function = self.config["vnf_function"]
         mod = self.config.get("control_mod")
@@ -164,7 +163,7 @@ class NFPA(object):
         except Exception as e:
             self.log.debug('%s' % e)
         if err:
-            self.exit("Configuring vnf did not succeed")
+            self.exit("Failed to configure vnf: %s" % vnf_function)
 
 
     def startAnalyzing(self, traffic_type, traffic_trace):
