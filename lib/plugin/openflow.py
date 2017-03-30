@@ -15,11 +15,14 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     config = nfpa.config
     log = l.getLogger(__name__, config['LOG_LEVEL'], config['app_start_date'],
                       config['LOG_PATH'])
+    of_path = config["MAIN_ROOT"] + "/of_rules/"   # path to the openflow rules
     invoke1 = lambda cmd: invoke(command=cmd, logger=log,
                                  email_adapter=config['email_adapter'])
+    prepare_rules = lambda path, bidir: \
+        flow_prep.prepareOpenFlowRules(log, of_path, path,
+                                       config["control_vnf_inport"],
+                                       config["control_vnf_outport"], bidir)
     
-    #the path to the openflow rules
-    of_path = config["MAIN_ROOT"] + "/of_rules/"
     # temporary variable for bidir status - it is needed for flow_rules_preparator
     bidir = False
 
@@ -60,12 +63,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
             bidir=True
 
         #prepare flow rule file
-        scenario_path = flow_prep.prepareOpenFlowRules(log,
-                                                       of_path,
-                                                       scenario_path,
-                                                       config["control_vnf_inport"],
-                                                       config["control_vnf_outport"],
-                                                       bidir)
+        scenario_path = prepare_rules(scenario_path, bidir)
         cmd = ofctl_cmd.replace("<C>","add-flows") + scenario_path
         log.info("add-flows via '%s'" % cmd)
         invoke1(cmd)
@@ -92,12 +90,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     if (os.path.isfile(str(of_path + scenario_path))):
         log.info("Group file found for this scenario: %s" % scenario_path)
         #prepare group file, i.e., replace port related meta data
-        group_path = flow_prep.prepareOpenFlowRules(log,
-                                                       of_path,
-                                                       scenario_path,
-                                                       config["control_vnf_inport"],
-                                                       config["control_vnf_outport"],
-                                                       False) #TODO: bidir handling here
+        group_path = prepare_rules(scenario_path, False) #TODO: bidir handling
         cmd = ofctl_cmd.replace("<C>","add-groups")
         cmd += " " + group_path
         log.info("add-groups via '%s'" % cmd)
@@ -128,12 +121,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
         #     return False
 
     #replace metadata in flow rule files
-    scenario_path = flow_prep.prepareOpenFlowRules(log,
-                                                   of_path,
-                                                   scenario_path,
-                                                   config["control_vnf_inport"],
-                                                   config["control_vnf_outport"],
-                                                   bidir)
+    scenario_path = prepare_rules(scenario_path, bidir)
     #assemble command ovs-ofctl
     cmd = ofctl_cmd.replace("<C>","add-flows") + scenario_path
     log.info("add-flows via '%s'" % cmd)
