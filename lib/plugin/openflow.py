@@ -39,9 +39,6 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     cmd = ofctl_cmd.replace("<C>", "del-groups")
     invoke1(cmd, "Deleting groups")
 
-    # Replace 'del-flows' to 'add-flows' for easier usage later
-    cmd = ofctl_cmd.replace("<C>", "add-flows")
-
     ############     BRIDGE ###########
     if config["vnf_function"].lower() == "bridge":
         # Setup does not depend on the traces
