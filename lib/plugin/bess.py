@@ -15,17 +15,17 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
                       config['LOG_PATH'])
 
     bess_path = config["MAIN_ROOT"] + "/bess"
-    invoke1 = lambda cmd: invoke(command=cmd, logger=log,
-                                 email_adapter=config['email_adapter'])
+    def invoke1(cmd, msg):
+        log.debug("%s with %s" % (msg, cmd))
+        invoke(command=cmd, logger=log, email_adapter=config['email_adapter'])
+        log.info("%s: done" % msg)
 
     # Reset bess daemon
     base_cmd = config['control_path'] + ' daemon connect %s -- '
     base_cmd = base_cmd % config.get('control_mgmt', 'localhost 10514')
 
     cmd = base_cmd + 'daemon reset || true'
-    log.debug("control cmd: %s" % cmd)
-    invoke1(cmd)
-    log.info("Daemon reset")
+    invoke1(cmd, 'Reseting daemon')
 
     inport = config["control_vnf_inport"]
     outport = config["control_vnf_outport"]
@@ -33,7 +33,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
 
     cmd = base_cmd + ('run file %s/%s vnf_inport=%s, vnf_outport=%s' %
                       (bess_path, pipeline, inport, outport))
-    invoke1(cmd)
+    invoke1(cmd, 'Starting pipeline')
 
     assert(int(config["biDir"]) == 0)
     return True
