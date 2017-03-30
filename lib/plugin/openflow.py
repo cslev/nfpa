@@ -20,7 +20,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     def invoke1(cmd, msg):
         log.debug("%s with %s" % (msg, cmd))
         invoke(command=cmd, logger=log, email_adapter=config['email_adapter'])
-        log.info("%s: done")
+        log.info("%s: done" % msg)
     def check_file_exists(filename, traffictype=None):
         if (os.path.isfile(str(of_path + filename))):
             return
