@@ -20,6 +20,18 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
         log.debug("%s with %s" % (msg, cmd))
         invoke(command=cmd, logger=log, email_adapter=config['email_adapter'])
         log.info("%s: done")
+    def check_file_exists(filename, traffictype=None):
+        if (os.path.isfile(str(of_path + filename))):
+            return
+        vnf = config['vnf_function']
+        log.error('Missing flow rule file: %s' % filename)
+        msg = 'Cannot configure VNF to act as a %s' % vnf
+        if traffictype:
+            msg += ' for the given trace (%s)' % traffictype
+        log.error(msg)
+        log.error("More info: http://ios.tmit.bme.hu/nfpa")
+        open(filename) # Raise exception
+
     prepare_rules = lambda path, bidir: \
         flow_prep.prepareOpenFlowRules(log, of_path, path,
                                        config["control_vnf_inport"],
@@ -44,12 +56,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
         # Setup does not depend on the traces
         # Add birdge rules - located under of_rules
         scenario_path = vnf_function + "_unidir.flows"
-        if not (os.path.isfile(str(of_path + scenario_path))):
-            log.error("Missing flow rule file: %s" % scenario_path)
-            log.error("NFPA does not know how to configure VNF to act as a bridge")
-            log.error("More info: http://ios.tmit.bme.hu/nfpa")
-            return False
-
+        check_file_exists(scenario_path)
         if bidir:
             # Change flow rule file
             scenario_path = scenario_path.replace("unidir", "bidir")
@@ -63,12 +70,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     # Check whether flow rules exists
     # Convention vnf_function.trace_direction.flows
     scenario_path = vnf_function + "." + traffictype + "_unidir.flows"
-    if not (os.path.isfile(str(of_path + scenario_path))):
-        log.error("Missing flow rule file: %s" % scenario_path)
-        log.error("NFPA does not know how to configure VNF to act as " +
-                  "%s for the given trace %s" % (vnf_function, traffictype))
-        log.error("More info: http://nfpa.tmit.bme.hu")
-        return False
+    check_file_exists(scenario_path, traffictype)
 
     # If flow file exists try to find corresponding groups
     scenario_path = scenario_path.replace(".flows", ".groups")
