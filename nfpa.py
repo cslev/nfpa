@@ -134,13 +134,11 @@ class NFPA(object):
         self.config['no_plot'] = self.no_plot
 
 
-    def exiting(self):
+    def exit(self, msg="EXITING..."):
         '''
-        This small function only prints out EXITING and call system.exit with
-        ERROR status -1.
-        Used only for function checkConfig()'s return values 
+        Print out MSG and call system.exit with ERROR status -1.
         '''
-        self.log.error("EXITING...")
+        self.log.error(msg)
         if (self.config['email_adapter'] is not None) and \
             (not self.config['email_adapter'].sendErrorMail()):
             self.log.error("Sending ERROR email did not succeed...")
@@ -159,11 +157,7 @@ class NFPA(object):
         if mod:
             return mod.configure_remote_vnf(self, vnf_function, traffictype)
         else:
-            self.log.error("Plugin for control_vnf not found: %s" % mod)
-            if (self.config['email_adapter'] is not None) and \
-               (not self.config['email_adapter'].sendErrorMail()):
-                self.log.error("Sending ERROR email did not succeed...")
-            exit(-1)
+            self.exit("Plugin for control_vnf not found: %s" % mod)
 
 
     def startAnalyzing(self, traffic_type, traffic_trace):
@@ -244,11 +238,7 @@ class NFPA(object):
                     # configure VNF if set
                     if self.config["control_nfpa"]:
                         if not self.configureVNFRemote(self.config["vnf_function"],trafficType):
-                            # configuring vnf did not succeed
-                            if (self.config['email_adapter'] is not None) and \
-                                (not self.config['email_adapter'].sendErrorMail()):
-                                self.log.error("Sending ERROR email did not succeed...")
-                            exit(-1)
+                            self.exit("Configuring vnf did not succeed")
 
                     #create config file for LUA script
                     self.rc.generateLuaConfigFile(trafficType,
@@ -275,23 +265,13 @@ class NFPA(object):
                     for i in range(0, int(self.config["measurement_num"])):
                         retval = os.system(main_cmd)
                         if (retval != 0):
-                            self.log.error("ERROR OCCURRED DURING STARTING PKTGEN")
-
-                            if (self.config['email_adapter'] is not None) and \
-                                    (not self.config['email_adapter'].sendErrorMail()):
-                                self.log.error("Sending ERROR email did not succeed...")
-                            exit(-1)
-
+                            self.exit("ERROR OCCURRED DURING STARTING PKTGEN")
 
                 else:
                     # configure VNF if set
                     if self.config["control_nfpa"]:
                         if not self.configureVNFRemote(self.config["vnf_function"], trafficType):
-                            # configuring vnf did not succeed
-                            if (self.config['email_adapter'] is not None) and \
-                                (not self.config['email_adapter'].sendErrorMail()):
-                                self.log.error("Sending ERROR email did not succeed...")
-                            exit(-1)
+                            self.exit("Configuring vnf did not succeed")
 
                     for ps in self.config['packetSizes']:
                         #create config file for LUA script
@@ -345,12 +325,7 @@ class NFPA(object):
                             #not follow pktgen's output due to forking
                             retval=os.system(main_cmd)
                             if(retval != 0):
-                                self.log.error("ERROR OCCURRED DURING STARTING PKTGEN")
-
-                                if (self.config['email_adapter'] is not None) and \
-                                    (not self.config['email_adapter'].sendErrorMail()):
-                                    self.log.error("Sending ERROR email did not succeed...")
-                                exit(-1)
+                                self.exit("ERROR OCCURRED DURING STARTING PKTGEN")
                     #ok, we got measurements for a given traffic trace
                     #with all the defined packetsizes
 
@@ -412,13 +387,7 @@ class NFPA(object):
                     #not follow pktgen's output due to forking
                     retval=os.system(main_cmd)
                     if(retval != 0):
-                        self.log.error("ERROR OCCURRED DURING STARTING PKTGEN")
-
-
-                        if (self.config['email_adapter'] is not None) and \
-                            (not self.config['email_adapter'].sendErrorMail()):
-                            self.log.error("Sending ERROR email did not succeed...")
-                        exit(-1)
+                        self.exit("ERROR OCCURRED DURING STARTING PKTGEN")
 
                 # Start analyzing existing results
                 self.startAnalyzing("realistic", realistic)
@@ -533,7 +502,7 @@ if __name__ == '__main__':
         #initiliaze if no web GUI was started
         status = main.initialize()
         if(status == -1):
-            main.exiting()
+            main.exit()
 
         try:
             #start PktGen based measurements
