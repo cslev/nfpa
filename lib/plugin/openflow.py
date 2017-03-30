@@ -16,8 +16,10 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     log = l.getLogger(__name__, config['LOG_LEVEL'], config['app_start_date'],
                       config['LOG_PATH'])
     of_path = config["MAIN_ROOT"] + "/of_rules/"   # path to the openflow rules
-    invoke1 = lambda cmd: invoke(command=cmd, logger=log,
-                                 email_adapter=config['email_adapter'])
+    def invoke1(cmd, msg):
+        log.debug("%s with %s" % (msg, cmd))
+        invoke(command=cmd, logger=log, email_adapter=config['email_adapter'])
+        log.info("%s: done")
     prepare_rules = lambda path, bidir: \
         flow_prep.prepareOpenFlowRules(log, of_path, path,
                                        config["control_vnf_inport"],
@@ -32,15 +34,11 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
                 " <C> " + \
                 config["control_mgmt"] + " "
     cmd = ofctl_cmd.replace("<C>", "del-flows")
-    log.debug("control cmd: %s" % cmd)
-    invoke1(cmd)
-    log.info("Flow rules deleted")
+    invoke1(cmd, "Deleting flow rules")
 
     # second, delete groups
     cmd = ofctl_cmd.replace("<C>", "del-groups")
-    log.debug("control cmd: %s" % cmd)
-    invoke1(cmd)
-    log.info("Groups deleted")
+    invoke1(cmd, "Deleting groups")
 
     #OK, flows are deleted, so replace 'del-flows' to 'add-flows' for
     # easier usage later
@@ -64,10 +62,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
         #prepare flow rule file
         scenario_path = prepare_rules(scenario_path, bidir)
         cmd = ofctl_cmd.replace("<C>","add-flows") + scenario_path
-        log.info("add-flows via '%s'" % cmd)
-        invoke1(cmd)
-        # print out stdout if any
-        log.info("Flows added")
+        invoke1(cmd, "Adding flows")
         return True
     ############    =============   ###########
 
@@ -92,8 +87,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
         group_path = prepare_rules(scenario_path, False) #TODO: bidir handling
         cmd = ofctl_cmd.replace("<C>","add-groups")
         cmd += " " + group_path
-        log.info("add-groups via '%s'" % cmd)
-        invoke1(cmd)
+        invoke1(cmd, "Adding groups")
     else:
         log.info("No group file was found...continue")
 
@@ -122,8 +116,5 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     scenario_path = prepare_rules(scenario_path, bidir)
     #assemble command ovs-ofctl
     cmd = ofctl_cmd.replace("<C>","add-flows") + scenario_path
-    log.info("add-flows via '%s'" % cmd)
-    log.info("This may take some time...")
-    invoke1(cmd)
-    log.info("Flows added")
+    invoke1(cmd, "Adding flows")
     return True
