@@ -189,17 +189,16 @@ class ReadConfig(object):
             #convert it first to lowercase
             self._config["control_vnf"] = self._config["control_vnf"].lower()
             #check whether it is supported
-            if self._config["control_vnf"] not in self._config["controllers"]:
-                try:
-                    mod = self._config["control_vnf"].lower()
-                    module = importlib.import_module("plugin.%s" % mod)
-                    self._config["control_mod"] = module
-                except Exception as e:
-                    print(e)
-                    self.log.error("The control_vnf (%s) is not supported!" %
-                                   self._config["control_vnf"])
-                    self.log.error("Disable control_nfpa in nfpa.cfg and configure your vnf manually")
-                    exit(-1)
+            try:
+                mod_name = self._config["control_vnf"]
+                module = importlib.import_module("plugin.%s" % mod_name)
+                self._config["control_mod"] = module
+            except Exception as e:
+                self.log.debug("%s" % e)
+                self.log.error("The control_vnf (%s) is not supported!" %
+                               self._config["control_vnf"])
+                self.log.error("Disable control_nfpa in nfpa.cfg and configure your vnf manually")
+                exit(-1)
 
             #check paths to the binaries
             #directory

@@ -22,7 +22,6 @@ import special_bidir_traffic_checker as sbtc
 import logger as l
 import date_formatter as df
 import invoke as invoke
-import flow_rules_preparator as flow_prep
 
 #required for loading classes under web/
 sys.path.append("web/")
@@ -156,165 +155,15 @@ class NFPA(object):
         :return: True - if success, False - if not
         '''
 
-        #the path to the openflow rules
-        of_path = self.config["MAIN_ROOT"] + "/of_rules/"
-        # temporary variable for bidir status - it is needed for flow_rules_preparator
-        bidir = False
-
-        #handle here OpenFlow and setup via ovs-ofctl
-        if self.config["control_vnf"].lower() == "openflow":
-
-            # first, delete the flows
-            ofctl_cmd = self.config["control_path"] + " " + \
-                        self.config["control_args"] +\
-                        " <C> " + \
-                        self.config["control_mgmt"] + " "
-            cmd = ofctl_cmd.replace("<C>", "del-flows")
-            self.log.debug("control cmd: %s" % cmd)
-            invoke.invoke(command=cmd,
-                          logger=self.log,
-                          email_adapter=self.config['email_adapter'])
-            self.log.info("Flow rules deleted")
-
-            # second, delete groups
-            cmd = ofctl_cmd.replace("<C>", "del-groups")
-            self.log.debug("control cmd: %s" % cmd)
-            invoke.invoke(command=cmd,
-                          logger=self.log,
-                          email_adapter=self.config['email_adapter'])
-            self.log.info("Groups deleted")
-
-            #OK, flows are deleted, so replace 'del-flows' to 'add-flows' for
-            # easier usage later
-            cmd = ofctl_cmd.replace("<C>", "add-flows")
-            #first check vnf_function, if it is bridge, then no special stuff needs
-            #to be setup regardless of the traces
-            ############     BRIDGE ###########
-            if self.config["vnf_function"].lower() == "bridge":
-                #add birdge rules - located under of_rules
-                scenario_path = vnf_function + "_unidir.flows"
-                if not (os.path.isfile(str(of_path + scenario_path))):
-                    self.log.error("Missing flow rule file: %s" % scenario_path)
-                    self.log.error("NFPA does not know how to configure VNF to act as a bridge")
-                    self.log.error("More info: http://ios.tmit.bme.hu/nfpa")
-                    if (self.config['email_adapter'] is not None) and \
-                        (not self.config['email_adapter'].sendErrorMail()):
-                        self.log.error("Sending ERROR email did not succeed...")
-                    exit(-1)
-
-                if self.config["biDir"] == 1:
-                    #change flow rule file if bidir was set
-                    scenario_path = scenario_path.replace("unidir","bidir")
-                    bidir=True
-
-                #prepare flow rule file
-                scenario_path = flow_prep.prepareOpenFlowRules(self.log,
-                                                               of_path,
-                                                               scenario_path,
-                                                               self.config["control_vnf_inport"],
-                                                               self.config["control_vnf_outport"],
-                                                               bidir)
-                cmd = ofctl_cmd.replace("<C>","add-flows") + scenario_path
-                self.log.info("add-flows via '%s'" % cmd)
-                invoke.invoke(command=cmd,
-                              logger=self.log,
-                              email_adapter=self.config['email_adapter'])
-                # print out stdout if any
-                self.log.info("Flows added")
-                return True
-            ############    =============   ###########
-
-
-            ############     OTHER CASES    ###########
-            #check whether flow rules exists?
-            #convention vnf_function.trace_direction.flows
-            scenario_path = vnf_function + "." + traffictype + "_unidir.flows"
-            if not (os.path.isfile(str(of_path + scenario_path))):
-                self.log.error("Missing flow rule file: %s" % scenario_path)
-                self.log.error("NFPA does not know how to configure VNF to act as " + \
-                               "%s for the given trace %s" % (vnf_function,traffictype))
-                self.log.error("More info: http://nfpa.tmit.bme.hu")
-                if (self.config['email_adapter'] is not None) and \
-                    (not self.config['email_adapter'].sendErrorMail()):
-                    self.log.error("Sending ERROR email did not succeed...")
-                exit(-1)
-
-
-            #If flow file exists try to find corresponding groups
-            scenario_path = scenario_path.replace(".flows",".groups")
-            self.log.info("Looking for group file: %s" % scenario_path)
-            if (os.path.isfile(str(of_path + scenario_path))):
-                self.log.info("Group file found for this scenario: %s" % scenario_path)
-                #prepare group file, i.e., replace port related meta data
-                group_path = flow_prep.prepareOpenFlowRules(self.log,
-                                                               of_path,
-                                                               scenario_path,
-                                                               self.config["control_vnf_inport"],
-                                                               self.config["control_vnf_outport"],
-                                                               False) #TODO: bidir handling here
-                cmd = ofctl_cmd.replace("<C>","add-groups")
-                cmd += " " + group_path
-                self.log.info("add-groups via '%s'" % cmd)
-                invoke.invoke(command=cmd,
-                              logger=self.log,
-                              email_adapter=self.config['email_adapter'])
-            else:
-                self.log.info("No group file was found...continue")
-
-            #change back to the .flows file from .groups
-            scenario_path = scenario_path.replace(".groups", ".flows")
-
-            #if biDir is set, then other file is needed where the same rules are present
-            #in the reverse direction
-            if (int(self.config["biDir"]) == 1):
-                #biDir for remote vnf configuration is currently not supported!
-                self.log.error("Configuring your VNF by NFPA for bi-directional scenario " +
-                               "is currently not supported")
-                self.log.error("Please verify your nfpa.cfg")
-                if (self.config['email_adapter'] is not None) and \
-                    (not self.config['email_adapter'].sendErrorMail()):
-                    self.log.error("Sending ERROR email did not succeed...")
-                exit(-1)
-                #save biDir setting in a boolean to later use for flow_prep.prepareOpenFlowRules()
-                # bidir = True
-                # scenario_path=scenario_path.replace("unidir","bidir")
-                # if not (os.path.isfile(str(of_path + scenario_path))):
-                #     self.log.error("Missing flow rule file: %s" % scenario_path)
-                #     self.log.error("NFPA does not know how to configure VNF to act as " + \
-                #                    "%s for the given trace %s in bi-directional mode" %
-                #                    (vnf_function,traffictype))
-                #     self.log.error("More info: http://ios.tmit.bme.hu/nfpa")
-                #     exit(-1)
-
-            #replace metadata in flow rule files
-            scenario_path = flow_prep.prepareOpenFlowRules(self.log,
-                                                           of_path,
-                                                           scenario_path,
-                                                           self.config["control_vnf_inport"],
-                                                           self.config["control_vnf_outport"],
-                                                           bidir)
-            #assemble command ovs-ofctl
-            cmd = ofctl_cmd.replace("<C>","add-flows") + scenario_path
-            self.log.info("add-flows via '%s'" % cmd)
-            self.log.info("This may take some time...")
-            invoke.invoke(command=cmd,
-                          logger=self.log,
-                          email_adapter=self.config['email_adapter'])
-            self.log.info("Flows added")
-            return True
-        ############    =============   ###########
-
-
+        mod = self.config.get("control_mod")
+        if mod:
+            return mod.configure_remote_vnf(self, vnf_function, traffictype)
         else:
-            mod = self.config.get("control_mod")
-            if mod:
-                return mod.configure_remote_vnf(self, vnf_function, traffictype)
-            else:
-                self.log.error("Plugin for control_vnf not found: %s" % mod)
-                if (self.config['email_adapter'] is not None) and \
-                   (not self.config['email_adapter'].sendErrorMail()):
-                    self.log.error("Sending ERROR email did not succeed...")
-                exit(-1)
+            self.log.error("Plugin for control_vnf not found: %s" % mod)
+            if (self.config['email_adapter'] is not None) and \
+               (not self.config['email_adapter'].sendErrorMail()):
+                self.log.error("Sending ERROR email did not succeed...")
+            exit(-1)
 
 
     def startAnalyzing(self, traffic_type, traffic_trace):
