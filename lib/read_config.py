@@ -8,6 +8,7 @@ import logger as l
 import copy
 import time
 import datetime
+import importlib
 import special_bidir_traffic_checker as sbtc
 import read_write_config_file as rwcf
 from send_mail import EmailAdapter
@@ -189,9 +190,16 @@ class ReadConfig(object):
             self._config["control_vnf"] = self._config["control_vnf"].lower()
             #check whether it is supported
             if self._config["control_vnf"] not in self._config["controllers"]:
-                self.log.error("The control_vnf (%s) is not supported!")
-                self.log.error("Disable control_nfpa in nfpa.cfg and configure your vnf manually")
-                exit(-1)
+                try:
+                    mod = self._config["control_vnf"].lower()
+                    module = importlib.import_module("plugin.%s" % mod)
+                    self._config["control_mod"] = module
+                except Exception as e:
+                    print(e)
+                    self.log.error("The control_vnf (%s) is not supported!" %
+                                   self._config["control_vnf"])
+                    self.log.error("Disable control_nfpa in nfpa.cfg and configure your vnf manually")
+                    exit(-1)
 
             #check paths to the binaries
             #directory

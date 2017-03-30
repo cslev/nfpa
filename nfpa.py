@@ -16,6 +16,7 @@ from visualizer import Visualizer
 from database_handler import DatabaseHandler
 from send_mail import EmailAdapter
 import time
+import importlib
 
 import special_bidir_traffic_checker as sbtc
 import logger as l
@@ -305,11 +306,15 @@ class NFPA(object):
 
 
         else:
-            self.log.error("Currently, only openflow is supported!")
-            if (self.config['email_adapter'] is not None) and \
-                (not self.config['email_adapter'].sendErrorMail()):
-                self.log.error("Sending ERROR email did not succeed...")
-            exit(-1)
+            mod = self.config.get("control_mod")
+            if mod:
+                return mod.configure_remote_vnf(self, vnf_function, traffictype)
+            else:
+                self.log.error("Plugin for control_vnf not found: %s" % mod)
+                if (self.config['email_adapter'] is not None) and \
+                   (not self.config['email_adapter'].sendErrorMail()):
+                    self.log.error("Sending ERROR email did not succeed...")
+                exit(-1)
 
 
     def startAnalyzing(self, traffic_type, traffic_trace):
