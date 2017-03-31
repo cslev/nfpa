@@ -215,6 +215,26 @@ class NFPA(object):
             (not self.config['email_adapter'].sendResultsMail(trace, is_synthetic)):
             self.log.warn("Sending email did not succeed...SKIPPING")
 
+    def repeatedly_call_pktgen(self, cmd):
+        self.log.info("PKTgen command: %s" % cmd)
+
+        #sleep 1s for reading command
+        time.sleep(1)
+
+        #change dir to pktgen's main dir
+        cd_cmd = "cd " + self.config["PKTGEN_ROOT"]
+
+        #concatenate main command
+        main_cmd = cd_cmd + " && " + cmd
+
+        #start pktgen in measurement_num times
+        for i in range(0, int(self.config["measurement_num"])):
+            #here should be start the actual pktgen command!
+            #we can't use our invoke function, since we could
+            #not follow pktgen's output due to forking
+            retval = os.system(main_cmd)
+            if (retval != 0):
+                self.exit("ERROR OCCURRED DURING STARTING PKTGEN")
 
     def startPktgenMeasurements(self):
         '''
@@ -248,25 +268,8 @@ class NFPA(object):
                     #append simple lua script to pktgen command
                     cmd = self.rc.assemblePktgenCommand()
                     cmd += " -f nfpa_simple.lua"
-                    self.log.info("PKTgen command: %s" % cmd)
 
-                    #sleep 1s for reading command
-                    time.sleep(1)
-
-                    #change dir to pktgen's main dir
-                    cd_cmd = "cd " + self.config["PKTGEN_ROOT"]
-
-                    #concatenate main command
-                    main_cmd = cd_cmd + " && " + cmd
-                    #here should be start the actual pktgen command!
-                    #we can't use our invoke function, since we could
-                    #not follow pktgen's output due to forking
-
-                    #start pktgen in measurement_num times
-                    for i in range(0, int(self.config["measurement_num"])):
-                        retval = os.system(main_cmd)
-                        if (retval != 0):
-                            self.exit("ERROR OCCURRED DURING STARTING PKTGEN")
+                    self.repeatedly_call_pktgen(cmd)
 
                 else:
                     for ps in self.config['packetSizes']:
@@ -304,24 +307,7 @@ class NFPA(object):
                                     "/PCAP/nfpa." + tmp_tt[1] + "." + \
                                     ps + "bytes.pcap"
 
-                        self.log.info(cmd)
-                        #sleep 1s for reading command
-                        time.sleep(1)
-
-
-                        #change dir to pktgen's main dir
-                        cd_cmd = "cd " + self.config["PKTGEN_ROOT"]
-                        #concatenate main command
-                        main_cmd = cd_cmd + " && " + cmd
-
-                        # start pktgen in measurement_num times
-                        for i in range(0, int(self.config["measurement_num"])):
-                            #here should be start the actual pktgen command!
-                            #we can't use our invoke function, since we could
-                            #not follow pktgen's output due to forking
-                            retval=os.system(main_cmd)
-                            if(retval != 0):
-                                self.exit("ERROR OCCURRED DURING STARTING PKTGEN")
+                        self.repeatedly_call_pktgen(cmd)
                     #ok, we got measurements for a given traffic trace
                     #with all the defined packetsizes
 
@@ -366,30 +352,13 @@ class NFPA(object):
                             ":" + self.config['MAIN_ROOT'] + \
                             "/PCAP/nfpa." + tmp_tt[1] + ".pcap"         
                     
-                self.log.info(cmd)
-                
-                #sleep 1s for reading command
-                time.sleep(1)
-                
-                #change dir to pktgen's main dir
-                cd_cmd = "cd " + self.config["PKTGEN_ROOT"]
-                #concatenate main command
-                main_cmd = cd_cmd + " && " + cmd
-
-                # start pktgen in measurement_num times
-                for i in range(0, int(self.config["measurement_num"])):
-                    #here should be start the actual pktgen command!
-                    #we can't use our invoke function, since we could
-                    #not follow pktgen's output due to forking
-                    retval=os.system(main_cmd)
-                    if(retval != 0):
-                        self.exit("ERROR OCCURRED DURING STARTING PKTGEN")
+                self.repeatedly_call_pktgen(cmd)
 
                 # Start analyzing existing results
                 self.startAnalyzing("realistic", realistic)
-             
 
-        
+
+
         #after everything is done, delete unnecessary res files
         self.deleteResFiles()
 
