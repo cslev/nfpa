@@ -75,43 +75,22 @@ class ReadConfig(object):
         
         self._config['helper_header'] = ['min', 'avg', 'max']
 
-
-
         self.log = l.getLogger( self.__class__.__name__,
                                 self._config['LOG_LEVEL'],
                                 self._config['app_start_date'],
                                 self._config['LOG_PATH'])
 
-        # self.log=logging.getLogger(self.__class__.__name__)
-
-
-        # set supported control APIs
-        self._config["controllers"] = ("openflow")
-
-
-        
         #create an instance of database helper and store it in config dictionary
         self._config["dbhelper"] = SQLiteDatabaseAdapter(self._config)
-
-
 
         # parse config params
         configSuccess = self.checkConfig()
         if (configSuccess == -1):
             return -1
 
-
-        #calculate time left
         self.calculateTimeLeft()
-        
-        #create res dir
         self.createResultsDir()
-        
-
-        #assemble pktgen command
         self.assemblePktgenCommand()
-          
-        #create symlinks for lua files
         self.createSymlinksForLuaScripts()
 
 
