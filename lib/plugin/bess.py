@@ -1,7 +1,7 @@
 import logger as l
 from invoke import invoke
 
-def configure_remote_vnf(nfpa, vnf_function, traffictype):
+def configure_remote_vnf(config, traffictype):
     '''
     Configure the remote vnf via pre-installed tools located on the
     same machine where NFPA is.
@@ -9,7 +9,6 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     :return: True - if success, False - if not
 
     '''
-    config = nfpa.config
     log = l.getLogger(__name__, config['LOG_LEVEL'], config['app_start_date'],
                       config['LOG_PATH'])
     def invoke1(cmd, msg):
@@ -30,8 +29,8 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     inport = config["control_vnf_inport"]
     outport = config["control_vnf_outport"]
     pipeline = config["vnf_function"].lower()
-    cmd = base_cmd + ('run file %s/%s vnf_inport=%s, vnf_outport=%s' %
-                      (bess_path, pipeline, inport, outport))
+    cmd = 'run file %s/%s vnf_inport=%s, vnf_outport=%s, traffictype=%s'
+    cmd = base_cmd + cmd % (bess_path, pipeline, inport, outport, traffictype)
     invoke1(cmd, 'Starting pipeline')
 
     return True

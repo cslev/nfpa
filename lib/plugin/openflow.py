@@ -3,7 +3,7 @@ from logger import getLogger
 from invoke import invoke
 from flow_rules_preparator import prepareOpenFlowRules as prepare_OF_rules
 
-def configure_remote_vnf(nfpa, vnf_function, traffictype):
+def configure_remote_vnf(config, traffictype):
     '''
     Configure the remote vnf via pre-installed tools located on the
     same machine where NFPA is.
@@ -11,7 +11,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     :return: True - if success, False - if not
 
     '''
-    config = nfpa.config
+    vnf_function = config['vnf_function'].lower()
     log = getLogger(__name__, config['LOG_LEVEL'], config['app_start_date'],
                     config['LOG_PATH'])
     of_path = config["MAIN_ROOT"] + "/of_rules/"   # path to the openflow rules
@@ -20,15 +20,11 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
         log.debug("%s with %s" % (msg, cmd))
         invoke(command=cmd, logger=log, email_adapter=config['email_adapter'])
         log.info("%s: done" % msg)
-    def check_file_exists(filename, traffictype=None):
+    def check_file_exists(filename):
         if os.path.isfile(str(of_path + filename)):
             return
         log.error('Missing flow rule file: %s' % filename)
-        msg = 'Cannot configure VNF to act as a %s' % config['vnf_function']
-        if traffictype:
-            msg += ' for the given trace (%s)' % traffictype
-        log.error(msg)
-        log.error("More info: http://nfpa.tmit.bme.hu")
+        log.error('Cannot configure VNF to act as a %s' % vnf_function)
         open(filename) # Raise exception
     def prepare_rules(path):
         prepare_OF_rules(log, of_path, path, config["control_vnf_inport"],
@@ -46,7 +42,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
     invoke1(cmd, "Deleting groups")
 
     ############     BRIDGE     ###########
-    if config["vnf_function"].lower() == "bridge":
+    if vnf_function == "bridge":
         # Setup does not depend on the traces
         # Add birdge rules - located under of_rules
         scenario_path = vnf_function + "_unidir.flows"
@@ -68,7 +64,7 @@ def configure_remote_vnf(nfpa, vnf_function, traffictype):
         return False
 
     scenario_path = vnf_function + "." + traffictype + "_unidir.flows"
-    check_file_exists(scenario_path, traffictype)
+    check_file_exists(scenario_path)
 
     # Try to find file for group rules
     scenario_path = scenario_path.replace(".flows", ".groups")

@@ -148,22 +148,21 @@ class NFPA(object):
         '''
         Configure the remote vnf via pre-installed tools located on the same
         machine where NFPA is.  Only works for some predefined vnf_function
-        and traffictraces
+        and traffictraces.
         '''
         if not self.config["control_nfpa"]:
             return # Nothing to do
 
-        vnf_function = self.config["vnf_function"]
         mod = self.config.get("control_mod")
         err = True
         if not mod:
             self.exit("Plugin for control_vnf not found: %s" % mod)
         try:
-            err = mod.configure_remote_vnf(self, vnf_function, traffictype)
+            err = mod.configure_remote_vnf(self.config, traffictype)
         except Exception as e:
             self.log.debug('%s' % e)
         if err:
-            self.exit("Failed to configure vnf: %s" % vnf_function)
+            self.exit("Failed to configure vnf. Traffictype: %s" % traffictype)
 
 
     def startAnalyzing(self, traffic_type, traffic_trace):
@@ -237,12 +236,11 @@ class NFPA(object):
 
             #iterate through traffic types
             for trafficType in self.config["trafficTypes"]:
+                self.log.info("Traffic type: %s" % trafficType)
+                self.configureVNFRemote(trafficType)
+
                 #first, measure simple scenarios (if desired)
                 if(trafficType == "simple"):
-                    self.log.info("SIMPLE TRACE - %s" % trafficType)
-
-                    self.configureVNFRemote(trafficType)
-
                     #create config file for LUA script
                     self.rc.generateLuaConfigFile(trafficType,
                                                   self.config["packetSizes"],
@@ -271,8 +269,6 @@ class NFPA(object):
                             self.exit("ERROR OCCURRED DURING STARTING PKTGEN")
 
                 else:
-                    self.configureVNFRemote(trafficType)
-
                     for ps in self.config['packetSizes']:
                         #create config file for LUA script
                         self.rc.generateLuaConfigFile(trafficType,
