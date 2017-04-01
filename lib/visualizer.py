@@ -83,7 +83,7 @@ class Visualizer(object):
         
         
         
-        #if any of the variable above are non-exist vars, we need to TERMINATE
+        #if any of the variable above are non-existing vars, we need to TERMINATE
         if(self.config is None or self.results is None):
             self.log.error("config and results dictionaries are EMPTY")
             self.log.error("Something went wrong during initialization")
@@ -476,35 +476,42 @@ class Visualizer(object):
         self.log.debug(gnuplot_arguments)
         #synthetic traffic/measurements have different GNUplot plotter files
         if(self.type == "synthetic"):
-            plotter_file = "/lib/plotter_" + self.config['plot_language'] + ".gp"
-            #if bi directional measurement was set, we use different gnuplot file
-            if((int(self.config["biDir"]) == 1) or ul_dl):
-                plotter_file = "/lib/plotter_bidir_" + self.config['plot_language'] + ".gp"
+            for language in self.config['plot_languages']:
+                plotter_file = "/lib/plotter_" + language + ".gp"
+                #if bi directional measurement was set, we use different gnuplot file
+                if((int(self.config["biDir"]) == 1) or ul_dl):
+                    plotter_file = "/lib/plotter_bidir_" + language + ".gp"
                 
-            #assemble gnuplot command
-            gnuplot_command = "gnuplot -e " + gnuplot_arguments + " " + \
-                              self.config['MAIN_ROOT'] + plotter_file
+                #assemble gnuplot command
+                gnuplot_command = "gnuplot -e " + gnuplot_arguments + " " + \
+                                  self.config['MAIN_ROOT'] + plotter_file
+                self.log.debug("======= GNUPLOT (%s) =======" % language)
+                self.log.debug(gnuplot_command)
+                retval = (invoke.invoke(command=gnuplot_command,
+                                        logger=self.log,
+                                        email_adapter=self.config['email_adapter']))[0]
+                if retval is not None or retval != '':
+                    self.log.info(retval)
                               
         #Realistic traffic/measurements have different GNUplot plotter files
         elif(self.type == "realistic"):
-            plotter_file = "/lib/plotter_realistic.gp"
-            #if bi directional measurement was set, we use different gnuplot file
-            if((int(self.config["biDir"]) == 1) or ul_dl):
-                plotter_file = "/lib/plotter_realistic_bidir.gp"
-                
-            #assemble gnuplot command
-            gnuplot_command = "gnuplot -e " + gnuplot_arguments + " " + \
-                              self.config['MAIN_ROOT'] + plotter_file   
-                              
-                                             
-                                             
-        self.log.debug("======= GNUPLOT =======")
-        self.log.debug(gnuplot_command)
-        retval = (invoke.invoke(command=gnuplot_command,
-                                logger=self.log,
-                                email_adapter=self.config['email_adapter']))[0]
-        if retval is not None or retval != '':
-            self.log.info(retval)
+            for language in self.config['plot_languages']:
+                plotter_file = "/lib/plotter_realistic_"+ language +".gp"
+                #if bi directional measurement was set, we use different gnuplot file
+                if((int(self.config["biDir"]) == 1) or ul_dl):
+                    plotter_file = "/lib/plotter_realistic_bidir_" + language + ".gp"
+
+                #assemble gnuplot command
+                gnuplot_command = "gnuplot -e " + gnuplot_arguments + " " + \
+                                  self.config['MAIN_ROOT'] + plotter_file
+                self.log.debug("======= GNUPLOT (%s) =======" % language)
+                self.log.debug(gnuplot_command)
+                retval = (invoke.invoke(command=gnuplot_command,
+                                        logger=self.log,
+                                        email_adapter=self.config['email_adapter']))[0]
+                if retval is not None or retval != '':
+                    self.log.info(retval)
+
             
 
     def getPrefixToPlots(self):

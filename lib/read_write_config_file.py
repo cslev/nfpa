@@ -25,6 +25,8 @@ def readConfigFile(config_file):
     trafficTypes = []
     #list for realistic traffics
     realisticTraffics = []
+    #list of desired languages for plots
+    plot_languages = []
     
     config['version'] = "v3.2"
 
@@ -51,7 +53,9 @@ def readConfigFile(config_file):
                     #handling trafficType params
                     elif key_value[0] == "trafficType":
                         trafficTypes.append(key_value[1])
-                        
+                    #handling plot_languages
+                    elif key_value[0] == "plot_language":
+                        plot_languages.append(key_value[1])
                         
                     #handling realistic traffics if set
                     elif key_value[0] == "realisticTraffic":
@@ -94,6 +98,8 @@ def readConfigFile(config_file):
     config["trafficTypes"] = trafficTypes
     #append realisticTraffics as well to config dict
     config["realisticTraffics"] = realisticTraffics
+    #append plot languages to the config_dict
+    config["plot_languages"] = plot_languages
 
     
     config["LOG_PATH"] = os.getcwd() + "/log/"
@@ -290,7 +296,9 @@ def getConfigComments():
                     "So, anything you feel necessary to position the results.",
 
                     'plot_language':
-                    "Change plotting language here: currently supported: eng,hun",
+                    "Change plotting language here: currently supported: eng,hun\n" +
+                    "To create the same plots with different languages, use this line " +
+                    "more times defining the different languages, as in case of packetSize",
 
                     'pps_unit':
                     "Set up the unit of the desired packet/s results in order "+
@@ -595,6 +603,14 @@ def writeConfigFile(c):
     file.write("### ================================================== ###\n\n")
     
     file.write("### ----- Gnuplot/Presenting Related Settings -------- ###\n")
+    splitToMultipleLines(cc['plot_language'], file)
+    if (c['plot_languages'] is not None):
+        for i in c['plot_languages']:
+            file.write("plot_language=" + str(i) + "\n")
+    else:
+        file.write("#plot_language=\n")
+    file.write("\n")
+
     splitToMultipleLines(cc['pps_unit'], file)
     file.write("pps_unit=" + c['pps_unit'] + "\n\n")
     splitToMultipleLines(cc['bps_unit'], file)
