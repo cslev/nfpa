@@ -100,7 +100,7 @@ def readConfigFile(config_file):
     config["realisticTraffics"] = realisticTraffics
     #append plot languages to the config_dict
     if len(plot_languages) == 0: #plot language was not set
-        languages="eng" #set default language to english
+        languages=["eng"] #set default language to english
     else:
         languages= plot_languages
 
