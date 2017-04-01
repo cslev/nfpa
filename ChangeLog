@@ -417,3 +417,8 @@ at a time), some codes became unnecessary.
 v3.5 - Multiple language support at the same time. Now, several plot_language lines could be defined (currently 2 only
 due to the number of supported languages so far), and for the measurements the plots will be generated in all
 languages
+
+v3.6 - New initializing argument. Now, it is possible to disable plot generation, and only produce the result files (.data).
+This could be useful, when you don't have the right version of gnuplot, or just don't need the plots as other scripts
+you have written is parsing the result files later anyway. Doesn't matter for what reason it is good or not, but now it
+is switchable :)
