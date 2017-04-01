@@ -99,8 +99,12 @@ def readConfigFile(config_file):
     #append realisticTraffics as well to config dict
     config["realisticTraffics"] = realisticTraffics
     #append plot languages to the config_dict
-    config["plot_languages"] = plot_languages
+    if len(plot_languages) == 0: #plot language was not set
+        languages="eng" #set default language to english
+    else:
+        languages= plot_languages
 
+    config["plot_languages"] = languages
     
     config["LOG_PATH"] = os.getcwd() + "/log/"
     print("Logging directory will be: %s" % config["LOG_PATH"])
