@@ -179,7 +179,8 @@ class WEBNFPA(object):
 
         tmp_lists = ["realisticTraffics", 
                      "trafficTypes", 
-                     "packetSizes"]
+                     "packetSizes",
+                     "plot_languages"]
         
         #the following config elements should not be checked, since they are
         #initialized by ReadConfig class, and they could be None if

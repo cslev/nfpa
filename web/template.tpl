@@ -78,7 +78,8 @@
 %              'vnf_function' : "(Virtual) Network Function's Function (e.g. l2-switch, l3-router, vxlan)<span class='req'>*</span>",
 %              'vnf_num_cores' : "Set here the number of CPU cores the VNF is using. Use integer numbers!<span class='req'>*</span>",
 %              'vnf_comment' : "Comment (e.g. ivshmem + qemu version 2.3.4)<span class='req'>*</span>",
-%              'plot_language' : "Desired language for the plots (currently supported: eng,hun<span class='req'>*</span>",
+%              'plot_language' : "Desired language for the plots (currently supported: eng,hun). To set more languages separate them" +\
+                                 "with commas but without whitespaces, e.g.,eng,hun <span class='req'>*</span>",
 %              'pps_unit' : "Desired Unit for Packet/s (e.g., k, M, G)<span class='req'>*</span>",
 %              'bps_unit' : "Desired Unit for Bit/s (e.g., k, M, G)<span class='req'>*</span>",
 %              'outlier_min_percentage' : "Outliers percentage for Minimum Values (e.g., 0.05). " +\
@@ -186,19 +187,6 @@
                     <option value="1" {{selected_duplex}}>Duplex</option>
                   </select>
 
-                % # plot_language needs select field
-                % elif j == "plot_language":
-                %   eng = ""
-                %   hun = ""
-                %   if d[j].lower() == "hun":
-                %     hun = "selected"
-                %   elif d[j].lower() == "eng":
-                %     eng = "selected"
-                %   end
-                  <select name={{j}}>
-                    <option value="eng" {{eng}}>eng</option>
-                    <option value="hun" {{hun}}>hun</option>
-                  </select>
                 % # pps_unit and bps_unit need select field
                 % elif j == "pps_unit" or j == "bps_unit":
                 %   k = ""
