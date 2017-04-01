@@ -413,3 +413,7 @@ v3.4 - Add hungarian language support for gnuplot plots. It can be set in nfpa.c
 v3.4.1 - Minor changes to nfpa_traffic.lua. Originally one measurement lasted until the trace with all of its packetsizes
 has been measured. However, since results are being analyzed for each traffic trace (consisting only one size of packets
 at a time), some codes became unnecessary.
+
+v3.5 - Multiple language support at the same time. Now, several plot_language lines could be defined (currently 2 only
+due to the number of supported languages so far), and for the measurements the plots will be generated in all
+languages

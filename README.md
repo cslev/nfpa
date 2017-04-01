@@ -17,3 +17,6 @@ this way a merge at the end may happen :)
 # What's NEW?
 Check ChangeLog from v3.2 where the fork has been issued.
 
+# New requirements:
+gnuplot >= v5.0 (due to the utf8 encoding)
+
