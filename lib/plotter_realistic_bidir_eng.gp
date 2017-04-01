@@ -26,17 +26,15 @@ set term post color eps 20
 set datafile separator ","
 
 #Setting the x and y axis's fonts
-#set xtics font "Times-Roman, 28" 
-#set ytics font "Times-Roman, 28"
+set xtics font ", 22"
+set ytics font ", 22"
 
 #Setting x and y axis's labels and their offset
-set ylabel PPS_UNIT."Packet/s" offset 1.5,0 font "Times-Roman, 28"
-#set xlabel "Packet size" offset 0,0.5 font "Times-Roman, 28"
+set ylabel "Packet/sec [".PPS_UNIT."pps]" font ", 28"
 
 
 #Setting the legend to bottom-right with 5 length of the sample, with 4 vertical spacing and with 18 font-size
 set key right top samplen 5 spacing 4 
-
 
 
 # We need to set lw in order for error bars to actually appear.
@@ -46,13 +44,15 @@ set style histogram errorbars linewidth 1
 set style fill solid 0.3
 set bars front
 
-#PACKET/S
-set output OUTPUT_BASENAME."_".PPS_UNIT."pps.eps"
-plot INPUT_DATA every ::1::3 using 3:2:4:xticlabels(1) w hist ti TR1
 
+#PACKET/S
+set output OUTPUT_BASENAME."_".PPS_UNIT."pps_eng.eps"
+plot INPUT_DATA every ::1::3 using 3:2:4:xticlabels(1) w hist ti "0->1:".TR1,\
+     INPUT_DATA every ::7::9 using 3:2:4:xticlabels(1) w hist ti "1->0:".TR2
 
 #BIT/S
 #Setting x and y axis's labels and their offset
-set ylabel BPS_UNIT."bit/s" offset 1.5,0 font "Times-Roman, 28"
-set output OUTPUT_BASENAME."_".BPS_UNIT."bps.eps"
-plot INPUT_DATA every ::4::6 using 3:2:4:xticlabels(1) w hist ti TR1
+set ylabel BPS_UNIT."bit/s" offset 1.5,0 font ", 28"
+set output OUTPUT_BASENAME."_".BPS_UNIT."bps_eng.eps"
+plot INPUT_DATA every ::4::6 using 3:2:4:xticlabels(1) w hist ti "0->1:".TR1,\
+     INPUT_DATA every ::10::12 using 3:2:4:xticlabels(1) w hist ti "1->0:".TR2

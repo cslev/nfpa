@@ -22,6 +22,8 @@ set terminal postscript eps noenhanced color 20 font "Verdana"
 #set separator
 set datafile separator ","
 
+set xrange [64:1500]
+
 #Setting the x and y axis's fonts
 set xtics font ", 22"
 set ytics font ", 22"
@@ -38,7 +40,7 @@ set key right top samplen 5 spacing 4
 #### Throughput packet/s ####
 ## SENT VS RECV ###
 #Setting output
-set output OUTPUT_BASENAME."sent_recv_".PPS_UNIT."pps.eps"
+set output OUTPUT_BASENAME."sent_recv_".PPS_UNIT."pps_hun.eps"
 
 #this actually puts out the results
 p INPUT_DATA u 1:2:2:2:xtic(1) with yerrorlines pt 1 ps 3 lw 8 lt 1 lc rgb "#C9C9C9" title "Elméleti max", \
@@ -51,7 +53,7 @@ p INPUT_DATA u 1:2:2:2:xtic(1) with yerrorlines pt 1 ps 3 lw 8 lt 1 lc rgb "#C9C
 
 ### MISSED PACKETS ###
 #Setting output
-set output OUTPUT_BASENAME."miss_".PPS_UNIT."pps.eps"
+set output OUTPUT_BASENAME."miss_".PPS_UNIT."pps_hun.eps"
 p INPUT_DATA u 1:10:9:11:xtic(1) with yerrorlines pt 2 ps 3 lw 6 lt 1 dt 4 lc rgb "#F90C38" title "Elveszett-".TR1, \
   INPUT_DATA u 1:28:27:29:xtic(1) with yerrorlines pt 3 ps 3 lw 6 lt 1 dt 4 lc rgb "#F90CB9" title "Elveszett-".TR2
   
@@ -59,7 +61,9 @@ p INPUT_DATA u 1:10:9:11:xtic(1) with yerrorlines pt 2 ps 3 lw 6 lt 1 dt 4 lc rg
 #### Throughput Mbit/s #####
 ## SENT VS RECV ###
 #Setting output
-set output OUTPUT_BASENAME."sent_recv_".BPS_UNIT."bps.eps"
+set key right top samplen 5 spacing 4
+
+set output OUTPUT_BASENAME."sent_recv_".BPS_UNIT."bps_hun.eps"
 set ylabel BPS_UNIT."bit/s" offset 1.5,0 font ", 28"
 
 #this actually puts out the results
@@ -72,7 +76,7 @@ p INPUT_DATA u 1:13:12:14:xtic(1) with yerrorlines pt 4 ps 2 lw 6 lt 1 dt 2 lc r
 ### DIFFERENCE BETWEEN SENT BPS AND RECV BPS
 ## SENT VS RECV ###
 #Setting output
-set output OUTPUT_BASENAME."diff_".BPS_UNIT."bps.eps"
+set output OUTPUT_BASENAME."diff_".BPS_UNIT."bps_hun.eps"
 p INPUT_DATA u 1:19:18:20:xtic(1) with yerrorlines pt 2 ps 3 lw 6 lt 1 dt 4 lc rgb "#F90C38" title "Különbség-".TR1, \
   INPUT_DATA u 1:37:36:38:xtic(1) with yerrorlines pt 3 ps 3 lw 6 lt 1 dt 4 lc rgb "#F90CB9" title "Különbség-".TR2
 
