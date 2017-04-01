@@ -78,8 +78,8 @@
 %              'vnf_function' : "(Virtual) Network Function's Function (e.g. l2-switch, l3-router, vxlan)<span class='req'>*</span>",
 %              'vnf_num_cores' : "Set here the number of CPU cores the VNF is using. Use integer numbers!<span class='req'>*</span>",
 %              'vnf_comment' : "Comment (e.g. ivshmem + qemu version 2.3.4)<span class='req'>*</span>",
-%              'plot_language' : "Desired language for the plots (currently supported: eng,hun). To set more languages separate them" +\
-                                 "with commas but without whitespaces, e.g.,eng,hun <span class='req'>*</span>",
+%              'plot_language' : "Desired language for the plots (currently supported: eng,hun). To set more languages separate them " +\
+%                                "with commas but without whitespaces, e.g.,eng,hun <span class='req'>*</span>",
 %              'pps_unit' : "Desired Unit for Packet/s (e.g., k, M, G)<span class='req'>*</span>",
 %              'bps_unit' : "Desired Unit for Bit/s (e.g., k, M, G)<span class='req'>*</span>",
 %              'outlier_min_percentage' : "Outliers percentage for Minimum Values (e.g., 0.05). " +\
@@ -122,7 +122,7 @@
 % main_dict_heads[7] = "Traffic Generating/PktGen Related Settings"
 % main_dict[8] = nfpa_control_settings
 % main_dict_heads[8] = "Let NFPA configure your VNF"
-% list_of_values = ["packetSizes", "realisticTraffics", "trafficTypes"]
+% list_of_values = ["plot_language", "packetSizes", "realisticTraffics", "trafficTypes"]
 
 
 <h1 style="background-image:url('static/pictures/szittyaLogo_v3_patrick_small.png');

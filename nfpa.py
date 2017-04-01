@@ -659,7 +659,7 @@ if __name__ == '__main__':
     if(args.web):
         #split web argument
       
-        web_nfpa = WEBNFPA(args.name[0], args.web[0], main)
+        web_nfpa = WEBNFPA(args.name[0], args.web[0], args.cfg[0], main)
 #         web_nfpa.start()
     #cli
     else:        

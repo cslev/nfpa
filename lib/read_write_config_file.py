@@ -104,7 +104,7 @@ def readConfigFile(config_file):
     else:
         languages= plot_languages
 
-    config["plot_languages"] = languages
+    config["plot_language"] = languages
     
     config["LOG_PATH"] = os.getcwd() + "/log/"
     print("Logging directory will be: %s" % config["LOG_PATH"])
@@ -608,8 +608,8 @@ def writeConfigFile(c):
     
     file.write("### ----- Gnuplot/Presenting Related Settings -------- ###\n")
     splitToMultipleLines(cc['plot_language'], file)
-    if (c['plot_languages'] is not None):
-        for i in c['plot_languages']:
+    if (c['plot_language'] is not None):
+        for i in c['plot_language']:
             file.write("plot_language=" + str(i) + "\n")
     else:
         file.write("#plot_language=\n")

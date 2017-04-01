@@ -160,9 +160,10 @@ class ReadConfig(object):
 
         #check plot_language
         accepted_languages = ['eng', 'hun']
-        if self._config['plot_language'] not in accepted_languages:
-            self.log.error("Unsupported language (%s)" % self._config['plot_language'])
-            return -1
+        for language in self._config['plot_language']:
+            if language not in accepted_languages:
+                self.log.error("Unsupported language (%s)" % language)
+                return -1
 
 
         #check whether NFPA is going to setup the flows in the vnf

@@ -476,7 +476,7 @@ class Visualizer(object):
         self.log.debug(gnuplot_arguments)
         #synthetic traffic/measurements have different GNUplot plotter files
         if(self.type == "synthetic"):
-            for language in self.config['plot_languages']:
+            for language in self.config['plot_language']:
                 plotter_file = "/lib/plotter_" + language + ".gp"
                 #if bi directional measurement was set, we use different gnuplot file
                 if((int(self.config["biDir"]) == 1) or ul_dl):
@@ -495,7 +495,7 @@ class Visualizer(object):
                               
         #Realistic traffic/measurements have different GNUplot plotter files
         elif(self.type == "realistic"):
-            for language in self.config['plot_languages']:
+            for language in self.config['plot_language']:
                 plotter_file = "/lib/plotter_realistic_"+ language +".gp"
                 #if bi directional measurement was set, we use different gnuplot file
                 if((int(self.config["biDir"]) == 1) or ul_dl):
