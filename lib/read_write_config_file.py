@@ -28,7 +28,7 @@ def readConfigFile(config_file):
     #list of desired languages for plots
     plot_languages = []
     
-    config['version'] = "v3.5"
+    config['version'] = "v3.6"
 
     
     #Logger class will check whether DEBUG is set correctly
