@@ -68,6 +68,9 @@ class Visualizer(object):
                       self.config['port_type'] + "/"
   
 
+        res_files_location = copy.deepcopy(self.prefix)
+
+
         #check whether directory exists
         if not os.path.exists(self.prefix):
             os.makedirs(self.prefix)
@@ -96,8 +99,7 @@ class Visualizer(object):
         
         #ready
         self.log.info("[DONE]")
-        self.log.info("Charts could be found in " + self.config['MAIN_ROOT'] +\
-                    "/" + self.config['RES_DIR'])
+        self.log.info("Results could be found in " + res_files_location)
 
     
         
@@ -281,8 +283,11 @@ class Visualizer(object):
                     self.log.error("Sending ERROR email did not succeed...")
                 exit(-1)
 
-            #call gnuplot command to create chart
-            self.drawChartViaGnuplot(gp_params, ul_dl=ul_dl)
+
+            # only draw plots if initializing argument --noplot was not set
+            if self.config['no_plot'] == False:
+                #call gnuplot command to create chart
+                self.drawChartViaGnuplot(gp_params, ul_dl=ul_dl)
         
         #if realistic traffic is needed to be plotted
         elif self.type == "realistic":
@@ -391,56 +396,7 @@ class Visualizer(object):
                 #update unit in the first column
                 one_line = one_line.replace("pps", str("%spps" % pu))
                 one_line = one_line.replace("bps", str("%sbps" % bu))
-                #update column with the traffic types used for ports
-#                 one_line = one_line.replace("sent_pps",
-#                                             str("sent_%spps_%s" % (pu,
-#                                                                    tmp_tt[0])))
-#                 one_line = one_line.replace("recv_pps",
-#                                             str("recv_%spps_%s" % (pu,
-#                                                                    tmp_tt[0])))
-#                 one_line = one_line.replace("miss_pps",
-#                                             str("miss_%spps_%s" % (pu,
-#                                                                    tmp_tt[0])))
-#                 one_line = one_line.replace("sent_bps",
-#                                             str("sent_%sbps_%s" % (bu,
-#                                                                    tmp_tt[0])))
-#                 one_line = one_line.replace("recv_bps",
-#                                             str("recv_%sbps_%s" % (bu,
-#                                                                    tmp_tt[0])))
-#                 one_line = one_line.replace("diff_bps",
-#                                             str("diff_%sbps_%s" % (bu,
-#                                                                    tmp_tt[0])))
-#
-#                 #update bidirectional header elements as well
-#                 if((int(self.config['biDir']) == 1) or (ul_dl)):
-#                     one_line = one_line.replace(
-#                                            "sent_pps_bidir",
-#                                            str("sent_%spps_%s" % (pu,
-#                                                                   tmp_tt[1])))
-#                     one_line = one_line.replace(
-#                                            "recv_pps_bidir",
-#                                            str("recv_%spps_%s" % (pu,
-#                                                                   tmp_tt[1])))
-#
-#                     one_line = one_line.replace(
-#                                            "miss_pps_bidir",
-#                                            str("miss_%spps_%s" % (pu,
-#                                                                   tmp_tt[1])))
-#
-#                     one_line = one_line.replace(
-#                                            "sent_bps_bidir",
-#                                            str("sent_%sbps_%s" % (bu,
-#                                                                   tmp_tt[1])))
-#
-#                     one_line = one_line.replace(
-#                                            "recv_bps_bidir",
-#                                            str("recv_%sbps_%s" % (bu,
-#                                                                   tmp_tt[1])))
-#
-#                     one_line = one_line.replace(
-#                                            "diff_bps_bidir",
-#                                            str("diff_%sbps_%s" % (bu,
-#                                                                   tmp_tt[1])))
+
 
 
                 #write out one line
@@ -456,8 +412,11 @@ class Visualizer(object):
                     (not self.config['email_adapter'].sendErrorMail()):
                     self.log.error("Sending ERROR email did not succeed...")
                 exit(-1)
-            #call gnuplot command to create chart
-            self.drawChartViaGnuplot(gp_params, ul_dl=ul_dl)
+
+            #only draw plots if initializing argument --noplot was not set
+            if self.config['no_plot'] == False:
+                #call gnuplot command to create chart
+                self.drawChartViaGnuplot(gp_params, ul_dl=ul_dl)
                 
 
     def drawChartViaGnuplot(self, gnuplot_arguments, **params):

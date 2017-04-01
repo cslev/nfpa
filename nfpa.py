@@ -46,6 +46,10 @@ class NFPA(object):
         self.reset_terminal = kwargs.get("reset_terminal", True)
         self.no_database = kwargs.get("no_database", False)
         self.config_file = kwargs.get("config_file", "nfpa.cfg")
+
+        self.no_plot = kwargs.get("no_plot", False)
+
+
         
   
     def storePID(self, new_pid):
@@ -107,7 +111,7 @@ class NFPA(object):
         self.config['scenario_name'] = self.scenario_name
 
         
-        self.log.info(str(self.config))
+        self.log.debug(str(self.config))
         #assembling log file path
         self.log_file_path = self.config['MAIN_ROOT'] + "/log/log_" + \
                              df.getDateFormat(self.config['app_start_date']) +\
@@ -126,6 +130,8 @@ class NFPA(object):
         else:
             self.config['email_adapter'] = None
 
+        #adding no_plot variable to self.config to be able to share it later with visualizer
+        self.config['no_plot'] = self.no_plot
 
 
     def exiting(self):
@@ -339,10 +345,11 @@ class NFPA(object):
 
         # after analyzation is done, visualize results
         results = results_analyzer.getResultsDict()
+
         visualizer = Visualizer(config=self.config,
-                                 results=results,
-                                 type=tt,
-                                 traffic_trace=trace)
+                                results=results,
+                                type=tt,
+                                traffic_trace=trace)
 
         #check whether user wants to store the results in the database
         if not self.no_database:
@@ -378,7 +385,7 @@ class NFPA(object):
             for trafficType in self.config["trafficTypes"]:
                 #first, measure simple scenarios (if desired)
                 if(trafficType == "simple"):
-                    self.log.warn("SIMPLE TRACE - %s" % trafficType)
+                    self.log.info("SIMPLE TRACE - %s" % trafficType)
 
                     # configure VNF if set
                     if self.config["control_nfpa"]:
@@ -629,6 +636,11 @@ if __name__ == '__main__':
                         "mainly for development purposes, however in some testing phases one "+
                         "may do not want to make mess in the database!",
                         required=False)
+    parser.add_argument('-p', '--noplot',
+                        action="store_true",
+                        default=False,
+                        help="DO NOT CREATE PLOTS: only result files will be created.",
+                        required=False)
     parser.add_argument('-c', '--cfg', nargs=1,
                         default=['nfpa.cfg'],
                         help="Specify a path to the config file. [Default: nfpa.cfg]",
@@ -652,7 +664,8 @@ if __name__ == '__main__':
     main = NFPA(scenario_name=args.name[0],
                 reset_terminal=args.noreset,
                 no_database=args.nodatabase,
-                config_file=args.cfg[0])
+                config_file=args.cfg[0],
+                no_plot=args.noplot)
 
     
     #web based gui
