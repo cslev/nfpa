@@ -154,14 +154,14 @@ class NFPA(object):
             return # Nothing to do
 
         mod = self.config.get("control_mod")
-        err = True
+        ok = True
         if not mod:
             self.exit("Plugin for control_vnf not found: %s" % mod)
         try:
-            err = mod.configure_remote_vnf(self.config, traffictype)
+            ok = mod.configure_remote_vnf(self.config, traffictype)
         except Exception as e:
             self.log.debug('%s' % e)
-        if err:
+        if not ok:
             self.exit("Failed to configure vnf. Traffictype: %s" % traffictype)
 
 
