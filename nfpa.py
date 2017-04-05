@@ -1,8 +1,4 @@
-'''
-Created on Jun 17, 2015
-
-@author: lele
-'''
+#!/usr/bin/env python
 import os
 import sys
 import datetime
