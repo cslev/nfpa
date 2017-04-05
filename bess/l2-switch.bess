@@ -1,0 +1,46 @@
+# -*- mode: python; -*-
+
+vnf_inport = int($control_vnf_inport!'0')
+vnf_outport = int($control_vnf_outport!'0')
+infix = $scenario_infix!'simple'
+
+import re
+import struct
+import operator
+
+def mac_from_str(s):
+  return ''.join([ chr(int(c, 16)) for c in s.split(':') ])
+
+
+# ---------------------------------------------------------------------------
+
+if vnf_inport == vnf_outport:
+  port0 = PMDPort(port_id=vnf_inport)
+  input = PortInc(port=port0.name)
+  output = PortOut(port=port0.name)
+else:
+  portIn = PMDPort(port_id=vnf_inport)
+  portOut = PMDPort(port_id=vnf_outport)
+  input = PortInc(port=portIn.name)
+  output = PortInc(port=portOut.name)
+
+table0 = ExactMatch(fields=[{'offset': 6, 'size': 6}])  # src
+table2 = ExactMatch(fields=[{'offset': 0, 'size': 6}])  # dst
+table0.set_default_gate(gate=1)
+table2.set_default_gate(gate=1)
+table0:1 -> output
+table2:1 -> output
+
+filename = 'l2-switch.%s_%s.flows' % (infix, 'unidir')
+with open($MAIN_ROOT + '/of_rules/' + filename, 'r') as f:
+  for line in f:
+    m = re.search('table=0,.*,dl_src=([^,]+)', line)
+    if m:
+      table0.add(fields=[mac_from_str(m.group(1))], gate=0)
+    else:
+      m = re.search('table=2,dl_dst=([^,]+)', line)
+      if not m:
+        continue
+      table2.add(fields=[mac_from_str(m.group(1))], gate=0)
+
+input -> table0 -> table2 -> output

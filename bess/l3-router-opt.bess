@@ -1,0 +1,54 @@
+# -*- mode: python; -*-
+import struct
+import re
+
+vnf_inport = int($control_vnf_inport!'0')
+vnf_outport = int($control_vnf_outport!'0')
+infix = $scenario_infix!'simple'
+
+if vnf_inport == vnf_outport:
+  port0 = PMDPort(port_id=vnf_inport)
+  input = PortInc(port=port0.name)
+  output = PortOut(port=port0.name)
+else:
+  portIn = PMDPort(port_id=vnf_inport)
+  portOut = PMDPort(port_id=vnf_outport)
+  input = PortInc(port=portIn.name)
+  output = PortInc(port=portOut.name)
+
+# ---------------------------------------------------------------------------
+
+l3fib = IPLookup()
+
+filename = 'l3-router.%s_%s.flows' % (infix, 'unidir')
+with open($MAIN_ROOT + '/of_rules/' + filename, 'r') as f:
+  for line in f:
+    m = re.search('nw_dst=([^/]+)/(\d+).*group:(\d+)', line)
+    if not m:
+      continue
+    l3fib.add(prefix=m.group(1), prefix_len=int(m.group(2)),
+              gate=int(m.group(3)))
+ret = l3fib.add(prefix='0.0.0.0', prefix_len=0, gate=0)
+
+filename = 'l3-router.%s_%s.groups' % (infix, 'unidir')
+with open($MAIN_ROOT + '/of_rules/' + filename, 'r') as f:
+  for line in f:
+    m = re.search('group_id=(\d+),.*mod_dl_src:([^,]+),mod_dl_dst:([^,]+)',
+                  line)
+    if not m:
+      continue
+    gin = int(m.group(1))
+    src = int(m.group(2).replace(':', ''), 16)
+    dst = int(m.group(3).replace(':', ''), 16)
+    u_dst = Update(fields=[{'offset': 0, 'size': 6, 'value': dst}])
+    u_src = Update(fields=[{'offset': 6, 'size': 6, 'value': src}])
+    l3fib:gin -> u_dst -> u_src -> output
+
+ethertype = ExactMatch(fields=[{'offset': 12, 'size':2}])
+ethertype.add(fields=[struct.pack("!H", 0x0806)], gate=1)  # ARP
+ethertype.add(fields=[struct.pack("!H", 0x0800)], gate=0)  # IPv4
+ethertype.set_default_gate(gate=2)
+
+input -> ethertype -> UpdateTTL() -> IPChecksum() -> l3fib
+ethertype:1 -> output
+ethertype:2 -> output
