@@ -149,17 +149,27 @@ class NFPA(object):
         if not self.config["control_nfpa"]:
             return # Nothing to do
 
-        mod = self.config.get("control_mod")
-        ok = True
-        if not mod:
-            self.exit("Plugin for control_vnf not found: %s" % mod)
+        obj = self.config.get("control_obj")
+        ok = False
+        if not obj:
+            self.exit("Plugin for control_vnf not found: %s" % obj)
         try:
-            ok = mod.configure_remote_vnf(self.config, traffictype)
+            ok = obj.configure_remote_vnf(traffictype)
         except Exception as e:
             self.log.debug('%s' % e)
         if not ok:
             self.exit("Failed to configure vnf. Traffictype: %s" % traffictype)
 
+    def stopVNFRemote(self):
+        if not self.config["control_nfpa"]:
+            return # Nothing to do
+
+        obj = self.config.get("control_obj")
+        try:
+            obj.stop_remote_vnf()
+        except Exception as e:
+            self.log.debug('%s' % e)
+            self.exit("Failed to stop vnf")
 
     def startAnalyzing(self, traffic_type, traffic_trace):
         '''
@@ -307,8 +317,8 @@ class NFPA(object):
                     #ok, we got measurements for a given traffic trace
                     #with all the defined packetsizes
 
-                # Start analyzing existing results, make plots and insert
-                #data into the database
+                self.stopVNFRemote()
+                # Analyze results, make plots and insert into the database
                 self.startAnalyzing("synthetic", trafficType)
 
         
@@ -350,7 +360,7 @@ class NFPA(object):
                     
                 self.repeatedly_call_pktgen(cmd)
 
-                # Start analyzing existing results
+                self.stopVNFRemote()
                 self.startAnalyzing("realistic", realistic)
 
 

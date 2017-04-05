@@ -171,7 +171,8 @@ class ReadConfig(object):
             try:
                 mod_name = self._config["control_vnf"]
                 module = importlib.import_module("plugin.%s" % mod_name)
-                self._config["control_mod"] = module
+                obj = module.VNFControl(self._config)
+                self._config["control_obj"] = obj
             except Exception as e:
                 self.log.debug("%s" % e)
                 self.log.error("The control_vnf (%s) is not supported!" %
