@@ -64,8 +64,8 @@ class VNFControl(Base):
     args = []
     self.config['scenario_infix'] = traffictype
     for var in ['control_vnf_inport', 'control_vnf_outport',
-                'scenario_infix', 'MAIN_ROOT']:
-      args.append('%s=\\"%s\\"' % (var, self.config[var]))
+                'scenario_infix', 'vnf_args', 'MAIN_ROOT']:
+      args.append('%s=\\"%s\\"' % (var, self.config.get(var, '')))
     cmd = cmd + ', '.join(args)
     self.invoke(cmd, 'Starting pipeline')
 

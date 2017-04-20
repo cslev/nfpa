@@ -293,6 +293,9 @@ def getConfigComments():
                     "New feature since NFPA v2. Set here the number of cpu " +
                     "cores the vnf is using",
                     
+                    'vnf_args':
+                    'Additional arguments for VNF',
+                    
                     'vnf_comment':
                     "Write here some comment to the function, for instance, " +
                     "ivshmem or userspace vhost for virtual ethernet, or " +
