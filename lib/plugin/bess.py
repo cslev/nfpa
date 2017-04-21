@@ -56,6 +56,10 @@ class VNFControl(Base):
     time.sleep(2)   # Wait for the daemon to start
                     # FIXME: Should read deamon output
 
+    cmd = self.base_cmd + ' show version'
+    version = subprocess.check_output(cmd, shell=True)
+    self.config['vnf_version'] = version.strip()
+
     inport = self.config["control_vnf_inport"]
     outport = self.config["control_vnf_outport"]
     pipeline = self.config["vnf_function"] + '.bess'
