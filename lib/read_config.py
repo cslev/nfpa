@@ -8,6 +8,7 @@ import logger as l
 import copy
 import time
 import datetime
+import importlib
 import special_bidir_traffic_checker as sbtc
 import read_write_config_file as rwcf
 from send_mail import EmailAdapter
@@ -74,43 +75,22 @@ class ReadConfig(object):
         
         self._config['helper_header'] = ['min', 'avg', 'max']
 
-
-
         self.log = l.getLogger( self.__class__.__name__,
                                 self._config['LOG_LEVEL'],
                                 self._config['app_start_date'],
                                 self._config['LOG_PATH'])
 
-        # self.log=logging.getLogger(self.__class__.__name__)
-
-
-        # set supported control APIs
-        self._config["controllers"] = ("openflow")
-
-
-        
         #create an instance of database helper and store it in config dictionary
         self._config["dbhelper"] = SQLiteDatabaseAdapter(self._config)
-
-
 
         # parse config params
         configSuccess = self.checkConfig()
         if (configSuccess == -1):
             return -1
 
-
-        #calculate time left
         self.calculateTimeLeft()
-        
-        #create res dir
         self.createResultsDir()
-        
-
-        #assemble pktgen command
         self.assemblePktgenCommand()
-          
-        #create symlinks for lua files
         self.createSymlinksForLuaScripts()
 
 
@@ -188,8 +168,15 @@ class ReadConfig(object):
             #convert it first to lowercase
             self._config["control_vnf"] = self._config["control_vnf"].lower()
             #check whether it is supported
-            if self._config["control_vnf"] not in self._config["controllers"]:
-                self.log.error("The control_vnf (%s) is not supported!")
+            try:
+                mod_name = self._config["control_vnf"]
+                module = importlib.import_module("plugin.%s" % mod_name)
+                obj = module.VNFControl(self._config)
+                self._config["control_obj"] = obj
+            except Exception as e:
+                self.log.debug("%s" % e)
+                self.log.error("The control_vnf (%s) is not supported!" %
+                               self._config["control_vnf"])
                 self.log.error("Disable control_nfpa in nfpa.cfg and configure your vnf manually")
                 exit(-1)
 
@@ -385,87 +372,9 @@ class ReadConfig(object):
 #                     exit(-1)
         #PORT MASK = OK
 
+        self.check_available_hugepages()
 
-        #Check available hugepages
-        # first get the relevant information from the OS
-        #commands for getting hugepage information
-        free_hugepages_cmd = "cat /proc/meminfo |grep HugePages_Free"
-        total_hugepages_cmd = "cat /proc/meminfo | grep HugePages_Total"
-        hugepage_size_cmd = "cat /proc/meminfo|grep Hugepagesize"
-
-        #get the data - invoce.check_retval will analyze the return values as well, and as a third
-        #parameter, we need to pass him our self.log instance to make him able to write out error messages
-        free_hugepages = (invoke.invoke(command=free_hugepages_cmd,
-                                        logger=self.log))[0]
-        total_hugepages = (invoke.invoke(command=total_hugepages_cmd,
-                                        logger=self.log))[0]
-        hugepage_size = (invoke.invoke(command=hugepage_size_cmd,
-                                        logger=self.log))[0]
-
-        #get the second part of the outputs
-        free_hugepages = free_hugepages.split(":")[1]
-        total_hugepages = total_hugepages.split(":")[1]
-        tmp_hugepage_size = copy.deepcopy(hugepage_size)
-        #this looks like : "Hugepagesize:       2048 kB"
-        #first we get the right part after the colon, then we remove the whitespaces from '       2048 kB.
-        #Finally we split that again with whitespace, and gets the first apart of the list, which is 2048
-        hugepage_size = hugepage_size.split(":")[1].strip().split(" ")[0]
-        hugepage_size_unit = tmp_hugepage_size.split(":")[1].strip().split(" ")[1]
-        #remove whitespaces
-        free_hugepages = free_hugepages.strip()
-        total_hugepages = total_hugepages.strip()
-        hugepage_size = hugepage_size.strip()
-        hugepage_size_unit = hugepage_size_unit.strip()
-
-        #convert them to int
-        free_hugepages = int(free_hugepages)
-        total_hugepages = int(total_hugepages)
-        #save total hugepages in self.config in order to calculate with it when the whole process'
-        #estimated time is calculated - zeroiung 1 hugepage takes approx. 0.5s
-        self._config["total_hugepages"]=total_hugepages
-
-        hugepage_size = int(hugepage_size)
-        #check wheter hugepage size unit is kB (until now (2016), there are defined in kB)
-        if(hugepage_size_unit == "kB"):
-            hugepage_size = hugepage_size/1024
-        else:
-            self.error("Cannot determine Hugepage size (check lines 364-405 in read_config.py to improve code) :(")
-            return -1
-
-        self.log.info("Hugepage size in MB: %s" % hugepage_size)
-        self.log.info("Total hugepages: %s" % total_hugepages)
-        self.log.info("Free hugepages: %s " % free_hugepages)
-
-        if(total_hugepages == 0):
-            self.log.error("Hugepages are not enabled? Check the output of: cat /proc/meminfo |grep -i hugepages")
-            return -1
-
-        if(free_hugepages == 0):
-            self.log.error("There is no hugepages left! Check the output of: cat /proc/meminfo |grep -i hugepages")
-            return -1
-
-        # check socket_mem param if exists or not empty
-        if (("socket_mem" in self._config) and (len(self._config["socket_mem"]) > 0)):
-            # socket_mem parameter could have more than one important value due to the NUMA awareness
-            # In this case, it is separated via a ',' (comma), so parse this value
-            socket_mem_list = self._config["socket_mem"].split(',')
-            # check if the required number of hugepages are enough
-            usable_hugepages = free_hugepages * hugepage_size
-            for i in socket_mem_list:
-                # no NUMA config was set
-                socket_mem = int(i)
-                usable_hugepages-=socket_mem
-            if(usable_hugepages >= 0):
-                self.log.info("There were enough hugepages to initialize pktgen (req: %s (MB), avail:%s! (MB)" % (self._config["socket_mem"],
-                                                                                                      (free_hugepages*hugepage_size)))
-            else:
-                self.log.error("Insufficient hugepages! Your required setting '%s' (MB) does not correspond to the available " \
-                               "resources %s (MB)" %(self._config["socket_mem"], (free_hugepages*hugepage_size)))
-                self.log.error("Check the output of: cat /proc/meminfo |grep -i hugepages")
-                return -1
-
-
-    #check biDir param
+        #check biDir param
         try:
             self._config["biDir"] = int((self._config["biDir"]))
             #check the value
@@ -944,15 +853,88 @@ class ReadConfig(object):
         #close file
         lua_cfg_file.close()
 
-        
+    def check_available_hugepages(self):
+        filename = '/sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages'
+        with open(filename,'r') as f:
+            self._config["total_hugepages"]= int(f.read())
+        self.log.info('total_hugepages: %s' % self._config["total_hugepages"])
 
+        self.log.warn('check socket_mem availability: TODO')
         
-        
-        
-        
-        
-        
-        
-        
-        
-                
+    def check_available_hugepages_orig(self):
+        # first get the relevant information from the OS
+        #commands for getting hugepage information
+        free_hugepages_cmd = "cat /proc/meminfo |grep HugePages_Free"
+        total_hugepages_cmd = "cat /proc/meminfo | grep HugePages_Total"
+        hugepage_size_cmd = "cat /proc/meminfo|grep Hugepagesize"
+
+        #get the data - invoce.check_retval will analyze the return values as well, and as a third
+        #parameter, we need to pass him our self.log instance to make him able to write out error messages
+        free_hugepages = (invoke.invoke(command=free_hugepages_cmd,
+                                        logger=self.log))[0]
+        total_hugepages = (invoke.invoke(command=total_hugepages_cmd,
+                                        logger=self.log))[0]
+        hugepage_size = (invoke.invoke(command=hugepage_size_cmd,
+                                        logger=self.log))[0]
+
+        #get the second part of the outputs
+        free_hugepages = free_hugepages.split(":")[1]
+        total_hugepages = total_hugepages.split(":")[1]
+        tmp_hugepage_size = copy.deepcopy(hugepage_size)
+        #this looks like : "Hugepagesize:       2048 kB"
+        #first we get the right part after the colon, then we remove the whitespaces from '       2048 kB.
+        #Finally we split that again with whitespace, and gets the first apart of the list, which is 2048
+        hugepage_size = hugepage_size.split(":")[1].strip().split(" ")[0]
+        hugepage_size_unit = tmp_hugepage_size.split(":")[1].strip().split(" ")[1]
+        #remove whitespaces
+        free_hugepages = free_hugepages.strip()
+        total_hugepages = total_hugepages.strip()
+        hugepage_size = hugepage_size.strip()
+        hugepage_size_unit = hugepage_size_unit.strip()
+
+        #convert them to int
+        free_hugepages = int(free_hugepages)
+        total_hugepages = int(total_hugepages)
+        #save total hugepages in self.config in order to calculate with it when the whole process'
+        #estimated time is calculated - zeroiung 1 hugepage takes approx. 0.5s
+        self._config["total_hugepages"]=total_hugepages
+
+        hugepage_size = int(hugepage_size)
+        #check wheter hugepage size unit is kB (until now (2016), there are defined in kB)
+        if(hugepage_size_unit == "kB"):
+            hugepage_size = hugepage_size/1024
+        else:
+            self.error("Cannot determine Hugepage size (check lines 364-405 in read_config.py to improve code) :(")
+            return -1
+
+        self.log.info("Hugepage size in MB: %s" % hugepage_size)
+        self.log.info("Total hugepages: %s" % total_hugepages)
+        self.log.info("Free hugepages: %s " % free_hugepages)
+
+        if(total_hugepages == 0):
+            self.log.error("Hugepages are not enabled? Check the output of: cat /proc/meminfo |grep -i hugepages")
+            return -1
+
+        if(free_hugepages == 0):
+            self.log.error("There is no hugepages left! Check the output of: cat /proc/meminfo |grep -i hugepages")
+            return -1
+
+        # check socket_mem param if exists or not empty
+        if (("socket_mem" in self._config) and (len(self._config["socket_mem"]) > 0)):
+            # socket_mem parameter could have more than one important value due to the NUMA awareness
+            # In this case, it is separated via a ',' (comma), so parse this value
+            socket_mem_list = self._config["socket_mem"].split(',')
+            # check if the required number of hugepages are enough
+            usable_hugepages = free_hugepages * hugepage_size
+            for i in socket_mem_list:
+                # no NUMA config was set
+                socket_mem = int(i)
+                usable_hugepages-=socket_mem
+            if(usable_hugepages >= 0):
+                self.log.info("There were enough hugepages to initialize pktgen (req: %s (MB), avail:%s! (MB)" % (self._config["socket_mem"],
+                                                                                                      (free_hugepages*hugepage_size)))
+            else:
+                self.log.error("Insufficient hugepages! Your required setting '%s' (MB) does not correspond to the available " \
+                               "resources %s (MB)" %(self._config["socket_mem"], (free_hugepages*hugepage_size)))
+                self.log.error("Check the output of: cat /proc/meminfo |grep -i hugepages")
+                return -1

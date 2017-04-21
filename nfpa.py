@@ -1,8 +1,4 @@
-'''
-Created on Jun 17, 2015
-
-@author: lele
-'''
+#!/usr/bin/env python
 import os
 import sys
 import datetime
@@ -16,12 +12,12 @@ from visualizer import Visualizer
 from database_handler import DatabaseHandler
 from send_mail import EmailAdapter
 import time
+import importlib
 
 import special_bidir_traffic_checker as sbtc
 import logger as l
 import date_formatter as df
 import invoke as invoke
-import flow_rules_preparator as flow_prep
 
 #required for loading classes under web/
 sys.path.append("web/")
@@ -134,183 +130,46 @@ class NFPA(object):
         self.config['no_plot'] = self.no_plot
 
 
-    def exiting(self):
+    def exit(self, msg="EXITING..."):
         '''
-        This small function only prints out EXITING and call system.exit with
-        ERROR status -1.
-        Used only for function checkConfig()'s return values 
+        Print out MSG and call system.exit with ERROR status -1.
         '''
-        self.log.error("EXITING...")
+        self.log.error(msg)
         if (self.config['email_adapter'] is not None) and \
             (not self.config['email_adapter'].sendErrorMail()):
             self.log.error("Sending ERROR email did not succeed...")
         exit(-1)
         
-    def configureVNFRemote(self, vnf_function, traffictype):
+    def configureVNFRemote(self, traffictype):
         '''
-        This function will configure the remote vnf via pre-installed tools
-        located on the same machine where NFPA is.
-        Only works for some predefined vnf_function and traffictraces
-
-        :return: True - if success, False - if not
+        Configure the remote vnf via pre-installed tools located on the same
+        machine where NFPA is.  Only works for some predefined vnf_function
+        and traffictraces.
         '''
+        if not self.config["control_nfpa"]:
+            return # Nothing to do
 
-        #the path to the openflow rules
-        of_path = self.config["MAIN_ROOT"] + "/of_rules/"
-        # temporary variable for bidir status - it is needed for flow_rules_preparator
-        bidir = False
+        obj = self.config.get("control_obj")
+        ok = False
+        if not obj:
+            self.exit("Plugin for control_vnf not found: %s" % obj)
+        try:
+            ok = obj.configure_remote_vnf(traffictype)
+        except Exception as e:
+            self.log.debug('%s' % e)
+        if not ok:
+            self.exit("Failed to configure vnf. Traffictype: %s" % traffictype)
 
-        #handle here OpenFlow and setup via ovs-ofctl
-        if self.config["control_vnf"].lower() == "openflow":
+    def stopVNFRemote(self):
+        if not self.config["control_nfpa"]:
+            return # Nothing to do
 
-            # first, delete the flows
-            ofctl_cmd = self.config["control_path"] + " " + \
-                        self.config["control_args"] +\
-                        " <C> " + \
-                        self.config["control_mgmt"] + " "
-            cmd = ofctl_cmd.replace("<C>", "del-flows")
-            self.log.debug("control cmd: %s" % cmd)
-            invoke.invoke(command=cmd,
-                          logger=self.log,
-                          email_adapter=self.config['email_adapter'])
-            self.log.info("Flow rules deleted")
-
-            # second, delete groups
-            cmd = ofctl_cmd.replace("<C>", "del-groups")
-            self.log.debug("control cmd: %s" % cmd)
-            invoke.invoke(command=cmd,
-                          logger=self.log,
-                          email_adapter=self.config['email_adapter'])
-            self.log.info("Groups deleted")
-
-            #OK, flows are deleted, so replace 'del-flows' to 'add-flows' for
-            # easier usage later
-            cmd = ofctl_cmd.replace("<C>", "add-flows")
-            #first check vnf_function, if it is bridge, then no special stuff needs
-            #to be setup regardless of the traces
-            ############     BRIDGE ###########
-            if self.config["vnf_function"].lower() == "bridge":
-                #add birdge rules - located under of_rules
-                scenario_path = vnf_function + "_unidir.flows"
-                if not (os.path.isfile(str(of_path + scenario_path))):
-                    self.log.error("Missing flow rule file: %s" % scenario_path)
-                    self.log.error("NFPA does not know how to configure VNF to act as a bridge")
-                    self.log.error("More info: http://ios.tmit.bme.hu/nfpa")
-                    if (self.config['email_adapter'] is not None) and \
-                        (not self.config['email_adapter'].sendErrorMail()):
-                        self.log.error("Sending ERROR email did not succeed...")
-                    exit(-1)
-
-                if self.config["biDir"] == 1:
-                    #change flow rule file if bidir was set
-                    scenario_path = scenario_path.replace("unidir","bidir")
-                    bidir=True
-
-                #prepare flow rule file
-                scenario_path = flow_prep.prepareOpenFlowRules(self.log,
-                                                               of_path,
-                                                               scenario_path,
-                                                               self.config["control_vnf_inport"],
-                                                               self.config["control_vnf_outport"],
-                                                               bidir)
-                cmd = ofctl_cmd.replace("<C>","add-flows") + scenario_path
-                self.log.info("add-flows via '%s'" % cmd)
-                invoke.invoke(command=cmd,
-                              logger=self.log,
-                              email_adapter=self.config['email_adapter'])
-                # print out stdout if any
-                self.log.info("Flows added")
-                return True
-            ############    =============   ###########
-
-
-            ############     OTHER CASES    ###########
-            #check whether flow rules exists?
-            #convention vnf_function.trace_direction.flows
-            scenario_path = vnf_function + "." + traffictype + "_unidir.flows"
-            if not (os.path.isfile(str(of_path + scenario_path))):
-                self.log.error("Missing flow rule file: %s" % scenario_path)
-                self.log.error("NFPA does not know how to configure VNF to act as " + \
-                               "%s for the given trace %s" % (vnf_function,traffictype))
-                self.log.error("More info: http://nfpa.tmit.bme.hu")
-                if (self.config['email_adapter'] is not None) and \
-                    (not self.config['email_adapter'].sendErrorMail()):
-                    self.log.error("Sending ERROR email did not succeed...")
-                exit(-1)
-
-
-            #If flow file exists try to find corresponding groups
-            scenario_path = scenario_path.replace(".flows",".groups")
-            self.log.info("Looking for group file: %s" % scenario_path)
-            if (os.path.isfile(str(of_path + scenario_path))):
-                self.log.info("Group file found for this scenario: %s" % scenario_path)
-                #prepare group file, i.e., replace port related meta data
-                group_path = flow_prep.prepareOpenFlowRules(self.log,
-                                                               of_path,
-                                                               scenario_path,
-                                                               self.config["control_vnf_inport"],
-                                                               self.config["control_vnf_outport"],
-                                                               False) #TODO: bidir handling here
-                cmd = ofctl_cmd.replace("<C>","add-groups")
-                cmd += " " + group_path
-                self.log.info("add-groups via '%s'" % cmd)
-                invoke.invoke(command=cmd,
-                              logger=self.log,
-                              email_adapter=self.config['email_adapter'])
-            else:
-                self.log.info("No group file was found...continue")
-
-            #change back to the .flows file from .groups
-            scenario_path = scenario_path.replace(".groups", ".flows")
-
-            #if biDir is set, then other file is needed where the same rules are present
-            #in the reverse direction
-            if (int(self.config["biDir"]) == 1):
-                #biDir for remote vnf configuration is currently not supported!
-                self.log.error("Configuring your VNF by NFPA for bi-directional scenario " +
-                               "is currently not supported")
-                self.log.error("Please verify your nfpa.cfg")
-                if (self.config['email_adapter'] is not None) and \
-                    (not self.config['email_adapter'].sendErrorMail()):
-                    self.log.error("Sending ERROR email did not succeed...")
-                exit(-1)
-                #save biDir setting in a boolean to later use for flow_prep.prepareOpenFlowRules()
-                # bidir = True
-                # scenario_path=scenario_path.replace("unidir","bidir")
-                # if not (os.path.isfile(str(of_path + scenario_path))):
-                #     self.log.error("Missing flow rule file: %s" % scenario_path)
-                #     self.log.error("NFPA does not know how to configure VNF to act as " + \
-                #                    "%s for the given trace %s in bi-directional mode" %
-                #                    (vnf_function,traffictype))
-                #     self.log.error("More info: http://ios.tmit.bme.hu/nfpa")
-                #     exit(-1)
-
-            #replace metadata in flow rule files
-            scenario_path = flow_prep.prepareOpenFlowRules(self.log,
-                                                           of_path,
-                                                           scenario_path,
-                                                           self.config["control_vnf_inport"],
-                                                           self.config["control_vnf_outport"],
-                                                           bidir)
-            #assemble command ovs-ofctl
-            cmd = ofctl_cmd.replace("<C>","add-flows") + scenario_path
-            self.log.info("add-flows via '%s'" % cmd)
-            self.log.info("This may take some time...")
-            invoke.invoke(command=cmd,
-                          logger=self.log,
-                          email_adapter=self.config['email_adapter'])
-            self.log.info("Flows added")
-            return True
-        ############    =============   ###########
-
-
-        else:
-            self.log.error("Currently, only openflow is supported!")
-            if (self.config['email_adapter'] is not None) and \
-                (not self.config['email_adapter'].sendErrorMail()):
-                self.log.error("Sending ERROR email did not succeed...")
-            exit(-1)
-
+        obj = self.config.get("control_obj")
+        try:
+            obj.stop_remote_vnf()
+        except Exception as e:
+            self.log.debug('%s' % e)
+            self.exit("Failed to stop vnf")
 
     def startAnalyzing(self, traffic_type, traffic_trace):
         '''
@@ -362,6 +221,26 @@ class NFPA(object):
             (not self.config['email_adapter'].sendResultsMail(trace, is_synthetic)):
             self.log.warn("Sending email did not succeed...SKIPPING")
 
+    def repeatedly_call_pktgen(self, cmd):
+        self.log.info("PKTgen command: %s" % cmd)
+
+        #sleep 1s for reading command
+        time.sleep(1)
+
+        #change dir to pktgen's main dir
+        cd_cmd = "cd " + self.config["PKTGEN_ROOT"]
+
+        #concatenate main command
+        main_cmd = cd_cmd + " && " + cmd
+
+        #start pktgen in measurement_num times
+        for i in range(0, int(self.config["measurement_num"])):
+            #here should be start the actual pktgen command!
+            #we can't use our invoke function, since we could
+            #not follow pktgen's output due to forking
+            retval = os.system(main_cmd)
+            if (retval != 0):
+                self.exit("ERROR OCCURRED DURING STARTING PKTGEN")
 
     def startPktgenMeasurements(self):
         '''
@@ -383,19 +262,11 @@ class NFPA(object):
 
             #iterate through traffic types
             for trafficType in self.config["trafficTypes"]:
+                self.log.info("Traffic type: %s" % trafficType)
+                self.configureVNFRemote(trafficType)
+
                 #first, measure simple scenarios (if desired)
                 if(trafficType == "simple"):
-                    self.log.info("SIMPLE TRACE - %s" % trafficType)
-
-                    # configure VNF if set
-                    if self.config["control_nfpa"]:
-                        if not self.configureVNFRemote(self.config["vnf_function"],trafficType):
-                            # configuring vnf did not succeed
-                            if (self.config['email_adapter'] is not None) and \
-                                (not self.config['email_adapter'].sendErrorMail()):
-                                self.log.error("Sending ERROR email did not succeed...")
-                            exit(-1)
-
                     #create config file for LUA script
                     self.rc.generateLuaConfigFile(trafficType,
                                                   self.config["packetSizes"],
@@ -403,42 +274,10 @@ class NFPA(object):
                     #append simple lua script to pktgen command
                     cmd = self.rc.assemblePktgenCommand()
                     cmd += " -f nfpa_simple.lua"
-                    self.log.info("PKTgen command: %s" % cmd)
 
-                    #sleep 1s for reading command
-                    time.sleep(1)
-
-                    #change dir to pktgen's main dir
-                    cd_cmd = "cd " + self.config["PKTGEN_ROOT"]
-
-                    #concatenate main command
-                    main_cmd = cd_cmd + " && " + cmd
-                    #here should be start the actual pktgen command!
-                    #we can't use our invoke function, since we could
-                    #not follow pktgen's output due to forking
-
-                    #start pktgen in measurement_num times
-                    for i in range(0, int(self.config["measurement_num"])):
-                        retval = os.system(main_cmd)
-                        if (retval != 0):
-                            self.log.error("ERROR OCCURRED DURING STARTING PKTGEN")
-
-                            if (self.config['email_adapter'] is not None) and \
-                                    (not self.config['email_adapter'].sendErrorMail()):
-                                self.log.error("Sending ERROR email did not succeed...")
-                            exit(-1)
-
+                    self.repeatedly_call_pktgen(cmd)
 
                 else:
-                    # configure VNF if set
-                    if self.config["control_nfpa"]:
-                        if not self.configureVNFRemote(self.config["vnf_function"], trafficType):
-                            # configuring vnf did not succeed
-                            if (self.config['email_adapter'] is not None) and \
-                                (not self.config['email_adapter'].sendErrorMail()):
-                                self.log.error("Sending ERROR email did not succeed...")
-                            exit(-1)
-
                     for ps in self.config['packetSizes']:
                         #create config file for LUA script
                         self.rc.generateLuaConfigFile(trafficType,
@@ -474,34 +313,12 @@ class NFPA(object):
                                     "/PCAP/nfpa." + tmp_tt[1] + "." + \
                                     ps + "bytes.pcap"
 
-                        self.log.info(cmd)
-                        #sleep 1s for reading command
-                        time.sleep(1)
-
-
-                        #change dir to pktgen's main dir
-                        cd_cmd = "cd " + self.config["PKTGEN_ROOT"]
-                        #concatenate main command
-                        main_cmd = cd_cmd + " && " + cmd
-
-                        # start pktgen in measurement_num times
-                        for i in range(0, int(self.config["measurement_num"])):
-                            #here should be start the actual pktgen command!
-                            #we can't use our invoke function, since we could
-                            #not follow pktgen's output due to forking
-                            retval=os.system(main_cmd)
-                            if(retval != 0):
-                                self.log.error("ERROR OCCURRED DURING STARTING PKTGEN")
-
-                                if (self.config['email_adapter'] is not None) and \
-                                    (not self.config['email_adapter'].sendErrorMail()):
-                                    self.log.error("Sending ERROR email did not succeed...")
-                                exit(-1)
+                        self.repeatedly_call_pktgen(cmd)
                     #ok, we got measurements for a given traffic trace
                     #with all the defined packetsizes
 
-                # Start analyzing existing results, make plots and insert
-                #data into the database
+                self.stopVNFRemote()
+                # Analyze results, make plots and insert into the database
                 self.startAnalyzing("synthetic", trafficType)
 
         
@@ -541,36 +358,13 @@ class NFPA(object):
                             ":" + self.config['MAIN_ROOT'] + \
                             "/PCAP/nfpa." + tmp_tt[1] + ".pcap"         
                     
-                self.log.info(cmd)
-                
-                #sleep 1s for reading command
-                time.sleep(1)
-                
-                #change dir to pktgen's main dir
-                cd_cmd = "cd " + self.config["PKTGEN_ROOT"]
-                #concatenate main command
-                main_cmd = cd_cmd + " && " + cmd
+                self.repeatedly_call_pktgen(cmd)
 
-                # start pktgen in measurement_num times
-                for i in range(0, int(self.config["measurement_num"])):
-                    #here should be start the actual pktgen command!
-                    #we can't use our invoke function, since we could
-                    #not follow pktgen's output due to forking
-                    retval=os.system(main_cmd)
-                    if(retval != 0):
-                        self.log.error("ERROR OCCURRED DURING STARTING PKTGEN")
-
-
-                        if (self.config['email_adapter'] is not None) and \
-                            (not self.config['email_adapter'].sendErrorMail()):
-                            self.log.error("Sending ERROR email did not succeed...")
-                        exit(-1)
-
-                # Start analyzing existing results
+                self.stopVNFRemote()
                 self.startAnalyzing("realistic", realistic)
-             
 
-        
+
+
         #after everything is done, delete unnecessary res files
         self.deleteResFiles()
 
@@ -679,7 +473,7 @@ if __name__ == '__main__':
         #initiliaze if no web GUI was started
         status = main.initialize()
         if(status == -1):
-            main.exiting()
+            main.exit()
 
         try:
             #start PktGen based measurements
