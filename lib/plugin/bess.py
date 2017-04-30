@@ -44,17 +44,21 @@ class VNFControl(Base):
 
     # Start the daemon
 
-    cmd = 'ssh -L 127.0.0.1:10514:127.0.0.1:10514 %s sudo %s -f -k'
-    cmd = cmd % (self.hostname, self.bessd)
+    cmd = ['ssh', '-L', '127.0.0.1:10514:127.0.0.1:10514', self.hostname]
+    cmd.append('sudo %s -f -k' % self.bessd)
     self.logfile = open('/tmp/nfpa-bessd.log', 'w')
     try:
-      self.daemon = subprocess.Popen(cmd, shell=True,
+      self.daemon = subprocess.Popen(cmd, shell=False,
                                      stdout=self.logfile, stderr=self.logfile)
     except Exception as e:
       self.log.error('Failed to start daemon with %s' % cmd)
       raise e
     time.sleep(2)   # Wait for the daemon to start
                     # FIXME: Should read deamon output
+
+    cmd = self.base_cmd + ' show version'
+    version = subprocess.check_output(cmd, shell=True)
+    self.config['vnf_version'] = version.strip()
 
     inport = self.config["control_vnf_inport"]
     outport = self.config["control_vnf_outport"]
@@ -76,6 +80,4 @@ class VNFControl(Base):
     self.invoke(cmd, 'Stoping bess')
     time.sleep(1)
     self.daemon.terminate()
-    time.sleep(1)
-    self.daemon.kill()
     self.logfile.close()
