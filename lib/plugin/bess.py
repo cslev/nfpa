@@ -39,8 +39,11 @@ class VNFControl(Base):
     if int(self.config["biDir"]) != 0:
       raise Exception("biDir is not 0")
 
-    bess_path = path.abspath(path.join(path.dirname(__file__),
-                                       '..', '..', 'bess'))
+
+    bess_path = path.abspath(path.join(self.config['MAIN_ROOT'],
+                                       'bess'))
+#    bess_path = path.abspath(path.join(path.dirname(__file__),
+#                                      '..', '..', 'bess'))
 
     # Start the daemon
 
