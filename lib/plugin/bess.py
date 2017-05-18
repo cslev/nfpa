@@ -15,6 +15,7 @@ It relies on the following config parameters:
 "control_vnf_outport: (dpdk) output port number
 "vnf_function": name of the bess script.
                 (filename:  $MAIN_ROOT/bess/$vnf_function.bess)
+"vnf_num_cores": number of bess workers
 "biDir": must be 0
 """
 
@@ -71,7 +72,8 @@ class VNFControl(Base):
     args = []
     self.config['scenario_infix'] = traffictype
     for var in ['control_vnf_inport', 'control_vnf_outport',
-                'scenario_infix', 'vnf_args', 'MAIN_ROOT']:
+                'scenario_infix', 'vnf_args', 'vnf_num_cores',
+                'MAIN_ROOT']:
       args.append('%s=\\"%s\\"' % (var, self.config.get(var, '')))
     cmd = cmd + ', '.join(args)
     self.invoke(cmd, 'Starting pipeline')
