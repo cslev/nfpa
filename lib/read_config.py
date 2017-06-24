@@ -4,6 +4,8 @@ Created on Jun 17, 2015
 @author: lele
 '''
 import os
+from wx.build import cfg_version
+
 import logger as l
 import copy
 import time
@@ -12,6 +14,9 @@ import importlib
 import special_bidir_traffic_checker as sbtc
 import read_write_config_file as rwcf
 from send_mail import EmailAdapter
+
+#for concatenating config files
+import fileinput
 
 import subprocess
 import invoke as invoke
@@ -51,8 +56,32 @@ class ReadConfig(object):
 
         #dictionary for storing configuration parameters read from config file
         self._config = {}
+
+        #config_file is just the basename of the separated config files
+        #first, we concatenate them into one file, then use the old one-config-file approach
+        postfixes = ['user','email','nfpanode','nf_hw','nf_data','nf_ctrl','traffic','gnuplot']
+        cfg_files = list()
+        for i in postfixes:
+            cfg_files.append(config_file + "." + i)
+
+        concatenated_config_file_name = "nfpa_main_generated.cfg"
+        with open(concatenated_config_file_name,'w') as fout:
+            fout.write("#GENERATED CONFIG FILE - MODIFYING IT DOES NOT HAVE ANY EFFECT!\n")
+            fout.write("#Create your own configuration with [CONFIG_FILE_PREFIX]. and the following endings:\n")
+            fout.write("#")
+            for p in postfixes:
+                fout.write(p)
+            fout.write("\n")
+            fout.write("#For more information read nfpa.cfg.README\n")
+
+            fin = fileinput.input(cfg_files)
+            for file in fin:
+                fout.write(file)
+            fin.close()
+
+
         #read config
-        tmp_cfg = rwcf.readConfigFile(config_file)
+        tmp_cfg = rwcf.readConfigFile(concatenated_config_file_name)
         #check whether it was successful
         if tmp_cfg[0] == True:
             self._config = tmp_cfg[1]
@@ -75,6 +104,8 @@ class ReadConfig(object):
         
         self._config['helper_header'] = ['min', 'avg', 'max']
 
+
+
         self.log = l.getLogger( self.__class__.__name__,
                                 self._config['LOG_LEVEL'],
                                 self._config['app_start_date'],
@@ -92,6 +123,7 @@ class ReadConfig(object):
         self.createResultsDir()
         self.assemblePktgenCommand()
         self.createSymlinksForLuaScripts()
+
 
 
     def checkDirectoryExistence(self, dir):

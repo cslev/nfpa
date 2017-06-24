@@ -1,5 +1,6 @@
 '''
-These helper functions are used by ReadConfig class and WEBNFPA class
+These helper functions are used by ReadConfig class and WEBNFPA class.
+Mostly used by the web interface to update config file according to the settings made through the web
 '''
 import datetime
 import time
@@ -28,7 +29,7 @@ def readConfigFile(config_file):
     #list of desired languages for plots
     plot_languages = []
     
-    config['version'] = "v3.6"
+
 
     
     #Logger class will check whether DEBUG is set correctly
@@ -78,6 +79,13 @@ def readConfigFile(config_file):
                             #handling line splitting! If something went
                             #wrong during setting up the cfg file, the 
                             #application will quit
+
+                            #A given key has been defined multiple times!
+                            if key in config:
+                                msg=str("%s has been defined multiple times!\n" % key)
+                                msg+=str("Please validate your configuartion files!\n")
+                                return (False,msg)
+
                             config[key]=value                            
                                 
                         

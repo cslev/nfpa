@@ -1,0 +1,8 @@
+email_service=false
+email_from=your_sending_address@gmail.com
+email_to=your_recipient@gmail.com
+email_server=smtp.gmail.com
+email_port=587
+email_username=your_username@gmail.com
+email_password=
+email_timeout=5

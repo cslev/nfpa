@@ -1,4 +1,25 @@
+#NFPA's config file handling has been changed since v3.7.
+#Now, the originally big one config file has been divided into smaller pieces
+#in order to make a higher granularity level for the configuration.
+#Each simpler config file is representing an important part of the whole
+#configuration. This makes it easier to change just one relevant part, for instance,
+#the traffic generation part without opening a big file and looking for the right
+#line. Furthermore, sharing configuration has also become much easier; only the relevant
+#part needs to be shared without forcing the other party to change manually the other parts
+#to his/her own environment (e.g., username, nf_hw).
+
+#You can still have several different configurations by having distinct config file prefixes.
+#Just use -c YOUR_CONFIG_FILE_PREFIX when running NFPA.
+
+
+
+
+#Below, the configurable parameters are the files comprising them are listed with
+#additional information about how a specific parameter should be set!
+
 ### ----------------- User Settings ------------------ ###
+#filename that should contain this: [YOUR_CONFIG_FILE_PREFIX].user
+
 #The username you will use later for sharing and accessing the
 #central web site. Register first at http://nfpa.tmit.bme.hu
 #to take the desired username.
@@ -6,6 +27,8 @@ username=levi
 ### ================================================== ###
 
 ### ----------------- Email Settings ------------------ ###
+#filename that should contain this: [YOUR_CONFIG_FILE_PREFIX].email
+
 #Email sending service. This will send you an email with the
 #measured results trace by trace. A log file is also attached
 #to know whether a failure has occurred. You need to have an
@@ -43,6 +66,8 @@ email_timeout=5
 ### ================================================== ###
 
 ### ------ Filesystem & OS Related Settings ---------- ###
+#filename that should contain this: [YOUR_CONFIG_FILE_PREFIX].nfpanode
+
 #The root directory of your installed PktGen. Required for copying
 #helper scripts to control PktGen. OMIT THE LAST '/'.
 PKTGEN_ROOT=/home/barrredkola/pktgen-3.1.2
@@ -66,7 +91,6 @@ RES_DIR=res
 #directory under the above-set NFPA's main root.levels: DEBUG,
 #INFO, WARNING, ERROR, CRITICAL (incase sensitive)
 LOG_LEVEL=INFO
-### ================================================== ###
 
 ### ------------- DPDK and Pktgen arguments  ------------- ###
 #CPU Core Mask in HEX. For instance, 'e' means 1110 in binary
@@ -107,7 +131,10 @@ port_mask=1
 cpu_port_assign="[2-3:4-5].0"
 ### ================================================== ###
 
-### Network Function Hardware & Software Related Settings# 
+
+### Network Function Hardware Related Settings#
+#filename that should contain this: [YOUR_CONFIG_FILE_PREFIX].nf_hw
+
 #Set here the make of the CPU where the NF being tested is running,
 #e.g., intel xeon, intel atom, intel core, amd opteron.
 cpu_make=intel xeon
@@ -129,6 +156,12 @@ nic_model=xl710
 #to show/plot the theoretical results as well. Format: [bitrate]_[UNIT](case
 #sensitive, use capitals for UNIT).
 port_type=40_G
+### ================================================== ###
+
+
+
+### Network Function Software Related Settings#
+#filename that should contain this: [YOUR_CONFIG_FILE_PREFIX].nf_data
 
 #Set here, whether the NF being tested is VIRTUALIZED. If it
 #is running on a pure bare-metal, set 'no'.Otherwise, set the
@@ -180,7 +213,11 @@ vnf_args=
 vnf_comment=kernel driver autoscales to the available cores
 ### ================================================== ###
 
+
+
 ### ----- Gnuplot/Presenting Related Settings -------- ###
+#filename that should contain this: [YOUR_CONFIG_FILE_PREFIX].gnuplot
+
 #Change plotting language here: currently supported: eng,hun
 #To create the same plots with different languages, use this
 #line more times defining the different languages, as in case of
@@ -207,7 +244,11 @@ outlier_min_percentage=0.15
 outlier_max_percentage=0.15
 ### ================================================== ###
 
+
+
 ### ------------- Let NFPA configure your VNF -------- ###
+#filename that should contain this: [YOUR_CONFIG_FILE_PREFIX].nf_ctrl
+
 # NFPA can start, initialize, and configure the VNF under measurement.
 #
 # It works only with some predefined vnf_function use-cases, and
@@ -249,10 +290,11 @@ control_vnf_outport=IN_PORT
 # running, the following command adjusts the control channel:
 # ovs-vsctl set-controller ptcp:6634
 control_mgmt=tcp:192.168.22.2:6634
-
 ### ================================================== ###
 
 ### --- Traffic Generating/PktGen Related Settings --- ###
+#filename that should contain this: [YOUR_CONFIG_FILE_PREFIX].traffic
+
 #Define the desired packet sizes to be used. Note that in case
 #of User defined synthetic traffic traces (traces that do not
 #exists originally in NFPA's PCAP repository), PCAP files need
@@ -289,8 +331,6 @@ trafficType=LB_ACL_100
 trafficType=LB_ACL_1000
 trafficType=LB_ACL_10000
 trafficType=LB_ACL_100000
-
-
 
 
 #Set here your special realistic traffic trace, e.g., WIFI.

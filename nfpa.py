@@ -42,6 +42,7 @@ class NFPA(object):
         self.reset_terminal = kwargs.get("reset_terminal", True)
         self.no_database = kwargs.get("no_database", False)
         self.config_file = kwargs.get("config_file", "nfpa.cfg")
+        self.version = kwargs.get("version", "v3.6")
 
         self.no_plot = kwargs.get("no_plot", False)
 
@@ -70,6 +71,8 @@ class NFPA(object):
             return -1
             
         self.config = self.rc.getConfig()
+        self.config['version'] = self.version
+
 
 
 
@@ -401,17 +404,19 @@ class NFPA(object):
 
 
 if __name__ == '__main__':
-    
+
+    version = "v3.7"
     #parse CLI
-    parser = argparse.ArgumentParser(description="NFPA usage")
+    parser = argparse.ArgumentParser(description="NFPA " + version + " usage")
     parser.add_argument('-n', '--name',nargs=1, 
                         help="Specify a name for the scenario",
                         required=True)
     parser.add_argument('-w', '--web', nargs=1, 
-                        help="Enable web-based GUI on hostname:port." +  
+                        help="----====  OBSOLETE - DO NOT USE AFTER V3.2 ====---- " +\
+                        "Enable web-based GUI on hostname:port." +\
                         "This will launch the web-based GUI that could be" +\
                         " accessed via http://[hostname]:[port]/nfpa" +\
-                        "Argument should look like hostname:port, " + 
+                        "Argument should look like hostname:port, " +\
                         "e.g., localhost:8000",
                         required=False)
     parser.add_argument('-r','--noreset',
@@ -459,7 +464,8 @@ if __name__ == '__main__':
                 reset_terminal=args.noreset,
                 no_database=args.nodatabase,
                 config_file=args.cfg[0],
-                no_plot=args.noplot)
+                no_plot=args.noplot,
+                version=version)
 
     
     #web based gui

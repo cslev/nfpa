@@ -423,5 +423,15 @@ This could be useful, when you don't have the right version of gnuplot, or just 
 you have written is parsing the result files later anyway. Doesn't matter for what reason it is good or not, but now it
 is switchable :)
 
-v??? - Support measuring BESS datapaths (Berkeley Extensible Software Switch,
+v3.7 - Support measuring BESS datapaths (Berkeley Extensible Software Switch,
   https://github.com/NetSys/bess/).  See documentation in lib/plugin/bess.py
+
+v3.8 - New way of configuration!
+NFPA's config file handling has been changed:
+Now, the originally big one config file has been divided into smaller pieces (e.g., [YOUR_CONFIG].email,
+[YOUR_CONFIG].nf_ctrl, [YOUR_CONFIG].traffic) in order to make a higher granularity level for the configuration.
+Each simpler config file is representing an important part of the whole configuration. This makes it easier to change
+just one relevant part, for instance, the traffic generation part without opening a big file and looking for the right
+line. Furthermore, sharing configuration has also become much easier; only the relevant part needs to be shared without
+forcing the other party to change manually the other parts to his/her own environment (e.g., username, nf_hw).
+See nfpa.cfg.README before using the new version.

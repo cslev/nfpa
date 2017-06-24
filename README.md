@@ -15,7 +15,10 @@ Hopefully, the original author shall find these modifications useful and as prod
 this way a merge at the end may happen :)
 
 # What's NEW?
-Check ChangeLog from v3.2 where the fork has been issued.
+Check [https://github.com/BarrRedKola/cbt/blob/master/ChangeLog](ChangeLog) from v3.2 where the fork has been issued.
+
+WEB interface has become OBSOLETE. We do not develop that part of CBT/NFPA further, thus new feautures we introduced
+do not work with the WEB interface!
 
 # New requirements:
 gnuplot >= v5.0 (due to the utf8 encoding)

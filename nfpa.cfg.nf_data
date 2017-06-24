@@ -1,0 +1,9 @@
+virtualization=no
+vnf_name=ovs
+vnf_version=2.5.1
+vnf_driver=kernel
+vnf_driver_version=3.16
+vnf_function=load_balancer_10
+vnf_num_cores=0
+vnf_args=
+vnf_comment=kernel driver autoscales to the available cores
