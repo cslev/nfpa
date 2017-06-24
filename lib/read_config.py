@@ -62,7 +62,11 @@ class ReadConfig(object):
         postfixes = ['user','email','nfpanode','nf_hw','nf_data','nf_ctrl','traffic','gnuplot']
         cfg_files = list()
         for i in postfixes:
-            cfg_files.append(config_file + "." + i)
+            tmp = config_file + "." + i
+            if not (os.path.isfile(tmp)):
+                print("config file %s does not exist! Create it manually! Read nfpa.cfg.README for more details!")
+                exit(-1)
+            cfg_files.append(tmp)
 
         concatenated_config_file_name = "nfpa_main_generated.cfg"
         with open(concatenated_config_file_name,'w') as fout:
