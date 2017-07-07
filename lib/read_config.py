@@ -4,7 +4,7 @@ Created on Jun 17, 2015
 @author: lele
 '''
 import os
-from wx.build import cfg_version
+#from wx.build import cfg_version
 
 import logger as l
 import copy
