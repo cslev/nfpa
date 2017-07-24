@@ -46,7 +46,7 @@ class MeasureThread(threading.Thread):
     
 
 class WEBNFPA(object):
-    def __init__(self, scenario_name, host_port, nfpa_class):
+    def __init__(self, scenario_name, host_port, config_file, nfpa_class):
         '''
         This class initializes a bottle python webserver on the given
         host_port, which is passed as host:port!
@@ -61,9 +61,11 @@ class WEBNFPA(object):
         host_port = host_port.split(":")
         self.host = host_port[0]
         self.port = host_port[1]
+
+
         
         #read config
-        tmp_cfg = rwcf.readConfigFile("nfpa.cfg")
+        tmp_cfg = rwcf.readConfigFile(config_file)
         #check whether it was successful
         if tmp_cfg[0] == True:
             self.config = tmp_cfg[1]
@@ -179,7 +181,8 @@ class WEBNFPA(object):
 
         tmp_lists = ["realisticTraffics", 
                      "trafficTypes", 
-                     "packetSizes"]
+                     "packetSizes",
+                     "plot_language"]
         
         #the following config elements should not be checked, since they are
         #initialized by ReadConfig class, and they could be None if

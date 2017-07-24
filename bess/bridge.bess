@@ -1,0 +1,22 @@
+# -*- mode: python; -*-
+
+vnf_inport = int($control_vnf_inport!'0')
+vnf_outport = int($control_vnf_outport!'0')
+traffictype = $traffictype!'simple'
+
+print("%s %s %s" % (vnf_inport, vnf_outport, traffictype))
+if vnf_inport == vnf_outport:
+  port0 = PMDPort(port_id=vnf_inport)
+  input = PortInc(port=port0.name)
+  output = PortOut(port=port0.name)
+else:
+  portIn = PMDPort(port_id=vnf_inport)
+  portOut = PMDPort(port_id=vnf_outport)
+  input = PortInc(port=portIn.name)
+  output = PortInc(port=portOut.name)
+
+if False:
+    fwd = MACSwap()
+    input -> fwd -> output
+else:
+    input -> Bypass() -> output

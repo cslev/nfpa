@@ -1,0 +1,7 @@
+control_nfpa=true
+control_vnf=openflow
+control_path=/usr/bin/ovs-ofctl
+control_args=-O OpenFlow13
+control_vnf_inport=1
+control_vnf_outport=IN_PORT
+control_mgmt=tcp:192.168.22.2:6634

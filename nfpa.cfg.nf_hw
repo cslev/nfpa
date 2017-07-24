@@ -1,0 +1,5 @@
+cpu_make=intel xeon
+cpu_model=e5-2620v3
+nic_make=intel
+nic_model=xl710
+port_type=40_G

@@ -9,18 +9,19 @@ require "Pktgen";
 
 -- for config params read from the config file
 
--- local variables for config parameters (read from config.cfg)
+-- local variables for config parameters (read from nfpa.cfg generated in pktgen's root)
 config = {};
--- local variable for different packet sizes (read from config.cfg)
-pktSizes = {};
+-- local variable for different packet sizes (read from nfpa.cfg generated in pktgen's root)
+--pktSizes = {};
 
 
 -- +++++++++++++++++++++++++ FUNCTION ++++++++++++++++++++++++++++
 function read_config_file ()
 
-  print("Reading the config file... (nfpa.cfg)\n");
+  print("Reading the config file generated in PKTGEN's root (nfpa.cfg)\n");
 
-  -- Opens a file in read
+  -- Opens a file in read - this config file is generated via NFPA in the pktgen's directory according to the main
+  -- nfpa.cfg or whatever was set as a startup argument!
   config_file = io.open("nfpa.cfg", "r");
 
   -- sets the default input file as test.lua
@@ -44,11 +45,12 @@ function read_config_file ()
       -- and value will be the substring after equal sign
       value = string.sub(line,equal_pos+1);
         -- packetSize fields found
-      if(key == "packetSize")
-      then
-        -- store desired packet sizes
-        table.insert(pktSizes, value);
-      end
+
+--      if(key == "packetSize")
+--      then
+--        -- store desired packet sizes
+--        table.insert(pktSizes, value);
+--      end
       -- store other config parameters in config var
       -- such as measureDuration, sendPort, recvPort, etc.
       config[key] = value;
@@ -130,13 +132,12 @@ function start_measurement ()
   
   traffic = config["trafficType"] .. "." .. config["packetSize"];
   -- get the number of desired packet sizes used for measurement
-  number_of_packetsizes = #pktSizes;
+--  number_of_packetsizes = #pktSizes;
   -- calculating estimated measurement duration
   -- heating up=3s, cooldown=3s, config["measurementDuration"], number_of_packetsizes
   if tonumber(config["measurementDuration"]) ~= 0
   then
-    estimated_time = number_of_packetsizes * tonumber(config["measurementDuration"]) +
-    number_of_packetsizes*6;
+    estimated_time = tonumber(config["measurementDuration"]) +  6;
     -- reducing factor for estimated time - the following should be multiplied
     -- in each iteration of the loop below
     reduce_factor = tonumber(config["measurementDuration"]) + 6;

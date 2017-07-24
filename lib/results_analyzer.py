@@ -272,7 +272,8 @@ class ResultsAnalyzer(object):
         This process will calculate the theoretical maximum according to the
         given packet size and the set port_type in nfpa.cfg.
         Then it converts it to the desired unit.
-        return int - the theoretical maximum
+        :param  packetsize Int - calculate theoretical value accordingly
+        return int - the theoretical maximum converted into the desired unit
         '''
         # get the port type from config file
         port_type = str(self.config['port_type']).split("_")[0]
@@ -414,7 +415,7 @@ class ResultsAnalyzer(object):
                     avg = float(avg / float(l))
 
                     self.log.debug("min-max-avg for %s-%s-%s: %d-%d-%0.4f" %
-                                 (self.trace, ps, res, min, max, avg))
+                                   (self.trace, ps, res, min, max, avg))
                     # copying calculated metrics into the temporary dictionary
                     tmp_dict['max'] = copy.deepcopy(max)
                     tmp_dict['min'] = copy.deepcopy(min)
@@ -427,9 +428,82 @@ class ResultsAnalyzer(object):
                     # now, it is safe to delete/clear tmp_dict for the next
                     # iteration of the loops
 
-                # append self._results with a new key,value pair
-                # add theoretical value
+                    # append self._results with a new key,value pair
+                    # add theoretical value
                 self._results[ps]['theor_max'] = self.calculateTheoreticalMax(ps)
+            # for ps in self._results:
+            #
+            #     theor_max = self.calculateTheoreticalMax(ps)
+            #     self.log.debug("theoretical max for packet size %s is: %d" % (ps,theor_max))
+            #
+            #     for res in self._results[ps]:
+            #         # lenght
+            #         l = len(self._results[ps][res])
+            #         # min = first element
+            #         min = copy.deepcopy(int(self._results[ps][res][0]))
+            #         # max = last element
+            #         max = copy.deepcopy(int(self._results[ps][res][(l - 1)]))
+            #
+            #         # calculate avg
+            #         avg = 0
+            #         for i in self._results[ps][res]:
+            #             avg += int(i)
+            #
+            #         avg = float(avg / float(l))
+            #
+            #         self.log.debug("min-max-avg for %s-%s-%s: %d-%d-%0.4f" %
+            #                      (self.trace, ps, res, min, max, avg))
+            #
+            #         #in some cases pktgen and the precision of the NIC could result in higher
+            #         #packet rates than theoretical, like a 10G NIC may produces 10.004G.
+            #         #In order to not confuse the user and don't make confusing plots where
+            #         #sending rate might higher than the theoretical, here we reduce back the
+            #         #rates to theoretical rate in such cases
+            #         if 'pps' in res:
+            #             #only if pps data is processed, bps are always much higher than theoretical pps
+            #             if max >= theor_max:
+            #                 self.log.debug("MAX value (%d) was higher than theoretical one (%0.4f)!" %
+            #                                (max, self._results[ps]['theor_max']))
+            #                 self.log.debug("Reducing back measurement data to avoid confusion!")
+            #                 tmp_dict['max'] = copy.deepcopy(self._results[ps]['theor_max'])
+            #             else:
+            #                 # copying calculated metrics into the temporary dictionary
+            #                 tmp_dict['max'] = copy.deepcopy(max)
+            #
+            #             if min >= theor_max:
+            #                 self.log.debug("MIN value (%d) was higher than theoretical one (%0.4f)!" %
+            #                                (min, self._results[ps]['theor_max']))
+            #                 self.log.debug("Reducing back measurement data to avoid confusion!")
+            #                 tmp_dict['min'] = copy.deepcopy(self._results[ps]['theor_max'])
+            #             else:
+            #                 # copying calculated metrics into the temporary dictionary
+            #                 tmp_dict['min'] = copy.deepcopy(min)
+            #
+            #             if avg >= theor_max:
+            #                 self.log.debug("AVG value (%d) was higher than theoretical one (%0.4f)!" %
+            #                                (avg, self._results[ps]['theor_max']))
+            #                 self.log.debug("Reducing back measurement data to avoid confusion!")
+            #                 tmp_dict['avg'] = copy.deepcopy(float(self._results[ps]['theor_max']))
+            #             else:
+            #                 # copying calculated metrics into the temporary dictionary
+            #                 tmp_dict['avg'] = copy.deepcopy(avg)
+            #         else:
+            #             tmp_dict['min'] = copy.deepcopy(min)
+            #             tmp_dict['max'] = copy.deepcopy(max)
+            #             tmp_dict['avg'] = copy.deepcopy(avg)
+            #
+            #         # update results dictionary by changing type of list to dict
+            #         self._results[ps][res] = {}
+            #         # copy tmp_dict into the main results variable
+            #         self._results[ps][res] = copy.deepcopy(tmp_dict)
+            #         # now, it is safe to delete/clear tmp_dict for the next
+            #         # iteration of the loops
+            #
+            #     # append self._results with a new key,value pair
+            #     # add theoretical value
+            #     self.log.debug("append theor max to self._results[ps][theor_max]")
+            #     self._results[ps]['theor_max'] = theor_max
+
         else:
             for res in self._results:
                 # lenght

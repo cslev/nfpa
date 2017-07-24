@@ -392,3 +392,46 @@ they are just for testing purposes and the user does not want to mess up the dat
 v3.2 - New starting parameter has added for defining the path to the config file (nfpa.cfg). Now, it became easier
 to automatically start NFPA multiple times consecutively for different use-cases, e.g., for different VNFs, by defining
 multiple config files. See the output of python nfpa.py -h
+
+-- CBT FORK
+v3.3 - Added access gateway use case that aggregates subscribers located behind customer endpoints to the Internet.
+It consists of a Virtual Provider Endpoint (VPE) that serves Internet access to subscribers located behind Customer
+Endpoints (CEs). For brevity, we identify CEs with the MAC address and we assume that the operator sets 10 CEs, each
+serving 20 users provisioned with a private IP address that is unique within the CE. Table 0 separates user-to-network
+traffic on a per-CE basis from network-to-user traffic; user-to-network traffic goes to per-CE flow tables
+(table 11, etc.) that match the source IP address to identify the user and rewrite the source address to a unique public
+IP address (realizing a NAT), and finally to the IP routing table (table 200) that contains 10K random IP prefixes;
+packets from yet unseen users will in turn be forwarded to the controller to perform admission control and allocate a
+unique IP address. Network-to-user traffic on the other hand goes to table 110, which matches on the destination IP to
+identify the user and the CE, swaps the destination IPs back to the private IP addresses, and then sends packets
+to the proper CE.
+Use vnf_function=AGW_10CE_20UserPerCE_10kfib and use trafficType=AGW_[X]flows, where [X] = {1,10, 100, 1000, 10.000,
+100.000}. - the compressed PCAP files could found under new_PCAP/ directory (nfpa.agw_unidir.tar.xz)
+
+v3.4 - Add hungarian language support for gnuplot plots. It can be set in nfpa.cfg under gnuplot related settings.
+
+v3.4.1 - Minor changes to nfpa_traffic.lua. Originally one measurement lasted until the trace with all of its packetsizes
+has been measured. However, since results are being analyzed for each traffic trace (consisting only one size of packets
+at a time), some codes became unnecessary.
+
+v3.5 - Multiple language support at the same time. Now, several plot_language lines could be defined (currently 2 only
+due to the number of supported languages so far), and for the measurements the plots will be generated in all
+languages
+
+v3.6 - New initializing argument. Now, it is possible to disable plot generation, and only produce the result files (.data).
+This could be useful, when you don't have the right version of gnuplot, or just don't need the plots as other scripts
+you have written is parsing the result files later anyway. Doesn't matter for what reason it is good or not, but now it
+is switchable :)
+
+v3.7 - Support measuring BESS datapaths (Berkeley Extensible Software Switch,
+  https://github.com/NetSys/bess/).  See documentation in lib/plugin/bess.py
+
+v3.8 - New way of configuration!
+NFPA's config file handling has been changed:
+Now, the originally big one config file has been divided into smaller pieces (e.g., [YOUR_CONFIG].email,
+[YOUR_CONFIG].nf_ctrl, [YOUR_CONFIG].traffic) in order to make a higher granularity level for the configuration.
+Each simpler config file is representing an important part of the whole configuration. This makes it easier to change
+just one relevant part, for instance, the traffic generation part without opening a big file and looking for the right
+line. Furthermore, sharing configuration has also become much easier; only the relevant part needs to be shared without
+forcing the other party to change manually the other parts to his/her own environment (e.g., username, nf_hw).
+See nfpa.cfg.README before using the new version.

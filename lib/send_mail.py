@@ -65,21 +65,22 @@ class EmailAdapter(object):
             #synthetic traffic traces generate more files with different
             #naming convenctions
             trace = current_trace
-            self.res_file_postfix = [
-                     ".data",
-                     "_diff_" + self.config['bps_unit'] + "bps.eps",
-                     "_miss_" + self.config['pps_unit'] + "pps.eps",
-                     "_sent_recv_" + self.config['bps_unit'] + "bps.eps",
-                     "_sent_recv_" + self.config['pps_unit'] + "pps.eps"]
+            self.res_file_postfix = [".data"]
+            #for the possible setup of multiple languages
+            for language in self.config['plot_language']:
+                self.res_file_postfix.append("_diff_" + self.config['bps_unit'] + "bps_" + language +".eps")
+                self.res_file_postfix.append("_miss_" + self.config['pps_unit'] + "pps_" + language + ".eps")
+                self.res_file_postfix.append("_sent_recv_" + self.config['bps_unit'] + "bps_" + language+ ".eps")
+                self.res_file_postfix.append("_sent_recv_" + self.config['pps_unit'] + "pps_" + language + ".eps")
 
         else:
             #realistic traces have a 'realistic_' prefix, and less files
             #are produced for one measurement
             trace = "realistic_" + current_trace
-            self.res_file_postfix = [
-                ".data",
-                "__" + self.config['bps_unit'] + "bps.eps",
-                "__" + self.config['pps_unit'] + "pps.eps"]
+            self.res_file_postfix = [".data"]
+            for language in self.config["plot_language"]:
+                self.res_file_postfix.append("__" + self.config['bps_unit'] + "bps_" + language + ".eps")
+                self.res_file_postfix.append("__" + self.config['pps_unit'] + "pps_" + language + ".eps")
 
 
 

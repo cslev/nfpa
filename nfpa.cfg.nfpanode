@@ -1,0 +1,12 @@
+PKTGEN_ROOT=/home/barrredkola/pktgen-3.1.2
+PKTGEN_BIN=app/app/x86_64-native-linuxapp-gcc/pktgen
+MAIN_ROOT=/home/barrredkola/cbt
+RES_DIR=res
+LOG_LEVEL=INFO
+
+cpu_core_mask=ff
+mem_channels=4
+socket_mem=4096
+other_dpdk_params=--file-prefix cbt_huge
+port_mask=1
+cpu_port_assign="[2-3:4-5].0"

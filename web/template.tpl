@@ -34,7 +34,7 @@
 % nf_settings = ['cpu_make', 'cpu_model', 'nic_make', 'nic_model', 'port_type',
 %                'virtualization','vnf_name', 'vnf_version', 'vnf_driver', 
 %                'vnf_driver_version', 'vnf_function', 'vnf_num_cores', 'vnf_comment']
-% gnuplot_settings = ['pps_unit', 'bps_unit', 'outlier_min_percentage',
+% gnuplot_settings = ['plot_language', 'pps_unit', 'bps_unit', 'outlier_min_percentage',
 %                     'outlier_max_percentage']
 % nfpa_control_settings = ['control_nfpa', 'control_vnf', 'control_path', 'control_args',
 %                          'control_vnf_inport', 'control_vnf_outport', 'control_mgmt']
@@ -78,6 +78,8 @@
 %              'vnf_function' : "(Virtual) Network Function's Function (e.g. l2-switch, l3-router, vxlan)<span class='req'>*</span>",
 %              'vnf_num_cores' : "Set here the number of CPU cores the VNF is using. Use integer numbers!<span class='req'>*</span>",
 %              'vnf_comment' : "Comment (e.g. ivshmem + qemu version 2.3.4)<span class='req'>*</span>",
+%              'plot_language' : "Desired language for the plots (currently supported: eng,hun). To set more languages separate them " +\
+%                                "with commas but without whitespaces, e.g.,eng,hun <span class='req'>*</span>",
 %              'pps_unit' : "Desired Unit for Packet/s (e.g., k, M, G)<span class='req'>*</span>",
 %              'bps_unit' : "Desired Unit for Bit/s (e.g., k, M, G)<span class='req'>*</span>",
 %              'outlier_min_percentage' : "Outliers percentage for Minimum Values (e.g., 0.05). " +\
@@ -120,7 +122,7 @@
 % main_dict_heads[7] = "Traffic Generating/PktGen Related Settings"
 % main_dict[8] = nfpa_control_settings
 % main_dict_heads[8] = "Let NFPA configure your VNF"
-% list_of_values = ["packetSizes", "realisticTraffics", "trafficTypes"]
+% list_of_values = ["plot_language", "packetSizes", "realisticTraffics", "trafficTypes"]
 
 
 <h1 style="background-image:url('static/pictures/szittyaLogo_v3_patrick_small.png');
@@ -184,7 +186,8 @@
                     <option value="0" {{selected_simplex}}>Simplex</option>    
                     <option value="1" {{selected_duplex}}>Duplex</option>
                   </select>
-                % # pps_uni and bps_unit needs select field
+
+                % # pps_unit and bps_unit need select field
                 % elif j == "pps_unit" or j == "bps_unit":
                 %   k = ""
                 %   m = ""

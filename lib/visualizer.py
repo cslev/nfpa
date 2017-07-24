@@ -68,6 +68,9 @@ class Visualizer(object):
                       self.config['port_type'] + "/"
   
 
+        res_files_location = copy.deepcopy(self.prefix)
+
+
         #check whether directory exists
         if not os.path.exists(self.prefix):
             os.makedirs(self.prefix)
@@ -83,7 +86,7 @@ class Visualizer(object):
         
         
         
-        #if any of the variable above are non-exist vars, we need to TERMINATE
+        #if any of the variable above are non-existing vars, we need to TERMINATE
         if(self.config is None or self.results is None):
             self.log.error("config and results dictionaries are EMPTY")
             self.log.error("Something went wrong during initialization")
@@ -96,8 +99,7 @@ class Visualizer(object):
         
         #ready
         self.log.info("[DONE]")
-        self.log.info("Charts could be found in " + self.config['MAIN_ROOT'] +\
-                    "/" + self.config['RES_DIR'])
+        self.log.info("Results could be found in " + res_files_location)
 
     
         
@@ -281,8 +283,11 @@ class Visualizer(object):
                     self.log.error("Sending ERROR email did not succeed...")
                 exit(-1)
 
-            #call gnuplot command to create chart
-            self.drawChartViaGnuplot(gp_params, ul_dl=ul_dl)
+
+            # only draw plots if initializing argument --noplot was not set
+            if self.config['no_plot'] == False:
+                #call gnuplot command to create chart
+                self.drawChartViaGnuplot(gp_params, ul_dl=ul_dl)
         
         #if realistic traffic is needed to be plotted
         elif self.type == "realistic":
@@ -391,56 +396,7 @@ class Visualizer(object):
                 #update unit in the first column
                 one_line = one_line.replace("pps", str("%spps" % pu))
                 one_line = one_line.replace("bps", str("%sbps" % bu))
-                #update column with the traffic types used for ports
-#                 one_line = one_line.replace("sent_pps",
-#                                             str("sent_%spps_%s" % (pu,
-#                                                                    tmp_tt[0])))
-#                 one_line = one_line.replace("recv_pps",
-#                                             str("recv_%spps_%s" % (pu,
-#                                                                    tmp_tt[0])))
-#                 one_line = one_line.replace("miss_pps",
-#                                             str("miss_%spps_%s" % (pu,
-#                                                                    tmp_tt[0])))
-#                 one_line = one_line.replace("sent_bps",
-#                                             str("sent_%sbps_%s" % (bu,
-#                                                                    tmp_tt[0])))
-#                 one_line = one_line.replace("recv_bps",
-#                                             str("recv_%sbps_%s" % (bu,
-#                                                                    tmp_tt[0])))
-#                 one_line = one_line.replace("diff_bps",
-#                                             str("diff_%sbps_%s" % (bu,
-#                                                                    tmp_tt[0])))
-#
-#                 #update bidirectional header elements as well
-#                 if((int(self.config['biDir']) == 1) or (ul_dl)):
-#                     one_line = one_line.replace(
-#                                            "sent_pps_bidir",
-#                                            str("sent_%spps_%s" % (pu,
-#                                                                   tmp_tt[1])))
-#                     one_line = one_line.replace(
-#                                            "recv_pps_bidir",
-#                                            str("recv_%spps_%s" % (pu,
-#                                                                   tmp_tt[1])))
-#
-#                     one_line = one_line.replace(
-#                                            "miss_pps_bidir",
-#                                            str("miss_%spps_%s" % (pu,
-#                                                                   tmp_tt[1])))
-#
-#                     one_line = one_line.replace(
-#                                            "sent_bps_bidir",
-#                                            str("sent_%sbps_%s" % (bu,
-#                                                                   tmp_tt[1])))
-#
-#                     one_line = one_line.replace(
-#                                            "recv_bps_bidir",
-#                                            str("recv_%sbps_%s" % (bu,
-#                                                                   tmp_tt[1])))
-#
-#                     one_line = one_line.replace(
-#                                            "diff_bps_bidir",
-#                                            str("diff_%sbps_%s" % (bu,
-#                                                                   tmp_tt[1])))
+
 
 
                 #write out one line
@@ -456,8 +412,11 @@ class Visualizer(object):
                     (not self.config['email_adapter'].sendErrorMail()):
                     self.log.error("Sending ERROR email did not succeed...")
                 exit(-1)
-            #call gnuplot command to create chart
-            self.drawChartViaGnuplot(gp_params, ul_dl=ul_dl)
+
+            #only draw plots if initializing argument --noplot was not set
+            if self.config['no_plot'] == False:
+                #call gnuplot command to create chart
+                self.drawChartViaGnuplot(gp_params, ul_dl=ul_dl)
                 
 
     def drawChartViaGnuplot(self, gnuplot_arguments, **params):
@@ -476,35 +435,42 @@ class Visualizer(object):
         self.log.debug(gnuplot_arguments)
         #synthetic traffic/measurements have different GNUplot plotter files
         if(self.type == "synthetic"):
-            plotter_file = "/lib/plotter.gp"
-            #if bi directional measurement was set, we use different gnuplot file
-            if((int(self.config["biDir"]) == 1) or ul_dl):
-                plotter_file = "/lib/plotter_bidir.gp"
+            for language in self.config['plot_language']:
+                plotter_file = "/lib/plotter_" + language + ".gp"
+                #if bi directional measurement was set, we use different gnuplot file
+                if((int(self.config["biDir"]) == 1) or ul_dl):
+                    plotter_file = "/lib/plotter_bidir_" + language + ".gp"
                 
-            #assemble gnuplot command
-            gnuplot_command = "gnuplot -e " + gnuplot_arguments + " " + \
-                              self.config['MAIN_ROOT'] + plotter_file
+                #assemble gnuplot command
+                gnuplot_command = "gnuplot -e " + gnuplot_arguments + " " + \
+                                  self.config['MAIN_ROOT'] + plotter_file
+                self.log.debug("======= GNUPLOT (%s) =======" % language)
+                self.log.debug(gnuplot_command)
+                retval = (invoke.invoke(command=gnuplot_command,
+                                        logger=self.log,
+                                        email_adapter=self.config['email_adapter']))[0]
+                if retval is not None or retval != '':
+                    self.log.info(retval)
                               
         #Realistic traffic/measurements have different GNUplot plotter files
         elif(self.type == "realistic"):
-            plotter_file = "/lib/plotter_realistic.gp"
-            #if bi directional measurement was set, we use different gnuplot file
-            if((int(self.config["biDir"]) == 1) or ul_dl):
-                plotter_file = "/lib/plotter_realistic_bidir.gp"
-                
-            #assemble gnuplot command
-            gnuplot_command = "gnuplot -e " + gnuplot_arguments + " " + \
-                              self.config['MAIN_ROOT'] + plotter_file   
-                              
-                                             
-                                             
-        self.log.debug("======= GNUPLOT =======")
-        self.log.debug(gnuplot_command)
-        retval = (invoke.invoke(command=gnuplot_command,
-                                logger=self.log,
-                                email_adapter=self.config['email_adapter']))[0]
-        if retval is not None or retval != '':
-            self.log.info(retval)
+            for language in self.config['plot_language']:
+                plotter_file = "/lib/plotter_realistic_"+ language +".gp"
+                #if bi directional measurement was set, we use different gnuplot file
+                if((int(self.config["biDir"]) == 1) or ul_dl):
+                    plotter_file = "/lib/plotter_realistic_bidir_" + language + ".gp"
+
+                #assemble gnuplot command
+                gnuplot_command = "gnuplot -e " + gnuplot_arguments + " " + \
+                                  self.config['MAIN_ROOT'] + plotter_file
+                self.log.debug("======= GNUPLOT (%s) =======" % language)
+                self.log.debug(gnuplot_command)
+                retval = (invoke.invoke(command=gnuplot_command,
+                                        logger=self.log,
+                                        email_adapter=self.config['email_adapter']))[0]
+                if retval is not None or retval != '':
+                    self.log.info(retval)
+
             
 
     def getPrefixToPlots(self):
