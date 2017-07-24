@@ -1,4 +1,4 @@
-#We are delighted to announce that the forked CBT project and NFPA has just been merged, therefore NFPA consists of all the new features (e.g., rewritten  plugin architecture to support numerous software datapaths) and scenarios the CBT guys have developed.
+# We are delighted to announce that the forked CBT project and NFPA has just been merged, therefore NFPA consists of all the new features (e.g., rewritten  plugin architecture to support numerous software datapaths) and scenarios the CBT guys have developed.
 We joined our forces and from now the two development branches are going to improve the whole architecture under the original name.
 Let's keep NFPA to be the no.1 brand in open-source network function benchmarking!
 
