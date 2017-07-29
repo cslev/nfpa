@@ -435,3 +435,7 @@ just one relevant part, for instance, the traffic generation part without openin
 line. Furthermore, sharing configuration has also become much easier; only the relevant part needs to be shared without
 forcing the other party to change manually the other parts to his/her own environment (e.g., username, nf_hw).
 See nfpa.cfg.README before using the new version.
+
+
+v4.0 - The official new version since the merge. 
+Access gateway use case has been changed/fixed - refer to 'use cases' on the website

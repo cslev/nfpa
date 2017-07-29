@@ -42,7 +42,7 @@ class NFPA(object):
         self.reset_terminal = kwargs.get("reset_terminal", True)
         self.no_database = kwargs.get("no_database", False)
         self.config_file = kwargs.get("config_file", "nfpa.cfg")
-        self.version = kwargs.get("version", "v3.6")
+        self.version = kwargs.get("version", "v4.0")
 
         self.no_plot = kwargs.get("no_plot", False)
 
