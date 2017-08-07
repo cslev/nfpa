@@ -72,9 +72,10 @@ class ReadConfig(object):
         with open(concatenated_config_file_name,'w') as fout:
             fout.write("#GENERATED CONFIG FILE - MODIFYING IT DOES NOT HAVE ANY EFFECT!\n")
             fout.write("#Create your own configuration with [CONFIG_FILE_PREFIX]. and the following endings:\n")
-            fout.write("#")
             for p in postfixes:
+                fout.write("#")
                 fout.write(p)
+		fout.write("\n")
             fout.write("\n")
             fout.write("#For more information read nfpa.cfg.README\n")
 

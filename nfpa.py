@@ -405,7 +405,7 @@ class NFPA(object):
 
 if __name__ == '__main__':
 
-    version = "v3.7"
+    version = "v4.0"
     #parse CLI
     parser = argparse.ArgumentParser(description="NFPA " + version + " usage")
     parser.add_argument('-n', '--name',nargs=1, 
