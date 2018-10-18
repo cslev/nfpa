@@ -15,6 +15,7 @@ trafficType=LB_ACL_100000
 
 #realisticTraffic=
 
+portRate=100
 measurement_num=2
 measurementDuration=30
 sendPort=0
