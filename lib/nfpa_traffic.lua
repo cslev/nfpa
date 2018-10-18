@@ -161,8 +161,12 @@ function start_measurement ()
 
   -- set default output file to the created file descriptor
   io.output(file);
-  
-  
+
+  -- set port rate for all ports
+  port_rate = tonumber(config["portRate"]);
+  print("portRate set is" .. port_rate .. "\n");
+  pktgen.set("all", "rate", tonumber(config["portRate"]));
+
   -- start sending packets    
   pktgen.start(tonumber(config["sendPort"]));
   -- set the other port as well if biDir is set
