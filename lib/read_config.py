@@ -862,7 +862,10 @@ class ReadConfig(object):
         #write out bi-direction request
         lua_cfg_file.write("biDir=" + str(self._config["biDir"]))
         lua_cfg_file.write("\n\n")
-        
+
+        #write out port rate for all ports
+        lua_cfg_file.write("portRate=" + str(self._config["portRate"]))
+        lua_cfg_file.write("\n\n")
         
         #write out packetSizes if set
         if packet_sizes is not None:
@@ -871,12 +874,10 @@ class ReadConfig(object):
                 lua_cfg_file.write("\n")
             lua_cfg_file.write("\n\n")
 
-# 
         #write out trafficTypes if set
         if traffic_type is not None:
             lua_cfg_file.write("trafficType=" + traffic_type)
             lua_cfg_file.write("\n\n")
-
 
         #write out realistic traffic name
         #if not set, do not write out. 
